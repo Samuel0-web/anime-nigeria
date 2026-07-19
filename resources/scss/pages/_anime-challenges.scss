@@ -1,0 +1,545 @@
+@use "../tokens" as *;
+
+// =============================================================================
+// CHALLENGES HERO
+// =============================================================================
+.an-challenges-hero{
+    position:relative;
+    overflow:hidden;
+    background:$black-soft;
+    padding-block:$space-xxxl $space-xxl;
+    text-align:center;
+}
+
+.an-challenges-hero__inner{
+    position:relative;
+    z-index:2;
+    max-width:920px;
+    margin-inline:auto;
+    opacity:0;
+    transform:translateY(40px);
+    transition: opacity .7s, transform .9s cubic-bezier(.22,1,.36,1);
+
+    &.is-visible{
+        opacity:1;
+        transform:none;
+    }
+}
+
+.an-challenges-hero__badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    margin-block:$space-md;
+    padding:.65rem 1rem;
+    border-radius:$radius-full;
+    background:$gold-dim;
+    border:1px solid rgba($gold,.25);
+    color:$gold;
+    font-family:$font-mono;
+    font-size:$fs-xs;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.an-challenges-hero__heading{
+    margin-bottom:$space-md;
+    color:$gold;
+    font-size:clamp(3rem,6vw,5.5rem);
+    line-height:1.02;
+    letter-spacing:-.03em;
+}
+
+.an-challenges-hero__description{
+    max-width:64ch;
+    margin-inline:auto;
+    margin-bottom:$space-xl;
+    color:$white-muted;
+    font-size:$fs-md;
+}
+
+.an-challenges-hero__actions{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:$space-md;
+}
+
+// =============================================================================
+// CHALLENGE TYPES
+// =============================================================================
+.an-challenges-hero__types{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:$space-sm;
+    margin-top:$space-xxl;
+}
+
+.an-challenges-hero__type{
+    display:inline-flex;
+    align-items:center;
+    gap:.7rem;
+    padding:.85rem 1.15rem;
+    border-radius:$radius-full;
+    border:1px solid $black-line;
+    background:rgba(255,255,255,.03);
+    color:$white-muted;
+    transition: transform $transition-base, border-color $transition-base,
+        background $transition-base, color $transition-base;
+
+    i{
+        color:$gold;
+        font-size:.95rem;
+    }
+
+    &:hover{
+        transform:translateY(-4px);
+        border-color:rgba($gold,.25);
+        background:rgba($gold,.08);
+        color:$white;
+    }
+}
+
+@media(max-width:$bp-md){
+    .an-challenges-hero__types{
+        gap:.75rem;
+    }
+
+    .an-challenges-hero__type{
+        padding:.75rem 1rem;
+        font-size:$fs-sm;
+    }
+
+}
+
+// =============================================================================
+// HOW IT WORKS
+// =============================================================================
+.an-challenges-process{
+    padding-block:$space-xxxl;
+    background:$black;
+}
+
+.an-challenges-process__grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:$space-lg;
+
+    @media(max-width:$bp-xl){
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    @media(max-width:$bp-md){
+        grid-template-columns:1fr;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// STEP CARD
+// -----------------------------------------------------------------------------
+.an-challenges-step{
+    position:relative;
+    padding:$space-xl;
+    border-radius:$radius-lg;
+    border:1px solid $black-line;
+    background:rgba(255,255,255,.025);
+    opacity:0;
+    transform:translateY(40px);
+    transition: opacity .7s, transform .9s cubic-bezier(.22,1,.36,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible{
+        opacity:1;
+        transform:none;
+    }
+
+    &:hover{
+        transform:translateY(-8px);
+        border-color:rgba($gold,.25);
+        box-shadow:0 22px 55px rgba(0,0,0,.35);
+    }
+}
+
+.an-challenges-step__number{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:46px;
+    height:46px;
+    margin-bottom:$space-lg;
+    border-radius:50%;
+    background:$gold-dim;
+    color:$gold;
+    font-family:$font-mono;
+    font-size:$fs-sm;
+    font-weight:$fw-bold;
+}
+
+.an-challenges-step__icon{
+    width:72px;
+    height:72px;
+    display:grid;
+    place-items:center;
+    margin-bottom:$space-lg;
+    border-radius:$radius-full;
+    background:$gold-dim;
+    color:$gold;
+    font-size:1.5rem;
+}
+
+.an-challenges-step h3{
+    margin-bottom:$space-sm;
+    color:$white;
+}
+
+.an-challenges-step p{
+    color:$white-muted;
+    line-height:$lh-normal;
+}
+
+// =============================================================================
+// CHALLENGE TYPES
+// =============================================================================
+.an-challenge-types{
+    padding-block:$space-xxxl;
+    background:$black;
+}
+
+.an-challenge-types__grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:$space-lg;
+
+    @media(max-width:$bp-lg){
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    @media(max-width:$bp-md){
+        grid-template-columns:1fr;
+    }
+}
+
+.an-challenge-type{
+    padding:$space-xl;
+    border:1px solid $black-line;
+    border-radius:$radius-lg;
+    background:rgba(255,255,255,.025);
+    opacity:0;
+    transform:translateY(40px) scale(.96);
+    transition: opacity .7s, transform .85s cubic-bezier(.22,1,.36,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+    &:hover{
+        transform:translateY(-8px);
+        border-color:rgba($gold,.25);
+        box-shadow:0 22px 50px rgba(0,0,0,.35);
+    }
+}
+
+.an-challenge-type:nth-child(1){ transition-delay:.05s; }
+.an-challenge-type:nth-child(2){ transition-delay:.10s; }
+.an-challenge-type:nth-child(3){ transition-delay:.15s; }
+.an-challenge-type:nth-child(4){ transition-delay:.20s; }
+.an-challenge-type:nth-child(5){ transition-delay:.25s; }
+.an-challenge-type:nth-child(6){ transition-delay:.30s; }
+
+.an-challenge-type__icon{
+    width:70px;
+    height:70px;
+    display:grid;
+    place-items:center;
+    margin-bottom:$space-md;
+    border-radius:$radius-full;
+    background:$gold-dim;
+    color:$gold;
+    font-size:1.4rem;
+}
+
+.an-challenge-type h3{
+    margin-bottom:$space-sm;
+    color:$white;
+    font-size:$fs-lg;
+}
+
+.an-challenge-type p{
+    color:$white-muted;
+    line-height:$lh-normal;
+}
+
+// =============================================================================
+// CHALLENGE HIGHLIGHTS
+// =============================================================================
+.an-challenge-highlights{
+    padding-block:$space-xxxl;
+    background:$black-soft;
+}
+
+.an-challenge-highlights__notice{
+    margin-bottom:$space-xl;
+    color:$white-faint;
+    text-align:center;
+    font-size:$fs-sm;
+    font-style:italic;
+}
+
+.an-challenge-highlights__grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:$space-lg;
+
+    @media(max-width:$bp-lg){
+        grid-template-columns:1fr;
+    }
+}
+
+.an-highlight-card{
+    overflow:hidden;
+    border:1px solid $black-line;
+    border-radius:$radius-lg;
+    background:rgba(255,255,255,.025);
+    opacity:0;
+    transform:translateY(40px);
+
+    transition: opacity .7s, transform .85s cubic-bezier(.22,1,.36,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible{
+        opacity:1;
+        transform:none;
+    }
+
+    &:hover{
+        transform:translateY(-8px);
+        border-color:rgba($gold,.25);
+        box-shadow:0 24px 55px rgba(0,0,0,.35);
+
+        img{
+            transform:scale(1.08);
+        }
+    }
+}
+
+.an-highlight-card__image{
+    overflow:hidden;
+    aspect-ratio:16/10;
+
+    img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        transition:transform .7s;
+    }
+}
+
+.an-highlight-card__content{
+    padding:$space-lg;
+}
+
+.an-highlight-card__category{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    margin-bottom:$space-sm;
+    color:$gold;
+    font-size:$fs-sm;
+    font-weight:$fw-bold;
+
+    i{
+        font-size:.85rem;
+    }
+}
+
+.an-highlight-card h3{
+    margin-bottom:$space-sm;
+    color:$white;
+}
+
+.an-highlight-card p{
+    color:$white-muted;
+    line-height:$lh-normal;
+}
+
+.an-highlight-card:nth-child(1){transition-delay:.05s;}
+.an-highlight-card:nth-child(2){transition-delay:.15s;}
+.an-highlight-card:nth-child(3){transition-delay:.25s;}
+
+// ==========================================================
+// Voice card
+// ==========================================================
+
+.an-highlight-card--voice{
+    display:flex;
+    flex-direction:column;
+}
+
+.an-highlight-card__voice{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:$space-md;
+    padding:$space-xl;
+    min-height:260px;
+    text-align:center;
+}
+
+.an-highlight-card__voice-icon{
+    width:82px;
+    height:82px;
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    background:$gold-dim;
+    color:$gold;
+    font-size:2rem;
+}
+
+.an-highlight-card__voice span{
+    color:$gold;
+    font-size:$fs-sm;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.an-highlight-card__voice h3{
+    margin:0;
+}
+
+.an-highlight-card__voice audio{
+    width:100%;
+    margin-top:$space-sm;
+}
+
+// =============================================================================
+// COMMUNITY GUIDELINES
+// =============================================================================
+.an-challenge-guidelines{
+    padding-block:$space-xxxl;
+    background:$black;
+}
+
+.an-challenge-guidelines__grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:$space-lg;
+    margin-top:$space-xxl;
+
+    @media(max-width:$bp-lg){
+        grid-template-columns:1fr;
+    }
+}
+
+.an-guideline-card{
+    padding:$space-xl;
+    border:1px solid $black-line;
+    border-radius:$radius-lg;
+    background:rgba(255,255,255,.025);
+    opacity:0;
+    transform:translateY(40px);
+    transition: opacity .7s, transform .85s cubic-bezier(.22,1,.36,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible{
+        opacity:1;
+        transform:none;
+    }
+
+    &:hover{
+        transform:translateY(-8px);
+        box-shadow:0 22px 55px rgba(0,0,0,.35);
+    }
+}
+
+.an-guideline-card--good:hover{
+    border-color:rgba($accent-teal,.25);
+}
+
+.an-guideline-card--warning:hover{
+    border-color:rgba($accent-crimson,.25);
+}
+
+.an-guideline-card__icon{
+    width:72px;
+    height:72px;
+    display:grid;
+    place-items:center;
+    margin-bottom:$space-md;
+    border-radius:$radius-full;
+    font-size:1.5rem;
+}
+
+.an-guideline-card--good .an-guideline-card__icon{
+    background:$accent-teal-dim;
+    color:$accent-teal;
+}
+
+.an-guideline-card--warning .an-guideline-card__icon{
+    background:$accent-crimson-dim;
+    color:$accent-crimson;
+}
+
+.an-guideline-card h3{
+    margin-bottom:$space-md;
+    color:$white;
+}
+
+.an-guideline-card ul{
+    display:grid;
+    gap:$space-sm;
+    padding:0;
+    margin:0;
+    list-style:none;
+}
+
+.an-guideline-card li{
+    position:relative;
+    padding-left:1.5rem;
+    color:$white-muted;
+    line-height:$lh-normal;
+}
+
+.an-guideline-card li::before{
+    content:"•";
+    position:absolute;
+    left:0;
+    color:$gold;
+}
+
+.an-challenge-guidelines__note{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:.75rem;
+    max-width:900px;
+    margin:$space-xxl auto 0;
+    padding:$space-lg;
+    border:1px solid $black-line;
+    border-radius:$radius-lg;
+    background:rgba(255,255,255,.025);
+    color:$white-muted;
+    line-height:$lh-normal;
+    opacity:0;
+    transform:translateY(30px);
+    transition: opacity .7s, transform .8s cubic-bezier(.22,1,.36,1);
+
+    &.is-visible {
+        opacity:1;
+        transform:none;
+    }
+
+    i {
+        margin-top:.15rem;
+        color:$gold;
+        flex-shrink:0;
+    }
+
+    @media(max-width:$bp-md){
+        text-align:left;
+    }
+}

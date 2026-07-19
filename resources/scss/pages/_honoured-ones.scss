@@ -1,0 +1,189 @@
+@use '../tokens' as *;
+
+// =============================================================================
+// HONORED HERO
+// =============================================================================
+.an-honored-hero {
+    position: relative;
+    padding-block: $space-xxxl $space-xxl;
+    background: $black-soft;
+    overflow: hidden;
+    text-align: center;
+}
+
+.an-honored-hero__heading {
+    margin-top: $space-sm;
+    margin-bottom: $space-md;
+    color: $gold;
+    font-size: $fs-3xl;
+    line-height: $lh-tight;
+
+    @media (max-width: $bp-md) {
+        font-size: $fs-2xl;
+    }
+}
+
+.an-honored-hero__description {
+    max-width: 60ch;
+    margin-inline: auto;
+    color: $white-muted;
+    font-size: $fs-md;
+}
+
+// =============================================================================
+// HONORED ONES
+// =============================================================================
+.an-honored {
+    padding-block: $space-xxl;
+    background: $black;
+}
+
+.an-honored__years {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: $space-sm;
+    margin-bottom: $space-xl;
+}
+
+.an-honored__year {
+    cursor: pointer;
+    padding: .85rem 1.6rem;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: transparent;
+    color: $white-muted;
+    font: inherit;
+    font-weight: $fw-bold;
+    transition: background $transition-fast, color $transition-fast, border-color $transition-fast,
+        transform $transition-fast;
+
+    &:hover {
+        color: $white;
+        border-color: $gold;
+        transform: translateY(-2px);
+    }
+
+    &.is-active {
+        background: $gold;
+        border-color: $gold;
+        color: $black;
+    }
+
+}
+
+.an-honored__stats {
+    display: flex;
+    justify-content: center;
+    gap: $space-xl;
+    margin-bottom: $space-xxl;
+
+    @media (max-width: $bp-sm) {
+        flex-direction: column;
+        gap: $space-lg;
+    }
+}
+
+.an-honored__stats > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.an-honored__stat-value {
+    font-size: $fs-2xl;
+    font-weight: $fw-bold;
+    color: $gold;
+}
+
+.an-honored__stat-label {
+    color: $white-muted;
+    font-size: $fs-sm;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.an-honored__stat-meta {
+    margin-top: $space-xxs;
+    color: $white-faint;
+    font-size: $fs-sm;
+}
+
+.an-honored__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-lg;
+
+    @media (max-width: $bp-lg) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $bp-md) {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+.an-honored__card {
+    position: relative;
+    padding: $space-lg;
+    background: rgba(255,255,255,.02);
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    transition: transform $transition-base, border-color $transition-base,
+        box-shadow $transition-base;
+
+    &:hover {
+        transform: translateY(-6px);
+        border-color: rgba($gold,.4);
+        box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+}
+
+.an-honored__card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(209,165,87,.08), transparent 55%);
+    opacity: 0;
+    transition: opacity $transition-base;
+}
+
+.an-honored__card:hover::before {
+    opacity: 1;
+}
+
+.an-honored__icon {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    margin-bottom: $space-md;
+    border-radius: $radius-full;
+    background: $gold-dim;
+    color: $gold;
+    font-size: 1.35rem;
+}
+
+.an-honored__category {
+    color: $white;
+    font-size: $fs-lg;
+    margin-bottom: $space-xs;
+    line-height: $lh-snug;
+}
+
+.an-honored__winner {
+    display: inline-block;
+    color: $white-muted;
+    font-size: $fs-base;
+}
+
+.an-honored__grid.is-changing {
+    opacity: 0;
+    transform: translateY(18px);
+}
+
+.an-honored__grid {
+    transition: opacity 250ms ease, transform 250ms ease;
+}

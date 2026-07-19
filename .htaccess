@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# If the request is not already for /public
+RewriteCond %{REQUEST_URI} !^/animenigeria/public/
+
+# Redirect everything to public/
+RewriteRule ^(.*)$ public/$1 [L]

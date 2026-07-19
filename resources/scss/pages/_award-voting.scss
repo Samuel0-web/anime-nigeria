@@ -1,0 +1,560 @@
+@use "../tokens" as *;
+
+// =============================================================================
+// HERO
+// =============================================================================
+.an-voting-hero {
+    position: relative;
+    background: $black;
+    padding-block: $space-xxxl;
+    overflow: hidden;
+}
+
+.an-voting-hero__glow {
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 640px;
+    height: 640px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($gold, 0.12), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-voting-hero__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.an-voting-hero__content {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 700ms $ease-standard, transform 700ms cubic-bezier(.22, 1, .36, 1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.an-voting-hero__eyebrow {
+    color: $gold;
+    margin-bottom: $space-md;
+}
+
+.an-voting-hero__heading {
+    font-size: $fs-3xl;
+    color: $white;
+    margin-bottom: $space-md;
+
+    @media (max-width: $bp-md) { font-size: $fs-2xl; }
+    @media (max-width: $bp-sm) { font-size: $fs-xl; }
+}
+
+.an-voting-hero__paragraph {
+    font-size: $fs-md;
+    color: $white-muted;
+    max-width: 52ch;
+}
+
+.an-voting-hero__rule {
+    position: relative;
+    width: 96px;
+    height: 1px;
+    margin: $space-lg auto 0;
+    background: linear-gradient(90deg, transparent, rgba($gold, 0.6) 50%, transparent);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -2.5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: $gold;
+        opacity: 0.7;
+    }
+}
+
+.an-voting-hero__actions {
+    margin-top: $space-lg;
+}
+
+// =============================================================================
+// HOW VOTING WORKS
+// =============================================================================
+.an-voting-steps {
+    position: relative;
+    background: $black-soft;
+    padding-block: $space-xxl;
+    overflow: hidden;
+}
+
+.an-voting-steps__glow {
+    position: absolute;
+    bottom: -18%;
+    left: -10%;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: $gold;
+    opacity: 0.05;
+    filter: blur(130px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-voting-steps__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.an-voting-steps__intro {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+    margin-bottom: $space-xxl;
+}
+
+.an-voting-steps__eyebrow { color: $gold; }
+
+.an-voting-steps__heading {
+    font-size: $fs-2xl;
+    color: $white;
+    margin-top: $space-sm;
+
+    @media (max-width: $bp-md) { font-size: $fs-xl; }
+}
+
+.an-voting-steps__subheading {
+    margin-top: $space-md;
+    font-size: $fs-md;
+    color: $white-muted;
+}
+
+.an-voting-steps__rule {
+    position: relative;
+    width: 96px;
+    height: 1px;
+    margin: $space-lg auto 0;
+    background: linear-gradient(90deg, transparent, rgba($gold, 0.6) 50%, transparent);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -2.5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: $gold;
+        opacity: 0.7;
+    }
+}
+
+.an-voting-steps__timeline {
+    position: relative;
+}
+
+// Mobile-first: vertical line down the left edge, aligned to icon centers
+.an-voting-steps__track {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 27px;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba($gold, 0.35) 10%, rgba($gold, 0.35) 90%,
+        transparent
+    );
+
+    @media (min-width: $bp-lg) {
+        top: 27px;
+        bottom: auto;
+        left: calc(100% / 8);
+        right: calc(100% / 8);
+        width: auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba($gold, 0.35) 10%, rgba($gold, 0.35) 90%,
+            transparent
+        );
+    }
+}
+
+.an-voting-steps__list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xl;
+
+    @media (min-width: $bp-lg) {
+        flex-direction: row;
+        gap: $space-lg;
+    }
+}
+
+.an-voting-steps__step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 72px;
+    border-radius: $radius-md;
+    transition: transform $transition-base;
+    opacity: 0;
+    transform: translateY(20px);
+    transition-property: opacity, transform;
+    transition-duration: 700ms;
+    transition-timing-function: $ease-standard, cubic-bezier(.22, 1, .36, 1);
+    transition-delay: calc(var(--i, 0) * 120ms);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &.is-visible:hover {
+        transform: translateY(-4px);
+        transition-delay: 0ms;
+        transition-duration: $transition-base;
+    }
+
+    &:hover .an-voting-steps__icon {
+        transform: scale(1.06);
+        border-color: rgba($gold, 0.6);
+        box-shadow: 0 0 24px rgba($gold, 0.3);
+    }
+
+    @media (min-width: $bp-lg) {
+        flex: 1;
+        align-items: center;
+        text-align: center;
+        padding-left: 0;
+        padding-top: 72px;
+    }
+}
+
+.an-voting-steps__icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba($gold, 0.4);
+    background: $black-soft;
+    color: $gold;
+    font-size: 1.25rem;
+    transition: transform $transition-base, border-color $transition-base, box-shadow $transition-base;
+
+    @media (min-width: $bp-lg) {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.an-voting-steps__step:hover .an-voting-steps__icon {
+    @media (min-width: $bp-lg) {
+        transform: translateX(-50%) scale(1.06);
+    }
+}
+
+.an-voting-steps__number {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: $gold;
+    color: $black;
+    font-family: $font-mono;
+    font-size: 0.6875rem;
+    font-weight: $fw-semibold;
+}
+
+.an-voting-steps__title {
+    font-size: $fs-lg;
+    color: $white;
+    margin-bottom: $space-xs;
+}
+
+.an-voting-steps__text {
+    font-size: $fs-sm;
+    color: $white-muted;
+    line-height: $lh-normal;
+    max-width: 32ch;
+}
+
+// =============================================================================
+// VOTING RULES & FAIR PLAY
+// =============================================================================
+.an-voting-rules {
+    position: relative;
+    background: $black;
+    padding-block: $space-xxl;
+    overflow: hidden;
+}
+
+.an-voting-rules__glow {
+    position: absolute;
+    top: -14%;
+    right: -8%;
+    width: 460px;
+    height: 460px;
+    border-radius: 50%;
+    background: $gold;
+    opacity: 0.05;
+    filter: blur(130px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-voting-rules__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.an-voting-rules__intro {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+    margin-bottom: $space-xxl;
+}
+
+.an-voting-rules__eyebrow { color: $gold; }
+
+.an-voting-rules__heading {
+    font-size: $fs-2xl;
+    color: $white;
+    margin-top: $space-sm;
+
+    @media (max-width: $bp-md) { font-size: $fs-xl; }
+}
+
+.an-voting-rules__subheading {
+    margin-top: $space-md;
+    font-size: $fs-md;
+    color: $white-muted;
+}
+
+.an-voting-rules__rule {
+    position: relative;
+    width: 96px;
+    height: 1px;
+    margin: $space-lg auto 0;
+    background: linear-gradient(90deg, transparent, rgba($gold, 0.6) 50%, transparent);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -2.5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: $gold;
+        opacity: 0.7;
+    }
+}
+
+.an-voting-rules__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+
+    @media (min-width: $bp-sm) and (max-width: $bp-lg) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: $bp-lg) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.an-voting-rules__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $space-lg;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+    isolation: isolate;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 700ms $ease-standard, transform 700ms cubic-bezier(.22, 1, .36, 1),
+        border-color $transition-base, box-shadow $transition-base;
+    transition-delay: calc(var(--i, 0) * 90ms);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &.is-visible:hover {
+        transform: translateY(-6px);
+        transition-delay: 0ms;
+        border-color: rgba($gold, 0.4);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.an-voting-rules__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba($gold, 0.4);
+    color: $gold;
+    font-size: 1.25rem;
+    margin-bottom: $space-md;
+    transition: transform $transition-base;
+}
+
+.an-voting-rules__card.is-visible:hover .an-voting-rules__icon { transform: scale(1.08); }
+
+.an-voting-rules__card-title {
+    font-size: $fs-lg;
+    color: $white;
+    margin-bottom: $space-xs;
+}
+
+.an-voting-rules__card-text {
+    font-size: $fs-sm;
+    color: $white-muted;
+    line-height: $lh-normal;
+}
+
+
+// =============================================================================
+// FREQUENTLY ASKED QUESTIONS
+// =============================================================================
+.an-voting-faq {
+    padding-block: $space-xxxl;
+    background: $black-soft;
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity .7s $ease-standard, transform .7s cubic-bezier(.22, 1, .36, 1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.an-voting-faq__list {
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+.an-voting-faq__item {
+    border-bottom: 1px solid $black-line;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &.is-open {
+        .an-voting-faq__question {
+            color: $gold;
+
+            i {
+                transform: rotate(45deg);
+            }
+        }
+
+        .an-voting-faq__answer {
+            max-height: 220px;
+            opacity: 1;
+            padding-bottom: $space-lg;
+        }
+    }
+}
+
+.an-voting-faq__question {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-lg 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: $white;
+    font: inherit;
+    font-size: $fs-lg;
+    font-weight: $fw-bold;
+    transition: color $transition-fast;
+
+    &:hover {
+        color: $gold;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $gold;
+        outline-offset: 8px;
+    }
+
+    i {
+        flex-shrink: 0;
+        color: $gold;
+        transition: transform $transition-base;
+    }
+}
+
+.an-voting-faq__answer {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height .42s cubic-bezier(.22, 1, .36, 1), opacity .32s ease,
+        padding-bottom .32s ease;
+
+    p {
+        max-width: 64ch;
+        color: $white-muted;
+        line-height: $lh-normal;
+        padding-bottom: 0;
+    }
+
+    a {
+        color: $gold;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

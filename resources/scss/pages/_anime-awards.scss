@@ -1,0 +1,769 @@
+@use '../tokens' as *;
+
+// =============================================================================
+// ANAA HERO
+// =============================================================================
+
+.an-awards-hero {
+    position: relative;
+    overflow: hidden;
+    background: $black-soft;
+    padding-block: $space-xxxl $space-xxl;
+    text-align: center;
+}
+
+.an-awards-hero__glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(130px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-awards-hero__glow--one {
+    top: -14%;
+    left: -8%;
+    width: 520px;
+    height: 520px;
+    background: $gold;
+    opacity: .06;
+}
+
+.an-awards-hero__glow--two {
+    right: -10%;
+    bottom: -18%;
+    width: 480px;
+    height: 480px;
+    background: $sakura;
+    opacity: .05;
+}
+
+.an-awards-hero__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin-inline: auto;
+    opacity: 0;
+    transform: translateY(40px) scale(.96);
+    transition: opacity .9s $ease-standard, transform 1s cubic-bezier(.16,1,.3,1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.an-awards-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-block: $space-md;
+    padding: .65rem 1rem;
+    border: 1px solid rgba($gold,.28);
+    border-radius: $radius-full;
+    background: rgba($gold,.08);
+    color: $gold;
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.an-awards-hero__heading {
+    margin-bottom: $space-md;
+    color: $gold;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    line-height: 1.02;
+    letter-spacing: -.03em;
+}
+
+.an-awards-hero__description {
+    max-width: 62ch;
+    margin-inline: auto;
+    margin-bottom: $space-xl;
+    color: $white-muted;
+    font-size: $fs-md;
+}
+
+.an-awards-hero__actions {
+    display: flex;
+    justify-content: center;
+
+}
+
+// =============================================================================
+// ABOUT
+// =============================================================================
+.an-awards-about {
+    padding-block: $space-xxxl;
+    background: $black;
+}
+
+.an-awards-about__grid {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: $space-xxl;
+    align-items: center;
+
+    @media (max-width:$bp-lg){
+        grid-template-columns:1fr;
+    }
+}
+
+.an-awards-about__heading {
+    margin-top: $space-sm;
+    margin-bottom: $space-md;
+    color: $white;
+    font-size: $fs-2xl;
+    line-height: $lh-tight;
+}
+
+.an-awards-about__content {
+    opacity: 0;
+    transform: translateX(-48px);
+    transition: opacity .8s $ease-standard, transform .9s cubic-bezier(.22,1,.36,1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    p {
+        color:$white-muted;
+        margin-bottom:$space-md;
+        max-width:62ch;
+    }
+}
+
+.an-awards-about__highlights {
+    display:grid;
+    gap:$space-md;
+    opacity: 0;
+    transform: translateX(48px);
+    transition: opacity .8s $ease-standard, transform .9s cubic-bezier(.22,1,.36,1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+// =============================================================================
+// HIGHLIGHT CARDS
+// =============================================================================
+.an-awards-highlight{
+    display:flex;
+    align-items:flex-start;
+    gap:$space-md;
+    padding:$space-lg;
+    background:rgba(255,255,255,.025);
+    border:1px solid $black-line;
+    border-radius:$radius-lg;
+    transition: transform $transition-base, border-color $transition-base,
+        background $transition-base, box-shadow $transition-base;
+
+    &:hover{
+        transform:translateY(-6px);
+        border-color:rgba($gold,.3);
+        background:rgba(255,255,255,.035);
+        box-shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+}
+
+.an-awards-highlight__icon{
+    flex-shrink:0;
+    width:60px;
+    height:60px;
+    display:grid;
+    place-items:center;
+    border-radius:$radius-full;
+    background:$gold-dim;
+    color:$gold;
+    font-size:1.3rem;
+}
+
+.an-awards-highlight{
+    h3{
+        margin-bottom:.35rem;
+        color:$white;
+        font-size:$fs-md;
+    }
+
+    p{
+        color:$white-muted;
+        font-size:$fs-sm;
+        line-height:$lh-normal;
+    }
+}
+
+// =============================================================================
+// WHY ANAA EXISTS
+// =============================================================================
+.an-awards-purpose{
+    position:relative;
+    padding-bottom:$space-xxxl;
+    background:$black;
+}
+
+.an-awards-purpose__card {
+    position:relative;
+    overflow:hidden;
+    max-width:1000px;
+    margin-inline:auto;
+    padding:$space-xxl;
+    border-radius:$radius-lg;
+    border:1px solid $black-line;
+    background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.015));
+    opacity: 0;
+    transform: scale(.94) translateY(40px);
+    transition: opacity .9s, transform .95s cubic-bezier(.16,1,.3,1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.an-awards-purpose__card::before{
+    content:"";
+    position:absolute;
+    top:-120px;
+    right:-120px;
+    width:300px;
+    height:300px;
+    border-radius:50%;
+    background:$gold;
+    opacity:.05;
+    filter:blur(90px);
+}
+
+.an-awards-purpose__quote{
+    margin-block:$space-md $space-lg;
+    color:$gold;
+    font-size:clamp(1.5rem,3vw,2.4rem);
+    line-height:1.25;
+    font-weight:$fw-bold;
+    font-style:italic;
+}
+
+.an-awards-purpose{
+    p{
+        max-width:66ch;
+        color:$white-muted;
+        margin-bottom:$space-md;
+    }
+}
+
+// =============================================================================
+// SECTION HEADING
+// =============================================================================
+.an-section-heading{
+    text-align:center;
+    max-width:760px;
+    margin-inline:auto;
+    margin-bottom:$space-xxl;
+}
+
+.an-section-heading h2{
+    margin-top:$space-sm;
+    margin-bottom:$space-md;
+    color:$white;
+    font-size:$fs-2xl;
+}
+
+.an-section-heading p{
+    color:$white-muted;
+}
+
+// =============================================================================
+// RESPONSIVE
+// =============================================================================
+@media (max-width:$bp-md){
+    .an-awards-hero{
+        padding-block: calc($space-xxxl - 2rem) $space-xxl;
+    }
+
+    .an-awards-hero__heading{
+        font-size:clamp(2.5rem,11vw,4rem);
+    }
+
+    .an-awards-about{
+        padding-block:$space-xxl;
+    }
+
+    .an-awards-purpose{
+        padding-bottom:$space-xxl;
+    }
+
+    .an-awards-purpose__card{
+        padding:$space-lg;
+    }
+
+    .an-awards-highlight{
+        padding:$space-md;
+    }
+}
+
+// =============================================================================
+// AWARD CATEGORIES
+// =============================================================================
+.an-awards-categories {
+    padding-block: $space-xxxl;
+    background: $black-soft;
+}
+
+.an-awards-categories__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-lg;
+
+    @media (max-width: $bp-lg) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $bp-md) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.an-awards-category {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: $space-lg;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: rgba(255,255,255,.025);
+    opacity: 0;
+    transform: translateY(40px) scale(.92);
+    transition: opacity .65s, transform .8s cubic-bezier(.22,1,.36,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.an-awards-category:nth-child(1){transition-delay:.05s;}
+.an-awards-category:nth-child(2){transition-delay:.10s;}
+.an-awards-category:nth-child(3){transition-delay:.15s;}
+.an-awards-category:nth-child(4){transition-delay:.20s;}
+.an-awards-category:nth-child(5){transition-delay:.25s;}
+.an-awards-category:nth-child(6){transition-delay:.30s;}
+.an-awards-category:nth-child(7){transition-delay:.35s;}
+.an-awards-category:nth-child(8){transition-delay:.40s;}
+.an-awards-category:nth-child(9){transition-delay:.45s;}
+.an-awards-category:nth-child(10){transition-delay:.50s;}
+.an-awards-category:nth-child(11){transition-delay:.55s;}
+.an-awards-category:nth-child(12){transition-delay:.60s;}
+
+.an-awards-category::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(255,255,255,.05), transparent 60%);
+    opacity: 0;
+    transition: opacity $transition-base;
+}
+
+.an-awards-category:hover {
+    transform: translateY(-8px);
+    border-color: rgba($gold,.25);
+    box-shadow: 0 24px 60px rgba(0,0,0,.35);
+}
+
+.an-awards-category:hover::before {
+    opacity: 1;
+}
+
+.an-awards-category__icon {
+    width: 66px;
+    height: 66px;
+    display: grid;
+    place-items: center;
+    margin-bottom: $space-md;
+    border-radius: $radius-full;
+    font-size: 1.45rem;
+    transition: transform $transition-base, background $transition-base, color $transition-base;
+}
+
+.an-awards-category:hover .an-awards-category__icon {
+    transform: translateY(-3px) scale(1.06);
+}
+
+.an-awards-category h3 {
+    margin-bottom: $space-xs;
+    color: $white;
+    font-size: $fs-lg;
+    line-height: $lh-snug;
+}
+
+.an-awards-category p {
+    color: $white-muted;
+    line-height: $lh-normal;
+}
+
+.an-awards-category--gold {
+    .an-awards-category__icon {
+        background: $gold-dim;
+        color: $gold;
+    }
+}
+
+.an-awards-category--sakura {
+    .an-awards-category__icon {
+        background: $sakura-dim;
+        color: $sakura;
+    }
+}
+
+.an-awards-category--ember {
+    .an-awards-category__icon {
+        background: $accent-ember-dim;
+        color: $accent-ember;
+    }
+}
+
+.an-awards-category--violet {
+    .an-awards-category__icon {
+        background: $accent-violet-dim;
+        color: $accent-violet;
+    }
+}
+
+.an-awards-category--teal {
+    .an-awards-category__icon {
+        background: $accent-teal-dim;
+        color: $accent-teal;
+    }
+}
+
+.an-awards-category--crimson {
+    .an-awards-category__icon {
+        background: $accent-crimson-dim;
+        color: $accent-crimson;
+    }
+}
+
+.an-awards-categories__footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:$space-xl;
+    margin-top:$space-xxl;
+    padding-top:$space-xl;
+    border-top:1px solid $black-line;
+
+    @media(max-width:$bp-md){
+        flex-direction:column;
+        text-align:center;
+    }
+}
+
+.an-awards-categories__summary{
+    max-width:560px;
+
+    p{
+        margin-top:$space-xs;
+        color:$white-muted;
+    }
+}
+
+.an-awards-categories__count{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    padding:.55rem 1rem;
+    border-radius:$radius-full;
+    background:$gold-dim;
+    border:1px solid rgba($gold,.2);
+    color:$gold;
+    font-weight:$fw-semibold;
+    letter-spacing:.02em;
+}
+
+// =============================================================================
+// AWARD JOURNEY
+// =============================================================================
+.an-awards-process {
+    padding-block: $space-xxxl;
+    background: $black;
+}
+
+.an-awards-process__grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: $space-lg;
+
+    @media (max-width: $bp-lg) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.an-awards-process__card {
+    position: relative;
+    padding: $space-xl;
+    text-align: center;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: rgba(255,255,255,.02);
+    opacity: 0;
+    transform: translateY(60px) rotateX(12deg);
+    transform-origin: top;
+    transition: opacity .8s, transform .9s cubic-bezier(.16,1,.3,1), border-color $transition-base,
+        box-shadow $transition-base;
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0) rotateX(0);
+    }
+}
+
+.an-awards-process__card:nth-child(1){transition-delay:.1s;}
+.an-awards-process__card:nth-child(3){transition-delay:.25s;}
+.an-awards-process__card:nth-child(5){transition-delay:.4s;}
+
+.an-awards-process__card:hover {
+    transform: translateY(-6px);
+    border-color: rgba($gold,.25);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+
+.an-awards-process__number {
+    display: inline-block;
+    margin-bottom: $space-md;
+    padding: .45rem .8rem;
+    border-radius: $radius-full;
+    background: rgba($gold,.08);
+    border: 1px solid rgba($gold,.18);
+    color: $gold;
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.an-awards-process__icon {
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+    margin-inline: auto;
+    margin-bottom: $space-md;
+    border-radius: $radius-full;
+    background: $gold-dim;
+    color: $gold;
+    font-size: 1.6rem;
+}
+
+.an-awards-process__card h3 {
+    margin-bottom: $space-sm;
+    color: $white;
+}
+
+.an-awards-process__card p {
+    color: $white-muted;
+}
+
+.an-awards-process__connector {
+    display: grid;
+    place-items: center;
+    color: rgba($gold,.55);
+    font-size: 1.4rem;
+
+    @media (max-width: $bp-lg) {
+        padding-block: $space-sm;
+        transform: rotate(90deg);
+    }
+}
+
+// =============================================================================
+// FAQ
+// =============================================================================
+.an-awards-faq {
+    padding-block: $space-xxxl;
+    background: $black-soft;
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 700ms $ease-standard, transform 700ms cubic-bezier(.22, 1, .36, 1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.an-awards-faq__list {
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+.an-awards-faq__item {
+    border-bottom: 1px solid $black-line;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.an-awards-faq__question {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-md;
+    padding: $space-lg 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: $white;
+    font: inherit;
+    font-size: $fs-lg;
+    font-weight: $fw-bold;
+    transition: color $transition-fast;
+
+    &:hover {
+        color: $gold;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $gold;
+        outline-offset: 8px;
+    }
+
+    i {
+        flex-shrink: 0;
+        color: $gold;
+        transition: transform $transition-base;
+    }
+}
+
+.an-awards-faq__item.is-open {
+    .an-awards-faq__question i {
+        transform: rotate(45deg);
+    }
+}
+
+.an-awards-faq__answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 420ms cubic-bezier(.22,1,.36,1), opacity 320ms ease,
+        padding-bottom 320ms ease;
+    opacity: 0;
+
+    p {
+        max-width: 64ch;
+        color: $white-muted;
+        line-height: $lh-normal;
+        padding-bottom: 0;
+    }
+}
+
+.an-awards-faq__item.is-open {
+    .an-awards-faq__answer {
+        max-height: 240px;
+        opacity: 1;
+        padding-bottom: $space-lg;
+    }
+}
+
+// =============================================================================
+// NEXT ARC CTA
+// =============================================================================
+.an-awards-coming {
+    position: relative;
+    overflow: hidden;
+    background: $black;
+    padding-block: $space-xxxl;
+}
+
+.an-awards-coming::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: $gold;
+    opacity: .05;
+    filter: blur(120px);
+    transform: translate(-50%, -50%);
+}
+
+.an-awards-coming__card {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin-inline: auto;
+    padding: $space-xxl;
+    text-align: center;
+    border-radius: $radius-lg;
+    border: 1px solid rgba($gold,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+    opacity: 0;
+    transform: translateY(70px) scale(.94);
+    transition: opacity .95s, transform 1.05s cubic-bezier(.16,1,.3,1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.an-awards-coming__card h2 {
+    margin-top: $space-sm;
+    margin-bottom: $space-md;
+    color: $white;
+    font-size: clamp(2.4rem,5vw,3.8rem);
+    line-height: 1.05;
+}
+
+.an-awards-coming__card p {
+    max-width: 60ch;
+    margin-inline: auto;
+    margin-bottom: $space-md;
+    color: $white-muted;
+}
+
+.an-awards-coming__actions {
+    display: flex;
+    justify-content: center;
+    gap: $space-md;
+    margin-top: $space-xl;
+}
+
+// =============================================================================
+// RESPONSIVE
+// =============================================================================
+@media (max-width:$bp-md){
+    .an-awards-coming__card{
+        padding:$space-lg;
+    }
+
+    .an-awards-coming__actions{
+        flex-direction:column;
+        align-items:center;
+
+        .an-btn{
+            width:min(320px,100%);
+        }
+    }
+}
+
+// =============================================================================
+// ACCESSIBILITY
+// =============================================================================
+@media (prefers-reduced-motion: reduce){
+    .an-awards-category,
+    .an-awards-highlight,
+    .an-awards-process__card,
+    .an-awards-faq__answer,
+    .an-awards-faq__question i{
+        transition:none;
+    }
+}
