@@ -13,6 +13,7 @@ import { initForgotPassword } from "./modules/auth/forgot-password.js";
 import { initButtonState } from "./modules/auth/button-state.js";
 import { initResetPassword } from "./modules/auth/reset-password.js";
 import { initUsername } from "./modules/auth/username.js";
+import { initRegister } from "./modules/auth/register.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".an-auth__form");
@@ -26,4 +27,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initForgotPassword(form);
     initResetPassword(form);
     initUsername(form, updateButtons);
+    initRegister(form);
 });

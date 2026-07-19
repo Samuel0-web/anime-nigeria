@@ -1,7 +1,7 @@
 import { nameRegex, setValid, setError, resetField } from "./helpers.js";
 
 export function initNameValidation(form, updateButtons) {
-    const fullname = form.querySelector("#name");
+    const fullname = form.querySelector("#fullname");
     if (!fullname) return;
     const field = fullname.closest(".an-auth__field");
 
@@ -21,10 +21,7 @@ export function initNameValidation(form, updateButtons) {
         }
 
         if (!nameRegex.test(value)) {
-            setError(
-                field,
-                "Only letters, spaces, apostrophes and hyphens are allowed."
-            );
+            setError(field, "Only letters, spaces, apostrophes and hyphens are allowed.");
             updateButtons?.();
             return;
         }

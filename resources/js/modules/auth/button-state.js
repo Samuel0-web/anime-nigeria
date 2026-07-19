@@ -1,7 +1,7 @@
 export function initButtonState(form) {
     const password = form.querySelector("#password");
     const email = form.querySelector('input[type="email"]');
-    const fullname = form.querySelector("#name");
+    const fullname = form.querySelector("#fullname");
     const username = form.querySelector("#username");
     const confirmPassword = form.querySelector("#confirm-password");
     const submit = form.querySelector(".an-auth__submit");

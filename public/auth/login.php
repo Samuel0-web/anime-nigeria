@@ -53,7 +53,7 @@ require_once __DIR__ . "/partials/meta.php";
 
                 </label>
 
-                <a href="/forgot-password">Forgot password?</a>
+                <a href="/auth/forgot-password">Forgot password?</a>
             </div>
 
             <button class="an-btn an-btn--primary an-auth__submit" type="submit">

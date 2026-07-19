@@ -1,9 +1,4 @@
-function maskEmail(email) {
-    const [name, domain] = email.split("@");
-    const visible = name.slice(0, 2);
-
-    return `${visible}${"*".repeat(Math.max(3, name.length - 2))}@${domain}`;
-}
+import { maskEmail } from "./helpers.js";
 
 export function initForgotPassword(form) {
     const email = form.querySelector('input[type="email"]');

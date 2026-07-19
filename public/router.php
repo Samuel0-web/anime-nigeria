@@ -23,6 +23,52 @@ if ($uri === '') {
 
 /*
 |--------------------------------------------------------------------------
+| API Routing
+|--------------------------------------------------------------------------
+|
+| Example:
+|   /auth/api/register
+|   -> public/auth/api/register.php
+|
+*/
+
+if (str_contains($uri, '/api/')) {
+
+    // Prevent directory traversal
+    if (preg_match('#\.\.#', $uri)) {
+        http_response_code(400);
+
+        header('Content-Type: application/json');
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid API route.',
+        ]);
+
+        exit;
+    }
+
+    $apiFile = __DIR__ . $uri . '.php';
+
+    if (is_file($apiFile)) {
+        require $apiFile;
+        exit;
+    }
+
+    http_response_code(404);
+
+    header('Content-Type: application/json');
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'API endpoint not found.',
+    ]);
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
 | Routes
 |--------------------------------------------------------------------------
 */
@@ -35,9 +81,10 @@ $routes = [
 
     '/login'                    => 'auth/login.php',
     '/join'                     => 'auth/register.php',
-    '/username'                 => 'auth/username.php',
-    '/forgot-password'          => 'auth/forgot-password.php',
-    '/reset-password'           => 'auth/reset-password.php',
+    '/auth/username'            => 'auth/username.php',
+    '/auth/verify'              => 'auth/verify.php',
+    '/auth/forgot-password'     => 'auth/forgot-password.php',
+    '/auth/reset-password'      => 'auth/reset-password.php',
 
     '/our-community'            => 'community/community.php',
     '/community/gallery'        => 'community/gallery.php',

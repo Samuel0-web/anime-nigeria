@@ -7,7 +7,7 @@ class CreateUsersTable {
         $pdo->exec("CREATE TABLE users (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 fullname VARCHAR(100) NOT NULL,
-                username VARCHAR(20) NOT NULL UNIQUE,
+                username VARCHAR(20) NULL UNIQUE,
                 username_changed_at TIMESTAMP NULL DEFAULT NULL,
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NULL,
@@ -16,6 +16,9 @@ class CreateUsersTable {
                 avatar VARCHAR(255) NULL,
                 role ENUM('member', 'moderator', 'admin') NOT NULL DEFAULT 'member',
                 email_verified_at TIMESTAMP NULL DEFAULT NULL,
+                email_verification_token CHAR(64) NULL,
+                email_verification_expires_at TIMESTAMP NULL DEFAULT NULL,
+                email_verification_sent_at TIMESTAMP NULL,
                 banned_at TIMESTAMP NULL DEFAULT NULL,
                 ban_reason TEXT NULL,
                 suspended_until TIMESTAMP NULL DEFAULT NULL,

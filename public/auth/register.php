@@ -1,7 +1,6 @@
 <?php
 $pageTitle = "Join The Community | Anime Nigeria";
 $pageDescription = "Create your Anime Nigeria account and join a growing community of anime fans across Nigeria.";
-
 require_once __DIR__ . "/partials/meta.php";
 ?>
 
@@ -23,8 +22,8 @@ require_once __DIR__ . "/partials/meta.php";
 
             <!-- FULL NAME -->
             <div class="an-auth__field">
-                <input type="text" id="name" name="name" class="an-auth__input" placeholder=" "
-                    autocomplete="name" required>
+                <input type="text" id="fullname" name="fullname" class="an-auth__input" placeholder=" "
+                    autocomplete="fullname" required>
 
                 <label for="name">Full Name</label>
                 <span class="an-auth__status"></span>
@@ -79,7 +78,7 @@ require_once __DIR__ . "/partials/meta.php";
             </div>
 
             <label class="an-auth__checkbox">
-                <input type="checkbox" id="terms" required>
+                <input type="checkbox" id="terms" name="terms" value="1" required>
                 <span class="an-auth__checkbox-box"></span>
 
                 <span class="an-auth__checkbox-text">I agree to the <a href="/terms">Terms</a> &
@@ -93,6 +92,28 @@ require_once __DIR__ . "/partials/meta.php";
                 Create Account
             </button>
         </form>
+
+        <div class="an-auth__success" hidden>
+            <div class="an-auth__success-icon">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+            </div>
+
+            <h2>Verify your email</h2>
+
+            <p>
+                We've sent a verification link to
+                <strong class="an-auth__masked-email"></strong>
+            </p>
+
+            <p class="an-auth__success-note">
+                Click the link in your email to verify your account.
+                The link expires in <strong>24 hours</strong>.
+            </p>
+
+            <button class="an-btn an-btn--primary an-auth__resend" disabled type="button">
+                Resend Email (<span class="an-auth__countdown">60</span>s)
+            </button>
+        </div>
 
         <div class="an-auth__divider">OR</div>
 

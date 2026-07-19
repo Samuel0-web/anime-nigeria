@@ -634,3 +634,62 @@
 .an-auth__field--username .an-auth__status {
     display: none !important;
 }
+
+// ======================================================================
+// VERIFY EMAIL
+// ======================================================================
+.an-auth__verify{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+}
+
+.an-auth__verify-icon{
+    width:92px;
+    aspect-ratio:1;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    margin-bottom:$space-md;
+    font-size:2.6rem;
+    border:1px solid;
+}
+
+.an-auth__verify-icon.is-success{
+    color:#3fb950;
+    background:rgba(#3fb950,.08);
+    border-color:rgba(#3fb950,.18);
+    box-shadow:0 0 40px rgba(#3fb950,.12);
+}
+
+.an-auth__verify-icon.is-info{
+    color:$gold;
+    background:rgba($gold,.08);
+    border-color:rgba($gold,.18);
+    box-shadow:0 0 40px rgba($gold,.12);
+}
+
+.an-auth__verify-icon.is-error{
+    color:#ef4444;
+    background:rgba(#ef4444,.08);
+    border-color:rgba(#ef4444,.18);
+    box-shadow:0 0 40px rgba(#ef4444,.12);
+}
+
+.an-auth__verify h1{
+    margin-bottom:$space-sm;
+    color:$white;
+    font-size:clamp(2rem,4vw,2.5rem);
+}
+
+.an-auth__verify p{
+    max-width:32rem;
+    margin-bottom:$space-lg;
+    color:$white-muted;
+    line-height:1.75;
+}
+
+.an-auth__verify-button{
+    width:100%;
+}
