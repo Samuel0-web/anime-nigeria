@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../../bootstrap.php';
+
+require_once __DIR__ . '/partials/meta.php';
 use App\Auth\Auth;
 use App\Database\Database;
 use App\Mail\Mail;
@@ -29,7 +30,6 @@ if ($result !== false) {
 
 $pageTitle = 'Verify your account | Anime Nigeria';
 $pageDescription = 'Verify your account';
-require_once __DIR__ . '/partials/meta.php';
 ?>
 
 <main class="an-auth">

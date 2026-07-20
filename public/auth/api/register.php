@@ -6,35 +6,50 @@ use App\Mail\Mail;
 use App\Mail\SmtpMailer;
 header('Content-Type: application/json');
 
-$db = Database::connection();
+try {
+    $db = Database::connection();
 
-$mail = new Mail(
-    new SmtpMailer(),
-    $_ENV['APP_URL']
-);
+    $mail = new Mail(
+        new SmtpMailer(),
+        $_ENV['APP_URL']
+    );
 
-$auth = new Auth($db, $mail);
+    $auth = new Auth($db, $mail);
 
-$userId = $auth->register([
-    'fullname'         => $_POST['fullname'] ?? '',
-    'email'            => $_POST['email'] ?? '',
-    'password'         => $_POST['password'] ?? '',
-    'confirm_password' => $_POST['confirm_password'] ?? '',
-    'terms'            => $_POST['terms'] ?? '',
-    'provider'         => 'local',
-]);
+    $user = $auth->register([
+        'fullname'         => $_POST['fullname'] ?? '',
+        'email'            => $_POST['email'] ?? '',
+        'password'         => $_POST['password'] ?? '',
+        'confirm_password' => $_POST['confirm_password'] ?? '',
+        'terms'            => $_POST['terms'] ?? '',
+        'provider'         => 'local',
+    ]);
 
-if ($userId !== false) {
+    if ($user === false) {
+        http_response_code(422);
+
+        echo json_encode([
+            'success' => false,
+            'errors' => $auth->errors(),
+        ]);
+        
+        exit;
+    }
+
     echo json_encode([
         'success' => true,
-        'email' => $userId['email'],
+        'email' => $user['email'],
         'resend_after' => 60,
     ]);
 
-    exit;
-}
+} catch (Throwable $e) {
+    http_response_code(500);
 
-echo json_encode([
-    'success' => false,
-    'errors' => $auth->errors(),
-]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Something went wrong. Please try again later.',
+    ]);
+
+    // log the real error
+    error_log($e);
+}

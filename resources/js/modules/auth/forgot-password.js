@@ -1,6 +1,7 @@
 import { maskEmail } from "./helpers.js";
 
 export function initForgotPassword(form) {
+    if (document.body.dataset.page !== "forgot-password") return;
     const email = form.querySelector('input[type="email"]');
     const intro = document.querySelector(".an-auth__intro");
     const success = document.querySelector(".an-auth__success");

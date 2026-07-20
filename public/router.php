@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-
+require_once __DIR__ . '/../bootstrap.php';
+use App\Http\Middleware\VerifyCsrf;
 /*
 |--------------------------------------------------------------------------
 | Current URI
@@ -33,6 +34,9 @@ if ($uri === '') {
 */
 
 if (str_contains($uri, '/api/')) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        VerifyCsrf::handle();
+    }
 
     // Prevent directory traversal
     if (preg_match('#\.\.#', $uri)) {

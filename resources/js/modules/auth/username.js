@@ -1,4 +1,5 @@
 import { setError, clearError, resetField } from "./helpers.js";
+import { success } from "../toast.js";
 
 export function initUsername(form, updateButtons) {
     const input = form.querySelector("#username");
@@ -9,29 +10,16 @@ export function initUsername(form, updateButtons) {
     const error = field.querySelector(".an-auth__error");
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
 
-    // Fake reserved usernames
-    const reserved = [
-        "admin",
-        "administrator",
-        "owner",
-        "support",
-        "staff",
-        "system",
-        "official",
-        "anime",
-        "animenigeria"
-    ];
-
     let debounce;
 
     input.addEventListener("input", () => {
         clearTimeout(debounce);
-        const value = input.value.trim();
+        const username = input.value.trim();
 
         // -------------------------
         // Empty
         // -------------------------
-        if (value === "") {
+        if (username === "") {
             preview.hidden = true;
             preview.classList.remove("is-visible");
             resetField(field);
@@ -48,12 +36,12 @@ export function initUsername(form, updateButtons) {
             preview.classList.add("is-visible");
         });
 
-        previewValue.textContent = `@${value}`;
+        previewValue.textContent = `@${username}`;
 
         // -------------------------
         // Live validation
         // -------------------------
-        if (value.length < 3) {
+        if (username.length < 3) {
             error.classList.remove("is-success", "is-checking");
             field.dataset.available = "false";
             setError(field, "Username must be at least 3 characters.");
@@ -61,7 +49,7 @@ export function initUsername(form, updateButtons) {
             return;
         }
 
-        if (!usernameRegex.test(value)) {
+        if (!usernameRegex.test(username)) {
             error.classList.remove("is-success", "is-checking");
             field.dataset.available = "false";
             setError(field, "Only letters, numbers and underscores are allowed.");
@@ -80,25 +68,76 @@ export function initUsername(form, updateButtons) {
         error.classList.add("is-checking");
         error.textContent = "Checking...";
 
-        // -------------------------
-        // Fake availability check
-        // -------------------------
-        debounce = setTimeout(() => {
-            const currentValue = input.value.trim().toLowerCase();
-            error.classList.remove("is-checking");
+        debounce = setTimeout(async () => {
+            try {
+                const response = await fetch("/auth/api/check-username", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        username,
+                    }),
+                });
 
-            if (reserved.includes(currentValue)) {
-                error.classList.remove("is-success");
+                const result = await response.json();
+                error.classList.remove("is-checking");
+
+                if (result.success) {
+                    field.dataset.available = "true";
+                    field.classList.remove("is-invalid");
+
+                    error.classList.add("is-success");
+                    error.textContent = "Username is available.";
+                } else {
+                    field.dataset.available = "false";
+
+                    error.classList.remove("is-success");
+                    setError(field, result.errors.username ?? "Username is unavailable.");
+                }
+
+                updateButtons();
+            } catch (e) {
                 field.dataset.available = "false";
-                setError(field, "Username is already taken.");
-            } else {
-                field.dataset.available = "true";
-                field.classList.remove("is-invalid");
-                error.classList.add("is-success");
-                error.textContent = "Username is available.";
+                error.classList.remove("is-checking");
+                setError(field, "Unable to check username. Please try again.");
+                updateButtons();
             }
-
-            updateButtons();
         }, 500);
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const username = input.value.trim();
+
+        if (field.dataset.available !== "true") {
+            return;
+        }
+
+        const button = form.querySelector("button");
+        button.disabled = true;
+
+        const response = await fetch("/auth/api/complete-registration", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                username,
+            }),
+        });
+
+        const result = await response.json();
+        button.disabled = false;
+
+        if (result.success) {
+            success("Account created successfully.")
+            window.location = result.redirect;
+            return;
+        }
+
+        if (result.errors?.username) {
+            setError(field, result.errors.username);
+        }
     });
 }

@@ -456,6 +456,14 @@
     &.is-success { color: #3fb950; }
 }
 
+.an-auth__checkbox-error{
+    display:block;
+    color:#ef4444;
+    font-size:.8rem;
+    line-height:1.4;
+    transition: color .2s ease;
+}
+
 .an-auth__password-rules{
     margin-top:.9rem;
     display:grid;

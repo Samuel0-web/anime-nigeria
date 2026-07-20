@@ -1,4 +1,5 @@
 export function initResetPassword(form) {
+    if (document.body.dataset.page !== "reset-password") return;
     const success = document.querySelector(".an-auth__success");
     const intro = document.querySelector(".an-auth__intro");
     const footer = document.querySelector(".an-auth__footer");

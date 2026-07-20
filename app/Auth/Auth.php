@@ -211,63 +211,44 @@ class Auth {
         }
 
         if (strlen($username) < 3 || strlen($username) > 20) {
-            $this->addError(
-                'username',
-                'Username must be between 3 and 20 characters.'
-            );
-
+            $this->addError('username', 'Username must be between 3 and 20 characters.');
             return false;
         }
 
         if (!preg_match('/^[A-Za-z0-9_]+$/', $username)) {
-            $this->addError(
-                'username',
-                'Only letters, numbers and underscores are allowed.'
-            );
-
+            $this->addError('username', 'Only letters, numbers and underscores are allowed.');
             return false;
         }
 
-        $reserved = [
-            'admin',
-            'administrator',
-            'owner',
-            'support',
-            'staff',
-            'system',
-            'official',
-            'anime',
-            'animenigeria',
-            'api',
-            'auth',
-            'login',
-            'register',
-            'signup',
-            'dashboard',
-            'settings',
-            'profile',
-            'member',
-            'moderator'
-        ];
+        $reserved = require __DIR__ . '/../../config/reserved_usernames.php';
 
         if (in_array(strtolower($username), $reserved, true)) {
-            $this->addError(
-                'username',
-                'This username is reserved.'
-            );
-
+            $this->addError('username', 'This username is reserved.');
             return false;
         }
 
         if ($this->users->usernameExists($username)) {
-            $this->addError(
-                'username',
-                'Username is already taken.'
-            );
-
+            $this->addError('username', 'Username is already taken.');
             return false;
         }
 
+        return true;
+    }
+
+    public function completeRegistration(int $userId, string $username): bool {
+        if (!$this->checkUsername($username)) {
+            return false;
+        }
+
+        if (!$this->users->updateUsername($userId, trim($username))) {
+            $this->addError('general', 'Unable to complete your registration.');
+            return false;
+        }
+
+        // User is now fully onboarded.
+        unset($_SESSION['pending_username_user_id']);
+        $_SESSION['user_id'] = $userId;
+        session_regenerate_id(true);
         return true;
     }
 }
