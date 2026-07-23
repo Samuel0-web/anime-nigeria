@@ -86,6 +86,5 @@ $pageDescription = 'Verify your account';
         }, 5000);
     </script>
 <?php endif; ?>
-
 </body>
 </html>

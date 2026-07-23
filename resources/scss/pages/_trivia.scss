@@ -576,3 +576,104 @@
         }
     }
 }
+
+// =============================================================================
+// MEMBER ACCESS
+// =============================================================================
+.an-trivia-access {
+    position: relative;
+    background: $black;
+    padding-block: $space-xxl;
+    overflow: hidden;
+}
+
+.an-trivia-access__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 620px;
+    height: 620px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($accent-violet, 0.12), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-trivia-access__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.an-trivia-access__card {
+    max-width: 900px;
+    margin-inline: auto;
+    text-align: center;
+    padding: $space-xl;
+    border-radius: $radius-lg;
+    border: 1px solid rgba($accent-violet, 0.3);
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateY(24px);
+    transition-property: opacity, transform, border-color, box-shadow;
+    transition-duration: 700ms, 700ms, $transition-base, $transition-slow;
+    transition-timing-function: $ease-standard, cubic-bezier(.22, 1, .36, 1), $ease-standard,
+        $ease-standard;
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &.is-visible:hover {
+        transform: translateY(-4px);
+        border-color: rgba($accent-violet, 0.5);
+        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: $bp-md) { padding: $space-lg; }
+}
+
+.an-trivia-access__label {
+    display: inline-block;
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $accent-violet;
+    margin-bottom: $space-md;
+}
+
+.an-trivia-access__heading {
+    font-size: $fs-2xl;
+    color: $white;
+    margin-bottom: $space-md;
+
+    @media (max-width: $bp-md) { font-size: $fs-xl; }
+}
+
+.an-trivia-access__text {
+    font-size: $fs-md;
+    color: $white-muted;
+    max-width: 60ch;
+    margin-inline: auto;
+    margin-bottom: $space-lg;
+}
+
+.an-trivia-access__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-md;
+
+    @media (max-width: $bp-sm) {
+        flex-direction: column;
+        align-items: stretch;
+
+        .an-btn { width: 100%; }
+    }
+}

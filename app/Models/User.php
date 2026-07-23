@@ -163,4 +163,17 @@ class User {
             ':id' => $id,
         ]);
     }
+
+    public function verifyPassword(array $user, string $password): bool {
+        if (empty($user['password'])) {
+            return false;
+        }
+
+        return password_verify($password, $user['password']);
+    }
+
+    public function updatePassword(int $userId, string $passwordHash): bool {
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        return $stmt->execute([$passwordHash, $userId]);
+    }
 }

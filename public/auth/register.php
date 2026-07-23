@@ -1,7 +1,10 @@
 <?php
 $pageTitle = "Join The Community | Anime Nigeria";
 $pageDescription = "Create your Anime Nigeria account and join a growing community of anime fans across Nigeria.";
+
 require_once __DIR__ . "/partials/meta.php";
+
+$auth->requireGuest();
 ?>
 <body data-page="register">
     <main class="an-auth an-auth--register">

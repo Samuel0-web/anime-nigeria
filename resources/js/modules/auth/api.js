@@ -11,10 +11,7 @@ export async function api(url, options = {}) {
         ...headers
     };
 
-    const isJsonPayload =
-        body &&
-        typeof body === "object" &&
-        !(body instanceof FormData) &&
+    const isJsonPayload = body && typeof body === "object" && !(body instanceof FormData) &&
         !(body instanceof Blob);
 
     if (isJsonPayload) {
@@ -43,13 +40,30 @@ export async function api(url, options = {}) {
 
     // Everything else that's an error
     if (!response.ok) {
-        throw new Error(data.message || `HTTP ${response.status}`);
+        const err = new Error(data.message || `HTTP ${response.status}`);
+        err.status = response.status;
+        err.data = data;
+        throw err;
     }
 
     return data;
 }
 
 export function handleApiError(err, fallback = "Something went wrong.") {
-    console.error(err);
-    error(err.message || fallback);
+    switch (err.status) {
+        case 419:
+            error(err.data?.message || "Your session has expired. Please refresh the page.");
+            break;
+
+        case 429:
+            error(err.data?.message || "You're doing that too often. Please wait a little before trying again.");
+            break;
+
+        case 500:
+            error(err.data?.message || "Something went wrong. Please try again later.");
+            break;
+
+        default:
+            error(err.data?.message || err.message || fallback);
+    }
 }

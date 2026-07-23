@@ -3,8 +3,10 @@ $pageTitle = "Sign In | Anime Nigeria";
 $pageDescription = "Sign In to your Anime Nigeria account to access your profile and community features.";
 
 require_once __DIR__ . "/partials/meta.php";
+
+$auth->requireGuest();
 ?>
-<body>
+<body data-page="login">
     <main class="an-auth an-auth--login">
         <div class="an-auth__glow an-auth__glow--one" aria-hidden="true"></div>
         <div class="an-auth__glow an-auth__glow--two" aria-hidden="true"></div>
@@ -44,6 +46,8 @@ require_once __DIR__ . "/partials/meta.php";
 
                     <small class="an-auth__error"></small>
                 </div>
+                
+                <div class="an-auth__message"></div>
 
                 <div class="an-auth__row">
                     <label class="an-auth__checkbox">

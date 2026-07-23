@@ -2,6 +2,8 @@
 namespace App\Mail;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use App\Core\Logger;
+use RuntimeException;
 
 class SmtpMailer implements Mailer {
     private PHPMailer $mail;
@@ -40,7 +42,7 @@ class SmtpMailer implements Mailer {
         $mail->isHTML(true);
 
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
-            $mail->SMTPDebug = 2;
+            $mail->SMTPDebug = 0;
             $mail->Debugoutput = 'html';
         }
 
@@ -57,9 +59,12 @@ class SmtpMailer implements Mailer {
             $this->mail->AltBody = $text ?? strip_tags($html);
             return $this->mail->send();
         } catch (Exception $e) {
-            // error_log($e->getMessage());
-            // return false;
-            die($e->getMessage());
+            Logger::error($e);
+
+            throw new RuntimeException('Unable to send verification email. Please try again.',
+                0,
+                $e
+            );
         }
     }
 }

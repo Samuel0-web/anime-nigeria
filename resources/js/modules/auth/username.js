@@ -1,5 +1,6 @@
 import { setError, clearError, resetField } from "./helpers.js";
 import { success } from "../toast.js";
+import { api, handleApiError } from "./api.js";
 
 export function initUsername(form, updateButtons) {
     const input = form.querySelector("#username");
@@ -9,7 +10,6 @@ export function initUsername(form, updateButtons) {
     const previewValue = document.querySelector(".an-auth__username-preview-value");
     const error = field.querySelector(".an-auth__error");
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-
     let debounce;
 
     input.addEventListener("input", () => {
@@ -70,17 +70,13 @@ export function initUsername(form, updateButtons) {
 
         debounce = setTimeout(async () => {
             try {
-                const response = await fetch("/auth/api/check-username", {
+                const result = await api("/auth/api/check-username", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
+                    body: {
                         username,
-                    }),
+                    },
                 });
 
-                const result = await response.json();
                 error.classList.remove("is-checking");
 
                 if (result.success) {
@@ -100,7 +96,10 @@ export function initUsername(form, updateButtons) {
             } catch (e) {
                 field.dataset.available = "false";
                 error.classList.remove("is-checking");
-                setError(field, "Unable to check username. Please try again.");
+
+                handleApiError(e);
+
+                setError(field, "Unable to check username.");
                 updateButtons();
             }
         }, 500);
@@ -117,27 +116,29 @@ export function initUsername(form, updateButtons) {
         const button = form.querySelector("button");
         button.disabled = true;
 
-        const response = await fetch("/auth/api/complete-registration", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-                username,
-            }),
-        });
+        try {
+            const result = await api("/auth/api/complete-registration", {
+                method: "POST",
+                body: {
+                    username,
+                },
+            });
 
-        const result = await response.json();
-        button.disabled = false;
+            button.disabled = false;
 
-        if (result.success) {
-            success("Account created successfully.")
-            window.location = result.redirect;
-            return;
-        }
+            if (result.success) {
+                success("Account created successfully.")
+                window.location = result.redirect;
+                return;
+            }
 
-        if (result.errors?.username) {
-            setError(field, result.errors.username);
+            if (result.errors?.username) {
+                setError(field, result.errors.username);
+            }
+        } catch (e) {
+            handleApiError(e);
+        } finally {
+            button.disabled = false;
         }
     });
 }

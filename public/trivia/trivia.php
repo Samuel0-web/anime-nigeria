@@ -225,6 +225,31 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
         </div>
     </section>
+
+    <!-- ===================================================================
+     MEMBER ACCESS
+     =================================================================== -->
+    <section class="an-trivia-access" aria-labelledby="an-trivia-access-heading">
+        <div class="an-trivia-access__glow" aria-hidden="true"></div>
+
+        <div class="an-container an-trivia-access__inner">
+            <div class="an-trivia-access__card an-reveal" style="--i:0">
+                <span class="an-trivia-access__label">Members Only</span>
+
+                <h2 class="an-trivia-access__heading" id="an-trivia-access-heading">Ready to Take on Your First Challenge?</h2>
+
+                <p class="an-trivia-access__text">
+                    Sign in to access Anime Trivia, test your anime knowledge, compete for higher
+                    scores and climb the community leaderboard one quiz at a time.
+                </p>
+
+                <div class="an-trivia-access__actions">
+                    <a href="/login" class="an-btn an-btn--primary">Start Playing</a>
+                    <a href="/register" class="an-btn an-btn--ghost">Create Free Account</a>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

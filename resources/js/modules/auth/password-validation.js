@@ -27,7 +27,7 @@ export function initPasswordValidation(form, updateButtons) {
         const value = password.value;
         let completed = 0;
 
-        Object.entries(ruleChecks).forEach(([key, check]) => {
+        Object.entries(ruleChecks ?? {}).forEach(([key, check]) => {
             const item = rules.querySelector(`[data-rule="${key}"]`);
 
             if (check(value)) {

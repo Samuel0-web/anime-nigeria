@@ -17,42 +17,36 @@ try {
 
     $auth = new Auth($db, $mail);
 
-    $user = $auth->register([
-        'fullname'         => $_POST['fullname'] ?? '',
-        'email'            => $_POST['email'] ?? '',
-        'password'         => $_POST['password'] ?? '',
-        'confirm_password' => $_POST['confirm_password'] ?? '',
-        'terms'            => $_POST['terms'] ?? '',
-        'provider'         => 'local',
+    $result = $auth->login([
+        'email' => $_POST['email'] ?? '',
+        'password' => $_POST['password'] ?? '',
+        'remember' => !empty($_POST['remember']),
     ]);
 
-    if ($user === false) {
+    if ($result === false) {
         http_response_code(422);
 
         echo json_encode([
             'success' => false,
-            'errors' => $auth->errors(),
+            'type'    => $auth->errorType(),
+            'errors'  => $auth->errors(),
+            'message' => $auth->error('general'),
         ]);
-        
+
         exit;
     }
 
-    http_response_code(201);
-
     echo json_encode([
         'success' => true,
-        'email' => $user['email'],
-        'resend_after' => 60,
+        'redirect' => $result['redirect'],
     ]);
 
 } catch (Throwable $e) {
+    Logger::error($e);
     http_response_code(500);
 
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage(),
+        'message' => 'Something went wrong.',
     ]);
-
-    // log the real error
-    Logger::error($e);
 }

@@ -89,6 +89,7 @@ $routes = [
     '/auth/verify'              => 'auth/verify.php',
     '/auth/forgot-password'     => 'auth/forgot-password.php',
     '/auth/reset-password'      => 'auth/reset-password.php',
+    '/logout'                    => 'auth/logout.php',
 
     '/our-community'            => 'community/community.php',
     '/community/gallery'        => 'community/gallery.php',

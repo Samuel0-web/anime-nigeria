@@ -13,3 +13,13 @@ if (session_status() === PHP_SESSION_NONE) {
         'use_strict_mode' => true,
     ]);
 }
+
+$db = App\Database\Database::connection();
+
+$mail = new App\Mail\Mail(
+    new App\Mail\SmtpMailer(),
+    $_ENV['APP_URL']
+);
+
+$auth = new App\Auth\Auth($db, $mail);
+$auth->boot();

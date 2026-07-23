@@ -9,7 +9,7 @@ export function initEmailValidation(form, updateButtons) {
         const value = email.value.trim();
 
         if (value === "") {
-            resetField(field);
+            setError(field, "Email is required.");
             updateButtons?.();
             return;
         }

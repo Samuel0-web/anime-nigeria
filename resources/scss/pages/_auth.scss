@@ -160,7 +160,7 @@
     justify-content:space-between;
     align-items:center;
     gap:$space-sm;
-    margin-top:-.25rem;
+    margin-top: .8rem;
     font-size:$fs-sm;
 
     a{
@@ -443,17 +443,25 @@
 }
 
 .an-auth__error{
-    display:block;
+    display:none;
     margin-top:.45rem;
     color:#ef4444;
     font-size:.8rem;
     line-height:1.4;
-    min-height:1rem;
-    transition: color .2s ease;
 
-    &.is-checking { color: $white-muted; }
+    &.is-visible{
+        display:block;
+    }
 
-    &.is-success { color: #3fb950; }
+    &.is-checking{
+        display:block;
+        color:$white-muted;
+    }
+
+    &.is-success{
+        display:block;
+        color:#3fb950;
+    }
 }
 
 .an-auth__checkbox-error{
@@ -462,6 +470,17 @@
     font-size:.8rem;
     line-height:1.4;
     transition: color .2s ease;
+}
+
+.an-auth__message{
+    display:none;
+    color:#ef4444;
+    font-size:.9rem;
+    line-height:1.5;
+
+    &.is-visible{
+        display:block;
+    }
 }
 
 .an-auth__password-rules{

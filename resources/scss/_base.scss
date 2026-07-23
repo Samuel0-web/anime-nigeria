@@ -120,3 +120,126 @@ select:-webkit-autofill:active {
         transform: rotate(360deg);
     }
 }
+
+.an-toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    width: min(400px, calc(100vw - 2rem));
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.an-toast {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border-radius: 14px;
+    border-left: 4px solid;
+    box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    pointer-events: auto;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform .28s ease, opacity .28s ease;
+}
+
+.an-toast.is-visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.an-toast__icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 1.15rem;
+}
+
+.an-toast__body {
+    flex: 1;
+}
+
+.an-toast__message {
+    margin: 0;
+    font-size: .95rem;
+    line-height: 1.5;
+    color: #1f2937;
+}
+
+.an-toast__close {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color .2s;
+}
+
+.an-toast__close:hover {
+    color: #111827;
+}
+/* Success */
+
+.an-toast--success {
+    border-color: #22c55e;
+}
+
+.an-toast--success .an-toast__icon {
+    background: rgba(34,197,94,.12);
+    color: #22c55e;
+}
+
+/* Error */
+.an-toast--error {
+    border-color: #ef4444;
+}
+
+.an-toast--error .an-toast__icon {
+    background: rgba(239,68,68,.12);
+    color: #ef4444;
+}
+
+/* Warning */
+.an-toast--warning {
+    border-color: #f59e0b;
+}
+
+.an-toast--warning .an-toast__icon {
+    background: rgba(245,158,11,.14);
+    color: #f59e0b;
+}
+
+/* Info */
+.an-toast--info {
+    border-color: #3b82f6;
+}
+
+.an-toast--info .an-toast__icon {
+    background: rgba(59,130,246,.12);
+    color: #3b82f6;
+}
+
+@media (max-width: 640px) {
+    .an-toast-container {
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+    }
+
+    .an-toast {
+        transform: translateY(-30px);
+    }
+
+    .an-toast.is-visible {
+        transform: translateY(0);
+    }
+}

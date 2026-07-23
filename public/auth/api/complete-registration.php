@@ -26,8 +26,10 @@ $mail = new Mail(
 
 $auth = new Auth($db, $mail);
 $userId = (int) $_SESSION['pending_username_user_id'];
+$data = json_decode(file_get_contents('php://input'), true);
+$username = trim($data['username'] ?? '');
 
-if ($auth->completeRegistration($userId, $_POST['username'] ?? '')) {
+if ($auth->completeRegistration($userId, $username)) {
     echo json_encode([
         'success' => true,
         'redirect' => '/dashboard'

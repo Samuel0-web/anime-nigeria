@@ -4,7 +4,7 @@ $pageDescription = "Reset your Anime Nigeria account password securely.";
 
 require_once __DIR__ . "/partials/meta.php";
 ?>
-<body data-page="reset-pass">
+<body data-page="forgot-password">
     <main class="an-auth an-auth--forgot">
         <div class="an-auth__glow an-auth__glow--one" aria-hidden="true"></div>
         <div class="an-auth__glow an-auth__glow--two" aria-hidden="true"></div>
@@ -58,7 +58,7 @@ require_once __DIR__ . "/partials/meta.php";
                 </p>
 
                 <button class="an-btn an-btn--primary an-auth__resend" disabled>
-                    Resend Email (<span class="an-auth__countdown">60</span>s)
+                    Resend Email
                 </button>
             </div>
 

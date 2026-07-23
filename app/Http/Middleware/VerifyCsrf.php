@@ -12,7 +12,7 @@ class VerifyCsrf {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid CSRF token.'
+                'message' => 'Your session has expired. Please refresh the page and try again.'
             ]);
 
             exit;

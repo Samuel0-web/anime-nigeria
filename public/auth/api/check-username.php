@@ -13,7 +13,8 @@ $mail = new Mail(
 );
 
 $auth = new Auth($db, $mail);
-$username = $_POST['username'] ?? '';
+$data = json_decode(file_get_contents('php://input'), true);
+$username = trim($data['username'] ?? '');
 
 if ($auth->checkUsername($username)) {
     echo json_encode([

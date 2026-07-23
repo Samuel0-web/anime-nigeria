@@ -1,4 +1,4 @@
-import { clearError, setError, maskEmail } from "./helpers.js";
+import { clearError, setError, maskEmail, startCountdown } from "./helpers.js";
 import { setLoading, clearLoading } from "./loading-state.js";
 import { api, handleApiError } from "./api.js";
 
@@ -8,27 +8,6 @@ export function initRegister(form) {
     const intro = document.querySelector(".an-auth__intro");
     const success = document.querySelector(".an-auth__success");
     if (!intro || !success) return;
-    let countdownInterval;
-
-    function startCountdown(seconds = 60) {
-        const button = success.querySelector(".an-auth__resend");
-        if (!button) return;
-        clearInterval(countdownInterval);
-        button.disabled = true;
-        button.innerHTML = `Resend Email (<span class="an-auth__countdown">${seconds}</span>s)`;
-        const countdown = button.querySelector(".an-auth__countdown");
-
-        countdownInterval = setInterval(() => {
-            seconds--;
-            countdown.textContent = seconds;
-
-            if (seconds <= 0) {
-                clearInterval(countdownInterval);
-                button.disabled = false;
-                button.textContent = "Resend Email";
-            }
-        }, 1000);
-    }
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -77,7 +56,7 @@ export function initRegister(form) {
                 success.classList.add("is-visible");
             });
 
-            startCountdown(result.resend_after);
+            startCountdown(result, result.resend_after);
         } catch (err) {
             handleApiError(err);
         } finally {
@@ -102,7 +81,7 @@ export function initRegister(form) {
                     return;
                 }
 
-                startCountdown(result.resend_after);
+                startCountdown(result, result.resend_after);
             } catch (err) {
                 handleApiError(err, "Could not resend email.");
                 clearLoading(resend);
