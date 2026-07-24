@@ -31,8 +31,11 @@ $google = $_SESSION['google_register'];
                 >
 
                 <h1>Almost there!</h1>
-                <p>Welcome <strong><?= htmlspecialchars($google['fullname']) ?></strong></p>
-                <p><?= htmlspecialchars($google['email']) ?></p>
+
+                <div class="an-auth__account">
+                    <strong><?= htmlspecialchars($google['fullname']) ?></strong>
+                    <span><?= htmlspecialchars($google['email']) ?></span>
+                </div>
 
                 <p>
                     Your Google account has been verified.

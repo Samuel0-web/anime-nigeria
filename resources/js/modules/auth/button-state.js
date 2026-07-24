@@ -5,15 +5,20 @@ export function initButtonState(form) {
     const username = form.querySelector("#username");
     const confirmPassword = form.querySelector("#confirm-password");
     const submit = form.querySelector(".an-auth__submit");
-    const google = document.querySelector(".an-auth__google");
     const terms = form.querySelector("#terms");
     const hasEmail = !!email;
     const hasPassword = !!password;
     const hasConfirm = !!confirmPassword;
     const hasName = !!fullname;
     const hasTerms = !!terms;
-
+    
     function areFieldsValid() {
+        const page = document.body.dataset.page;
+
+        if (page === "google-register") {
+            return true;
+        }
+
         // Forgot Password
         if (hasEmail && !hasPassword) {
             return email.closest(".an-auth__field").classList.contains("is-valid");
@@ -21,16 +26,14 @@ export function initButtonState(form) {
 
         // Reset Password
         if (!hasEmail && hasPassword && hasConfirm) {
-            return (
-                password.closest(".an-auth__field").classList.contains("is-valid") &&
+            return (password.closest(".an-auth__field").classList.contains("is-valid") &&
                 confirmPassword.closest(".an-auth__field").classList.contains("is-valid")
             );
         }
 
         // Login
         if (hasEmail && hasPassword && !hasTerms) {
-            return (
-                email.closest(".an-auth__field").classList.contains("is-valid") &&
+            return (email.closest(".an-auth__field").classList.contains("is-valid") &&
                 password.value.trim() !== ""
             );
         }
@@ -42,8 +45,7 @@ export function initButtonState(form) {
         }
 
         // Register
-        return (
-            fullname.closest(".an-auth__field").classList.contains("is-valid") &&
+        return (fullname.closest(".an-auth__field").classList.contains("is-valid") &&
             email.closest(".an-auth__field").classList.contains("is-valid") &&
             password.closest(".an-auth__field").classList.contains("is-valid") &&
             confirmPassword.closest(".an-auth__field").classList.contains("is-valid")
@@ -52,14 +54,11 @@ export function initButtonState(form) {
 
     function updateButtons() {
         const valid = areFieldsValid();
+        const agreed = terms?.checked ?? false;
 
         // Register only
         if (hasTerms) {
             const agreed = terms.checked;
-
-            if (google) {
-                google.disabled = !agreed;
-            }
 
             if (submit) {
                 submit.disabled = !(valid && agreed);

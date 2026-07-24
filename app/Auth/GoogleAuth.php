@@ -256,10 +256,10 @@ class GoogleAuth {
 
         try {
             $userId = $this->users->create([
-                'fullname'          => $googleUser['name'],
+                'fullname'          => $googleUser['fullname'],
                 'email'             => strtolower($googleUser['email']),
                 'provider'          => 'google',
-                'google_id'         => $googleUser['sub'],
+                'google_id'         => $googleUser['google_id'],
                 'avatar'            => $googleUser['picture'] ?? null,
                 'email_verified_at' => date('Y-m-d H:i:s'),
             ]);
