@@ -81,5 +81,12 @@ $auth->requireGuest();
             <p class="an-auth__footer">Don't have an account? <a href="/join">Create one</a></p>
         </section>
     </main>
+
+    <?php if (!empty($_SESSION['oauth_error'])): ?>
+        <script>
+            window.oauthError = <?= json_encode($_SESSION['oauth_error']) ?>;
+        </script>
+        <?php unset($_SESSION['oauth_error']); ?>
+    <?php endif; ?>
 </body>
 </html>

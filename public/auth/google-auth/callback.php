@@ -9,7 +9,7 @@ $google = new GoogleAuth($db, new GoogleClient());
 $result = $google->callback($_GET['code'] ?? null, $_GET['state'] ?? null, $_GET['error'] ?? null);
 
 if ($result === false) {
-    $_SESSION['flash_error'] = $google->error();
+    $_SESSION['oauth_error'] = $google->error();
     header('Location: /login');
     exit;
 }

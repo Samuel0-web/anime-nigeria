@@ -132,8 +132,7 @@ class Auth {
             ]);
 
             if ($userId === false) {
-                $this->db->rollBack();
-                return false;
+                throw new \RuntimeException('Unable to create account.');
             }
 
             $this->mail->sendVerificationEmail($email, $fullname, $verificationToken);
@@ -291,16 +290,21 @@ class Auth {
         }
 
         $record = $this->passwordResetTokens->findByToken($token);
+
+        if (!$record) {
+            $this->addError('general', 'This password reset link is invalid.');
+            return false;
+        }
+
         $user = $this->users->findById((int) $record['user_id']);
 
         if ($user && $user['auth_provider'] === 'google') {
             $this->passwordResetTokens->deleteByUser((int) $record['user_id']);
-            $this->addError('general', 'This account uses Google Sign-In.');
-            return false;
-        }
+            
+            $this->addError(
+                'general', 'This account uses Google Sign-In. Please continue with Google.'
+            );
 
-        if (!$record) {
-            $this->addError('general', 'This password reset link is invalid.');
             return false;
         }
 

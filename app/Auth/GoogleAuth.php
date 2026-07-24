@@ -73,7 +73,7 @@ class GoogleAuth {
         if (empty($_SESSION['google_oauth']) || empty($_SESSION['google_oauth']['state']) ||
             empty($_SESSION['google_oauth']['created_at'])
         ) {
-            $this->addError('Invalid Google authentication request.');
+            $this->addError('Your Google sign-in session has expired. Please try again.');
             return false;
         }
 
@@ -81,13 +81,13 @@ class GoogleAuth {
 
         if (time() - $oauth['created_at'] > 600) {
             unset($_SESSION['google_oauth']);
-            $this->addError('Google authentication request expired.');
+            $this->addError('Your Google sign-in session has expired. Please try again.');
             return false;
         }
 
         if (empty($state) || !hash_equals($oauth['state'], $state)) {
             unset($_SESSION['google_oauth']);
-            $this->addError('Invalid Google authentication request.');
+            $this->addError('Your Google sign-in session has expired. Please try again.');
             return false;
         }
 
@@ -99,7 +99,7 @@ class GoogleAuth {
         |--------------------------------------------------------------------------
         */
         if (empty($code)) {
-            $this->addError('Google did not return an authorization code.');
+            $this->addError('Google sign-in could not be completed. Please try again.');
             return false;
         }
 
@@ -113,11 +113,11 @@ class GoogleAuth {
             $googleUser = $this->google->getUser($token['access_token']);
 
             if (empty($googleUser['email_verified']) || $googleUser['email_verified'] !== true) {
-                $this->addError('Google email address is not verified.');
+                $this->addError('Please verify your Google email address before signing in.');
                 return false;
             }
         } catch (\Throwable) {
-            $this->addError('Unable to authenticate with Google.');
+            $this->addError('We could not sign you in with Google. Please try again.');
             return false;
         }
 
@@ -127,7 +127,7 @@ class GoogleAuth {
         |--------------------------------------------------------------------------
         */
         if (empty($googleUser['sub']) || empty($googleUser['email']) || empty($googleUser['name'])) {
-            $this->addError('Google returned an incomplete user profile.');
+            $this->addError('We could not retrieve your Google account information.');
             return false;
         }
 
@@ -141,7 +141,7 @@ class GoogleAuth {
 
         if ($user !== false) {
             if (strtolower($user['email']) !== strtolower($googleUser['email'])) {
-                $this->addError('Google account information does not match.');
+                $this->addError('We could not verify your Google account. Please try again.');
                 return false;
             }
 
@@ -276,8 +276,7 @@ class GoogleAuth {
                 'redirect' => '/auth/username',
             ];
 
-        } catch (\Throwable $e) {
-
+        } catch (\Throwable) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }

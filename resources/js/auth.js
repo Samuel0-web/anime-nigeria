@@ -17,6 +17,7 @@ import { initRegister } from "./modules/auth/register.js";
 import { initGoogleRegister } from "./modules/auth/google-register";
 import { initLogin } from "./modules/auth/login.js";
 import { initGoogleAuth } from "./modules/auth/helpers";
+import { error as errorToast } from "./modules/toast.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".an-auth__form");
@@ -34,4 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initGoogleRegister(form);
     initLogin(form, updateButtons);
     initGoogleAuth();
+
+    if (window.oauthError) {
+        errorToast(window.oauthError);
+        delete window.oauthError;
+    }
 });
