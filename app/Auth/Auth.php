@@ -228,6 +228,14 @@ class Auth {
             ];
         }
 
+        if ($user !== false && $user['auth_provider'] === 'google') {
+            $this->addError(
+                'email', 'This account uses Google Sign-In. Please continue with Google.'
+            );
+
+            return false;
+        }
+
         $token = bin2hex(random_bytes(32));
         $tokenHash = hash('sha256', $token);
         $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
@@ -283,6 +291,13 @@ class Auth {
         }
 
         $record = $this->passwordResetTokens->findByToken($token);
+        $user = $this->users->findById((int) $record['user_id']);
+
+        if ($user && $user['auth_provider'] === 'google') {
+            $this->passwordResetTokens->deleteByUser((int) $record['user_id']);
+            $this->addError('general', 'This account uses Google Sign-In.');
+            return false;
+        }
 
         if (!$record) {
             $this->addError('general', 'This password reset link is invalid.');
@@ -440,7 +455,10 @@ class Auth {
 
         if (empty($user['password'])) {
             $this->errorType = 'auth';
-            $this->addError('general', 'This account uses Google Sign-In.');
+            $this->addError(
+                'general', 'This account uses Google Sign-In. Please continue with Google.'
+            );
+            
             return false;
         }
 
