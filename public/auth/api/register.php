@@ -50,7 +50,7 @@ try {
 
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage(),
+        'message' => 'Something went wrong. Please try again.',
     ]);
 
     // log the real error

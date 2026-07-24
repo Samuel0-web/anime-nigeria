@@ -12,13 +12,16 @@ class User {
      * Create a new user
      */
     public function create(array $data): int|false {
-        $stmt = $this->db->prepare("INSERT INTO users 
+        $stmt = $this->db->prepare("INSERT INTO users
             (
                 fullname,
                 username,
                 email,
                 password,
                 auth_provider,
+                google_id,
+                avatar,
+                email_verified_at,
                 email_verification_token,
                 email_verification_sent_at,
                 email_verification_expires_at
@@ -29,23 +32,30 @@ class User {
                 :email,
                 :password,
                 :provider,
+                :google_id,
+                :avatar,
+                :email_verified_at,
                 :verification_token,
-                CURRENT_TIMESTAMP,
+                :verification_sent_at,
                 :verification_expires_at
             )
         ");
 
         $success = $stmt->execute([
             ':fullname' => $data['fullname'],
-            ':username' => !empty($data['username']) ? $data['username'] : null,
-            ':email'    => $data['email'],
-            ':password' => $data['password'],
+            ':username' => $data['username'] ?? null,
+            ':email' => $data['email'],
+            ':password' => $data['password'] ?? null,
             ':provider' => $data['provider'] ?? 'local',
-            ':verification_token' => $data['verification_token'],
-            ':verification_expires_at' => $data['verification_expires_at'],
+            ':google_id' => $data['google_id'] ?? null,
+            ':avatar' => $data['avatar'] ?? null,
+            ':email_verified_at' => $data['email_verified_at'] ?? null,
+            ':verification_token' => $data['verification_token'] ?? null,
+            ':verification_sent_at' => $data['verification_sent_at'] ?? null,
+            ':verification_expires_at' => $data['verification_expires_at'] ?? null,
         ]);
 
-        if (! $success) {
+        if (!$success) {
             return false;
         }
 
@@ -175,5 +185,54 @@ class User {
     public function updatePassword(int $userId, string $passwordHash): bool {
         $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
         return $stmt->execute([$passwordHash, $userId]);
+    }
+
+    public function findByGoogleId(string $googleId): array|false {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE google_id = :google_id LIMIT 1");
+
+        $stmt->execute([
+            ':google_id' => $googleId,
+        ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function linkGoogleAccount(int $userId, string $googleId, ?string $avatar): bool {
+        $stmt = $this->db->prepare("UPDATE users SET google_id = :google_id, avatar = :avatar
+            WHERE id = :id
+        ");
+
+        return $stmt->execute([
+            ':id' => $userId,
+            ':google_id' => $googleId,
+            ':avatar' => $avatar,
+        ]);
+    }
+
+    public function updateAvatar(int $userId, ?string $avatar): bool {
+        $stmt = $this->db->prepare("UPDATE users SET avatar = :avatar WHERE id = :id");
+
+        return $stmt->execute([
+            ':id' => $userId,
+            ':avatar' => $avatar,
+        ]);
+    }
+
+    public function hasGoogleLinked(int $userId): bool {
+        $stmt = $this->db->prepare("SELECT google_id FROM users WHERE id = :id LIMIT 1");
+
+        $stmt->execute([
+            ':id' => $userId,
+        ]);
+
+        return !empty($stmt->fetchColumn());
+    }
+
+    public function unlinkGoogle(int $userId): bool {
+        $stmt = $this->db->prepare("UPDATE users SET google_id = NULL WHERE id = :id");
+
+        return $stmt->execute([
+            ':id' => $userId,
+        ]);
     }
 }

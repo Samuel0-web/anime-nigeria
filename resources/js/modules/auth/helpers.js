@@ -93,3 +93,11 @@ export function startCountdown(button, seconds = 60) {
 
     return interval;
 }
+
+export function initGoogleAuth() {
+    document.querySelectorAll(".an-auth__google").forEach(button => {
+        button.addEventListener("click", () => {
+            window.location.href = button.dataset.url;
+        });
+    });
+}

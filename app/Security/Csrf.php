@@ -11,9 +11,6 @@ class Csrf {
     }
 
     public static function verify(?string $token): bool {
-        return hash_equals(
-            $_SESSION['csrf_token'] ?? '',
-            $token ?? ''
-        );
+        return hash_equals($_SESSION['csrf_token'] ?? '', $token ?? '');
     }
 }

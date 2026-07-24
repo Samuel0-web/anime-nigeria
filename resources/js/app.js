@@ -12,6 +12,7 @@ import { initWinnersFaq } from "./award-winners.js";
 import { initAnimeAwards } from "./anime-awards.js";
 import { initContactFaq } from "./contact.js";
 import { initTriviaFaq } from "./trivia.js";
+import { initLeaderboardFaq } from "./trivia-leaderboard.js";
 import './honoured-ones.js';
 import './auth.js';
 import './legals.js';
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initVotingFaq();
   initWinnersFaq();
   initTriviaFaq();
+  initLeaderboardFaq();
   initAnimeAwards();
   initDropdowns();
   initMobileNav();

@@ -14,7 +14,9 @@ import { initButtonState } from "./modules/auth/button-state.js";
 import { initResetPassword } from "./modules/auth/reset-password.js";
 import { initUsername } from "./modules/auth/username.js";
 import { initRegister } from "./modules/auth/register.js";
+import { initGoogleRegister } from "./modules/auth/google-register";
 import { initLogin } from "./modules/auth/login.js";
+import { initGoogleAuth } from "./modules/auth/helpers";
 
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".an-auth__form");
@@ -29,5 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initResetPassword(form);
     initUsername(form, updateButtons);
     initRegister(form);
+    initGoogleRegister(form);
     initLogin(form, updateButtons);
+    initGoogleAuth();
 });

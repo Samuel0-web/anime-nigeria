@@ -51,7 +51,7 @@ export async function api(url, options = {}) {
 
 export function handleApiError(err, fallback = "Something went wrong.") {
     switch (err.status) {
-        case 419:
+        case 403:
             error(err.data?.message || "Your session has expired. Please refresh the page.");
             break;
 

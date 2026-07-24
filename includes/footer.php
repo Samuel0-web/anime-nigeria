@@ -43,7 +43,7 @@
 
         <!-- New Legal Links Section -->
         <ul class="an-footer__legal" aria-label="Legal policies">
-            <li><a href="/terms" class="an-footer__legal-link">Terms of Use</a></li> &middot;
+            <li><a href="/terms" class="an-footer__legal-link">Terms of Use</a></li> &bull;
             <li><a href="/privacy" class="an-footer__legal-link">Privacy Policy</a></li>
         </ul>
 

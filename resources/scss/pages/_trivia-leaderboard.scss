@@ -304,3 +304,250 @@
     line-height: $lh-normal;
     max-width: 32ch;
 }
+
+// =============================================================================
+// RANKING SYSTEM & FAIR PLAY
+// =============================================================================
+.an-leaderboard-rules {
+    position: relative;
+    background: $black;
+    padding-block: $space-xxl;
+    overflow: hidden;
+}
+
+.an-leaderboard-rules__glow {
+    position: absolute;
+    top: -14%;
+    left: -8%;
+    width: 460px;
+    height: 460px;
+    border-radius: 50%;
+    background: $accent-violet;
+    opacity: 0.06;
+    filter: blur(130px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.an-leaderboard-rules__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.an-leaderboard-rules__intro {
+    max-width: 640px;
+    margin-inline: auto;
+    text-align: center;
+    margin-bottom: $space-xxl;
+}
+
+.an-leaderboard-rules__eyebrow { color: $accent-violet; }
+
+.an-leaderboard-rules__heading {
+    font-size: $fs-2xl;
+    color: $white;
+    margin-top: $space-sm;
+
+    @media (max-width: $bp-md) { font-size: $fs-xl; }
+}
+
+.an-leaderboard-rules__subheading {
+    margin-top: $space-md;
+    font-size: $fs-md;
+    color: $white-muted;
+}
+
+.an-leaderboard-rules__rule {
+    position: relative;
+    width: 96px;
+    height: 1px;
+    margin: $space-lg auto 0;
+    background: linear-gradient(90deg, transparent, rgba($accent-violet, 0.6) 50%, transparent);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -2.5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: $accent-violet;
+        opacity: 0.7;
+    }
+}
+
+.an-leaderboard-rules__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+
+    @media (min-width: $bp-sm) and (max-width: $bp-lg) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: $bp-lg) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.an-leaderboard-rules__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $space-lg;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+    isolation: isolate;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 700ms $ease-standard, transform 700ms cubic-bezier(.22, 1, .36, 1),
+        border-color $transition-base, box-shadow $transition-base;
+    transition-delay: calc(var(--i, 0) * 90ms);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &.is-visible:hover {
+        transform: translateY(-6px);
+        transition-delay: 0ms;
+        border-color: rgba($accent-violet, 0.4);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.an-leaderboard-rules__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba($accent-violet, 0.4);
+    color: $accent-violet;
+    font-size: 1.25rem;
+    margin-bottom: $space-md;
+    transition: transform $transition-base;
+}
+
+.an-leaderboard-rules__card.is-visible:hover .an-leaderboard-rules__icon { transform: scale(1.08); }
+
+.an-leaderboard-rules__card-title {
+    font-size: $fs-lg;
+    color: $white;
+    margin-bottom: $space-xs;
+}
+
+.an-leaderboard-rules__card-text {
+    font-size: $fs-sm;
+    color: $white-muted;
+    line-height: $lh-normal;
+}
+
+
+// =============================================================================
+// FREQUENTLY ASKED QUESTIONS
+// Mirrors .an-contact-faq / .an-voting-faq / .an-winners-faq / .an-trivia-faq
+// exactly — background alternates to $black-soft to follow this page's
+// black / black-soft rhythm (Hero black, Steps soft, Rules black, FAQ soft).
+// =============================================================================
+.an-leaderboard-faq {
+    padding-block: $space-xxxl;
+    background: $black-soft;
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity .7s $ease-standard, transform .7s cubic-bezier(.22, 1, .36, 1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.an-leaderboard-faq__list {
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+.an-leaderboard-faq__item {
+    border-bottom: 1px solid $black-line;
+
+    &:last-child { border-bottom: none; }
+
+    &.is-open {
+        .an-leaderboard-faq__question {
+            color: $accent-violet;
+
+            i { transform: rotate(45deg); }
+        }
+
+        .an-leaderboard-faq__answer {
+            max-height: 220px;
+            opacity: 1;
+            padding-bottom: $space-lg;
+        }
+    }
+}
+
+.an-leaderboard-faq__question {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-lg 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: $white;
+    font: inherit;
+    font-size: $fs-lg;
+    font-weight: $fw-bold;
+    transition: color $transition-fast;
+
+    &:hover { color: $accent-violet; }
+
+    &:focus-visible {
+        outline: 2px solid $accent-violet;
+        outline-offset: 8px;
+    }
+
+    i {
+        flex-shrink: 0;
+        color: $accent-violet;
+        transition: transform $transition-base;
+    }
+}
+
+.an-leaderboard-faq__answer {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height .42s cubic-bezier(.22, 1, .36, 1), opacity .32s ease,
+        padding-bottom .32s ease;
+
+    p {
+        max-width: 64ch;
+        color: $white-muted;
+        line-height: $lh-normal;
+        padding-bottom: 0;
+    }
+
+    a {
+        color: $accent-violet;
+        text-decoration: none;
+
+        &:hover { text-decoration: underline; }
+    }
+}

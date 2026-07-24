@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-$pageTitle = "Community Awards | Anime Nigeria";
-$pageDescription = "Celebrating outstanding members and recognise the fans shaping Anime Nigeria";
+$pageTitle = "Trivia Winners | Anime Nigeria";
+$pageDescription = "Learn how trivia winners are selected.";
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 

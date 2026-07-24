@@ -1,9 +1,11 @@
 <?php
 require_once __DIR__ . "/partials/meta.php";
+
 if (!isset($_SESSION['pending_username_user_id'])) {
     header('Location: /login');
     exit;
 }
+
 $pageTitle = "Choose Your Username | Anime Nigeria";
 $pageDescription = "Choose a unique username to complete your Anime Nigeria account setup.";
 

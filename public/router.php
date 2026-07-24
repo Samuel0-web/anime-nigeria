@@ -15,7 +15,6 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 | Remove trailing slash
 |--------------------------------------------------------------------------
 */
-
 $uri = rtrim($uri, '/');
 
 if ($uri === '') {
@@ -85,11 +84,14 @@ $routes = [
 
     '/login'                    => 'auth/login.php',
     '/join'                     => 'auth/register.php',
+    '/join/google'              => 'auth/google-auth/join.php',
+    '/auth/google'              => 'auth/google-auth/google.php',
+    '/auth/google/callback'     => 'auth/google-auth/callback.php',
     '/auth/username'            => 'auth/username.php',
     '/auth/verify'              => 'auth/verify.php',
     '/auth/forgot-password'     => 'auth/forgot-password.php',
     '/auth/reset-password'      => 'auth/reset-password.php',
-    '/logout'                    => 'auth/logout.php',
+    '/logout'                   => 'auth/logout.php',
 
     '/our-community'            => 'community/community.php',
     '/community/gallery'        => 'community/gallery.php',

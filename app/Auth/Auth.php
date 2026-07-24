@@ -77,44 +77,8 @@ class Auth {
         | Validation
         |--------------------------------------------------------------------------
         */
-
-        if ($fullname === '') {
-            $this->addError('fullname', 'Full name is required.');
-        } elseif (mb_strlen($fullname) > 100) {
-            $this->addError('fullname', 'Full name is too long.');
-        }
-
-        if ($email === '') {
-            $this->addError('email', 'Email is required.');
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->addError('email', 'Enter a valid email address.');
-        } else {
-            $existingUser = $this->users->findByEmail($email);
-
-            if ($existingUser !== false) {
-
-                // Email verified, but onboarding not finished.
-                if ($existingUser['email_verified_at'] !== null && empty($existingUser['username']) ) {
-                    $this->addError(
-                        'email',
-                        'This email has already been verified. Sign in to continue.'
-                    );
-
-                // Email still waiting for verification.
-                } elseif ($existingUser['email_verified_at'] === null) {
-                    $this->addError(
-                        'email',
-                        'An account with this email already exists. Please verify your email first.'
-                    );
-
-                // Fully registered.
-                } else {
-                    $this->addError(
-                        'email',
-                        'An account with this email already exists.'
-                    );
-                }
-            }
+        if (!$this->validateReg($fullname, $email, $acceptedTerms)) {
+            return false;
         }
 
         if ($provider === 'local') {
@@ -135,10 +99,6 @@ class Auth {
             } elseif ($password !== $confirmPassword) {
                 $this->addError('confirm_password', 'Passwords do not match.');
             }
-        }
-
-        if (!$acceptedTerms) {
-            $this->addError('terms', 'You must agree to the Terms and Privacy Policy.');
         }
 
         if (!empty($this->errors)) {
@@ -176,12 +136,7 @@ class Auth {
                 return false;
             }
 
-            $this->mail->sendVerificationEmail(
-                $email,
-                $fullname,
-                $verificationToken
-            );
-
+            $this->mail->sendVerificationEmail($email, $fullname, $verificationToken);
             $this->db->commit();
 
             return [
@@ -201,9 +156,52 @@ class Auth {
         }
     }
 
+    /**
+     * Validate registration data shared by all providers.
+     */
+    private function validateReg(string $fullname, string $email, bool $acceptedTerms): bool {
+        if ($fullname === '') {
+            $this->addError('fullname', 'Full name is required.');
+        } elseif (mb_strlen($fullname) > 100) {
+            $this->addError('fullname', 'Full name is too long.');
+        }
+
+        if ($email === '') {
+            $this->addError('email', 'Email is required.');
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->addError('email', 'Enter a valid email address.');
+        } else {
+            $existingUser = $this->users->findByEmail($email);
+
+            if ($existingUser !== false) {
+                if ($existingUser['email_verified_at'] !== null && empty($existingUser['username'])
+                ) {
+
+                    $this->addError(
+                        'email', 'This email has already been verified. Sign in to continue.'
+                    );
+
+                } elseif ($existingUser['email_verified_at'] === null) {
+                    $this->addError(
+                        'email',
+                        'An account with this email already exists. Please verify your email first.'
+                    );
+
+                } else {
+                    $this->addError('email', 'An account with this email already exists.');
+                }
+            }
+        }
+
+        if (!$acceptedTerms) {
+            $this->addError('terms', 'You must agree to the Terms and Privacy Policy.');
+        }
+
+        return empty($this->errors);
+    }
+
     private function sendPasswordReset(string $email): array|false {
         $this->errors = [];
-
         $email = strtolower(trim($email));
 
         if ($email === '') {
@@ -437,6 +435,12 @@ class Auth {
         if ($user === false) {
             $this->errorType = 'auth';
             $this->addError('general', 'Invalid email or password.');
+            return false;
+        }
+
+        if (empty($user['password'])) {
+            $this->errorType = 'auth';
+            $this->addError('general', 'This account uses Google Sign-In.');
             return false;
         }
 
