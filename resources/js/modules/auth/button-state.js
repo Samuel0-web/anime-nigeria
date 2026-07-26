@@ -53,6 +53,11 @@ export function initButtonState(form) {
     }
 
     function updateButtons() {
+        if (submit?.dataset.cooldown === "true") {
+            submit.disabled = true;
+            return;
+        }
+
         const valid = areFieldsValid();
         const agreed = terms?.checked ?? false;
 

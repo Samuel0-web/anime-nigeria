@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initForgotPassword(form);
     initResetPassword(form);
     initUsername(form, updateButtons);
-    initRegister(form);
+    initRegister(form, updateButtons);
     initGoogleRegister(form);
     initLogin(form, updateButtons);
     initGoogleAuth();

@@ -25,8 +25,15 @@ if ($auth->checkUsername($username)) {
     exit;
 }
 
-echo json_encode([
+$response = [
     'success' => false,
     'available' => false,
     'errors' => $auth->errors(),
-]);
+    'type'     => $auth->errorType(),
+];
+
+if ($auth->meta()) {
+    $response['meta'] = $auth->meta();
+}
+
+echo json_encode($response);

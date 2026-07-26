@@ -7,7 +7,7 @@ require_once __DIR__ . "/../partials/meta.php";
 $auth->requireGuest();
 
 if (empty($_SESSION['google_register'])) {
-    header("Location: /join");
+    header("Location: /login");
     exit;
 }
 

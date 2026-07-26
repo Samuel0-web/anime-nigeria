@@ -6,11 +6,17 @@ $result = $auth->resetPassword($_POST['token'] ?? '', $_POST);
 if (!$result) {
     http_response_code(422);
 
-    echo json_encode([
+    $response = [
         'success' => false,
-        'errors' => $auth->errors(),
-    ]);
+        'errors'  => $auth->errors(),
+        'type'    => $auth->errorType(),
+    ];
 
+    if ($auth->meta()) {
+        $response['meta'] = $auth->meta();
+    }
+
+    echo json_encode($response);
     exit;
 }
 

@@ -2,6 +2,7 @@ import { api, handleApiError } from "./api";
 import { setLoading, clearLoading } from "./loading-state";
 import { setError, clearError, setValid, showFormMessage, clearFormMessage } from "./helpers";
 import { initEmailValidation } from "./email-validation";
+import { startCooldown } from "./utils/cooldown.js";
 
 export function initLogin(form, updateButtons) {
     if (document.body.dataset.page !== "login") return;
@@ -34,6 +35,21 @@ export function initLogin(form, updateButtons) {
             if (!response.success) {
                 if (response.type === "auth") {
                     showFormMessage(form, response.message);
+
+                    if (response.meta?.cooldown) {
+                        startCooldown(form, response.meta.cooldown,
+                            (time) => {
+                                showFormMessage(
+                                    form, `Too many login attempts. Try again in ${time}.`
+                                );
+                            },
+                            () => {
+                                clearFormMessage(form);
+                                updateButtons();
+                            }
+                        );
+                    }
+
                     return;
                 }
 
@@ -53,6 +69,7 @@ export function initLogin(form, updateButtons) {
             handleApiError(err);
         } finally {
             clearLoading(button);
+            updateButtons();
         }
     });
 

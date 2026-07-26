@@ -1,10 +1,20 @@
 <?php
 require_once __DIR__ . '/../../../bootstrap.php';
-
-use App\Database\Database;
 header('Content-Type: application/json');
-$email = $_POST['email'] ?? '';
-$result = $auth->forgotPassword($email);
+$email = $_SESSION['verification_email'] ?? '';
+
+if ($email === '') {
+    http_response_code(403);
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Verification session expired.',
+    ]);
+
+    exit;
+}
+
+$result = $auth->resendVerification($email);
 
 if ($result === false) {
     http_response_code(422);
@@ -25,6 +35,5 @@ if ($result === false) {
 
 echo json_encode([
     'success' => true,
-    'email' => $result['email'],
     'resend_after' => $result['resend_after'],
 ]);

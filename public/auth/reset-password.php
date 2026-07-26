@@ -4,6 +4,8 @@ $pageDescription = "Create a new password to securely regain access to your Anim
 
 require_once __DIR__ . "/partials/meta.php";
 
+$auth->requireGuest();
+
 $token = $_GET['token'] ?? '';
 $record = false;
 
@@ -14,6 +16,13 @@ if ($token !== '') {
 }
 
 $linkValid = $record && strtotime($record['expires_at']) > time();
+
+if (!$linkValid) {
+    header('Location: /auth/forgot-password');
+    exit;
+}
+
+
 ?>
 <body data-page="reset-password">
     <main class="an-auth an-auth--register">

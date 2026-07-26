@@ -26,13 +26,18 @@ try {
     if ($result === false) {
         http_response_code(422);
 
-        echo json_encode([
+        $response = [
             'success' => false,
-            'type'    => $auth->errorType(),
             'errors'  => $auth->errors(),
+            'type'    => $auth->errorType(),
             'message' => $auth->error('general'),
-        ]);
+        ];
 
+        if ($auth->meta()) {
+            $response['meta'] = $auth->meta();
+        }
+
+        echo json_encode($response);
         exit;
     }
 

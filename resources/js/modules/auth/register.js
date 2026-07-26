@@ -1,8 +1,11 @@
-import { clearError, setError, maskEmail, startCountdown } from "./helpers.js";
+import { clearError, setError, maskEmail, startCountdown, showFormMessage, clearFormMessage
+} from "./helpers.js";
+
 import { setLoading, clearLoading } from "./loading-state.js";
 import { api, handleApiError } from "./api.js";
+import { startCooldown } from "./utils/cooldown.js";
 
-export function initRegister(form) {
+export function initRegister(form, updateButtons) {
     if (document.body.dataset.page !== "register") return;
     if (!form.classList.contains("an-auth__form")) return;
     const intro = document.querySelector(".an-auth__intro");
@@ -13,21 +16,31 @@ export function initRegister(form) {
         e.preventDefault();
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn.disabled) return;
-
-        // Clear previous errors
+        clearFormMessage(form);
         form.querySelectorAll(".an-auth__field").forEach(clearError);
         form.querySelector(".an-auth__checkbox-error").textContent = "";
         setLoading(submitBtn, "Creating account...");
 
         try {
-            const formData = new FormData(form);
-
             const result = await api("/auth/api/register", {
                 method: "POST",
-                body: formData
+                body: new FormData(form)
             });
 
             if (!result.success) {
+                if (result.type === "auth" && result.meta?.cooldown) {
+                    startCooldown(form, result.meta.cooldown,
+                        (time) => {
+                            showFormMessage(form, `Too many attempts. Try again in ${time}.`);
+                        },
+                        () => {
+                            clearFormMessage(form);
+                        }
+                    );
+
+                    return;
+                }
+
                 Object.entries(result.errors).forEach(([field, message]) => {
                     if (field === "terms") {
                         form.querySelector(".an-auth__checkbox-error").textContent = message;
@@ -56,11 +69,12 @@ export function initRegister(form) {
                 success.classList.add("is-visible");
             });
 
-            startCountdown(result, result.resend_after);
+            startCountdown(resend, result.resend_after);
         } catch (err) {
             handleApiError(err);
         } finally {
             clearLoading(submitBtn);
+            updateButtons();
         }
     });
 
@@ -68,7 +82,7 @@ export function initRegister(form) {
 
     if (resend) {
         resend.addEventListener("click", async () => {
-            if (resend.disabled) return;    
+            if (resend.disabled) return;
             setLoading(resend, "Sending...");
 
             try {
@@ -81,7 +95,7 @@ export function initRegister(form) {
                     return;
                 }
 
-                startCountdown(result, result.resend_after);
+                startCountdown(resend, result.resend_after);
             } catch (err) {
                 handleApiError(err, "Could not resend email.");
                 clearLoading(resend);

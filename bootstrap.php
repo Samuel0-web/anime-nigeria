@@ -16,12 +16,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $db = App\Database\Database::connection();
-
-$mail = new App\Mail\Mail(
-    new App\Mail\SmtpMailer(),
-    $_ENV['APP_URL']
-);
-
+$mail = new App\Mail\Mail(new App\Mail\SmtpMailer(), $_ENV['APP_URL']);
 $auth = new App\Auth\Auth($db, $mail);
 $auth->boot();
 // Headers::send();

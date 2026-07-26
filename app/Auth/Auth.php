@@ -4,6 +4,7 @@ use App\Mail\Mail;
 use App\Models\User;
 use App\Auth\RememberMe;
 use App\Models\PasswordResetToken;
+use App\Services\RateLimiter;
 use PDO;
 
 class Auth {
@@ -12,7 +13,9 @@ class Auth {
     private Mail $mail;
     private RememberMe $rememberMe;
     private PasswordResetToken $passwordResetTokens;
+    private RateLimiter $rateLimiter;
     private const PASSWORD_RESET_RESEND_AFTER = 60;
+    private const VERIFICATION_RESEND_AFTER = 60;
 
     /**
      * Validation / auth errors
@@ -26,6 +29,13 @@ class Auth {
         $this->mail = $mail;
         $this->rememberMe = new RememberMe($db);
         $this->passwordResetTokens = new PasswordResetToken($db);
+        $this->rateLimiter = new RateLimiter($db);
+    }
+
+    private array $meta = [];
+
+    public function meta(): array {
+        return $this->meta;
     }
 
     /**
@@ -54,17 +64,46 @@ class Auth {
         return !empty($this->errors);
     }
 
+    private function validatePassword(string $password, string $confirm): void {
+        if ($password === '') {
+            $this->addError('password', 'Password is required.');
+        } elseif (strlen($password) < 8) {
+            $this->addError('password', 'Password must be at least 8 characters.');
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            $this->addError('password', 'Password must contain at least one uppercase letter.');
+        } elseif (!preg_match('/[0-9]/', $password)) {
+            $this->addError('password', 'Password must contain at least one number.');
+        } elseif (!preg_match('/[!@#$%&*?,]/', $password)) {
+            $this->addError('password', 'Password must contain at least one symbol.');
+        }
+
+        if ($confirm === '') {
+            $this->addError('confirm_password', 'Please confirm your password.');
+        } elseif ($password !== $confirm) {
+            $this->addError('confirm_password', 'Passwords do not match.');
+        }
+    }
+
     /**
      * Register a user
      */
     public function register(array $data): array|false {
         $this->errors = [];
+        $this->meta = [];
+        $this->errorType = 'validation';
+
+        if ($this->rateLimiter->tooManyAttempts('register')) {
+            $this->errorType = 'auth';
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('register');
+            $this->addError('general', 'Too many attempts.');
+            return false;
+        }
 
         // Clean input
         $fullname = trim($data['fullname'] ?? '');
         $email    = strtolower(trim($data['email'] ?? ''));
         $password = $data['password'] ?? '';
-        $confirmPassword = $data['confirm_password'] ?? '';
+        $confirm = $data['confirm_password'] ?? '';
         $provider = $data['provider'] ?? 'local';
         $acceptedTerms = !empty($data['terms']);
 
@@ -78,30 +117,16 @@ class Auth {
         |--------------------------------------------------------------------------
         */
         if (!$this->validateReg($fullname, $email, $acceptedTerms)) {
+            $this->rateLimiter->hit('register');
             return false;
         }
 
         if ($provider === 'local') {
-            if ($password === '') {
-                $this->addError('password', 'Password is required.');
-            } elseif (strlen($password) < 8) {
-                $this->addError('password', 'Password must be at least 8 characters.');
-            } elseif (!preg_match('/[A-Z]/', $password)) {
-                $this->addError('password', 'Password must contain at least one uppercase letter.');
-            } elseif (!preg_match('/[0-9]/', $password)) {
-                $this->addError('password', 'Password must contain at least one number.');
-            } elseif (!preg_match('/[!@#$%&*?,]/', $password)) {
-                $this->addError('password', 'Password must contain at least one symbol.');
-            }
-
-            if ($confirmPassword === '') {
-                $this->addError('confirm_password', 'Please confirm your password.');
-            } elseif ($password !== $confirmPassword) {
-                $this->addError('confirm_password', 'Passwords do not match.');
-            }
+            $this->validatePassword($password, $confirm);
         }
 
-        if (!empty($this->errors)) {
+        if ($this->hasErrors()) {
+            $this->rateLimiter->hit('register');
             return false;
         }
 
@@ -136,7 +161,9 @@ class Auth {
             }
 
             $this->mail->sendVerificationEmail($email, $fullname, $verificationToken);
+            $_SESSION['verification_email'] = $email;
             $this->db->commit();
+            $this->rateLimiter->clear('register');
 
             return [
                 'id' => $userId,
@@ -199,6 +226,65 @@ class Auth {
         return empty($this->errors);
     }
 
+    private function sendVerification(string $email): array|false {
+        $this->errors = [];
+        $email = strtolower(trim($email));
+
+        if ($email === '') {
+            $this->addError('email', 'Email is required.');
+            return false;
+        }
+
+        $user = $this->users->findByEmail($email);
+
+        if ($user === false) {
+            return [
+                'email' => $email,
+                'resend_after' => self::VERIFICATION_RESEND_AFTER,
+            ];
+        }
+
+        if ($user['email_verified_at'] !== null) {
+            $this->addError('general', 'This email has already been verified.');
+            return false;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
+        $this->users->updateVerificationToken((int) $user['id'], $tokenHash, $expiresAt);
+        $this->mail->sendVerificationEmail($user['email'], $user['fullname'], $token);
+        $_SESSION['verification_email'] = $user['email'];
+
+        return [
+            'email' => $user['email'],
+            'resend_after' => self::VERIFICATION_RESEND_AFTER,
+        ];
+    }
+
+    public function resendVerification(string $email): array|false {
+        $this->errors = [];
+        $this->meta = [];
+        $this->errorType = 'validation';
+
+        if ($this->rateLimiter->tooManyAttempts('resend_verification')) {
+            $this->errorType = 'auth';
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('resend_verification');
+            $this->addError('general', 'Too many attempts.');
+            return false;
+        }
+
+        $result = $this->sendVerification($email);
+
+        if ($result === false) {
+            $this->rateLimiter->hit('resend_verification');
+        } else {
+            $this->rateLimiter->clear('resend_verification');
+        }
+
+        return $result;
+    }
+
     private function sendPasswordReset(string $email): array|false {
         $this->errors = [];
         $email = strtolower(trim($email));
@@ -227,7 +313,7 @@ class Auth {
             ];
         }
 
-        if ($user !== false && $user['auth_provider'] === 'google') {
+        if ($user['auth_provider'] === 'google') {
             $this->addError(
                 'email', 'This account uses Google Sign-In. Please continue with Google.'
             );
@@ -249,15 +335,53 @@ class Auth {
     }
 
     public function forgotPassword(string $email): array|false {
-        return $this->sendPasswordReset($email);
+        $this->errors = [];
+        $this->errorType = 'auth';
+
+        if ($this->rateLimiter->tooManyAttempts('forgot_password')) {
+            $this->errorType = 'auth';
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('forgot_password');
+            $this->addError('general', 'Too many attempts.');
+            return false;
+        }
+
+        $result = $this->sendPasswordReset($email);
+
+        if ($result === false) {
+            $this->rateLimiter->hit('forgot_password');
+        } else {
+            $this->rateLimiter->clear('forgot_password');
+        }
+
+        return $result;
     }
 
     public function resendPasswordReset(string $email): array|false {
-        return $this->sendPasswordReset($email);
+        $this->errors = [];
+        $this->meta = [];
+        $this->errorType = 'validation';
+
+        if ($this->rateLimiter->tooManyAttempts('resend_password_reset')) {
+            $this->errorType = 'auth';
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('resend_password_reset');
+            $this->addError('general', 'Too many attempts.');
+            return false;
+        }
+
+        $result = $this->sendPasswordReset($email);
+
+        if ($result === false) {
+            $this->rateLimiter->hit('resend_password_reset');
+        } else {
+            $this->rateLimiter->clear('resend_password_reset');
+        }
+
+        return $result;
     }
 
     public function resetPassword(string $token, array $data): bool {
         $this->errors = [];
+        $this->errorType = 'auth';
         $password = $data['password'] ?? '';
         $confirm = $data['confirm_password'] ?? '';
         $token = trim($token);
@@ -267,23 +391,7 @@ class Auth {
             return false;
         }
 
-        if ($password === '') {
-            $this->addError('password', 'Password is required.');
-        } elseif (strlen($password) < 8) {
-            $this->addError('password', 'Password must be at least 8 characters.');
-        } elseif (!preg_match('/[A-Z]/', $password)) {
-            $this->addError('password', 'Password must contain at least one uppercase letter.');
-        } elseif (!preg_match('/[0-9]/', $password)) {
-            $this->addError('password', 'Password must contain at least one number.');
-        } elseif (!preg_match('/[!@#$%&*?,]/', $password)) {
-            $this->addError('password', 'Password must contain at least one symbol.');
-        }
-
-        if ($confirm === '') {
-            $this->addError('confirm_password', 'Confirm your password.');
-        } elseif ($password !== $confirm) {
-            $this->addError('confirm_password', 'Passwords do not match.');
-        }
+        $this->validatePassword($password, $confirm);
 
         if ($this->hasErrors()) {
             return false;
@@ -342,6 +450,7 @@ class Auth {
      */
     public function verifyEmail(string $token): array|false {
         $this->errors = [];
+        $this->errorType = 'auth';
         $token = trim($token);
 
         if ($token === '') {
@@ -371,6 +480,14 @@ class Auth {
             return false;
         }
 
+        // Clean up verification session.
+        unset($_SESSION['verification_email']);
+
+        // User still needs to complete onboarding.
+        if (empty($user['username'])) {
+            $_SESSION['pending_username_user_id'] = (int) $user['id'];
+        }
+
         return [
             'status' => 'verified',
             'user' => $user,
@@ -382,6 +499,16 @@ class Auth {
      */
     public function checkUsername(string $username): bool {
         $this->errors = [];
+        $this->meta = [];
+        $this->errorType = 'validation';
+        
+
+        if ($this->rateLimiter->tooManyAttempts('username')) {
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('username');
+            $this->addError('username', 'Too many attempts.');
+            return false;
+        }
+
         $username = trim($username);
 
         if ($username === '') {
@@ -411,6 +538,12 @@ class Auth {
             return false;
         }
 
+        if ($this->hasErrors()) {
+            $this->rateLimiter->hit('username');
+            return false;
+        }
+
+        $this->rateLimiter->clear('username');
         return true;
     }
 
@@ -433,6 +566,16 @@ class Auth {
 
     public function login(array $data): array|false {
         $this->errors = [];
+        $this->meta = [];
+        $this->errorType = 'validation';
+
+        if ($this->rateLimiter->tooManyAttempts('login')) {
+            $this->errorType = 'auth';
+            $this->meta['cooldown'] = $this->rateLimiter->remainingSeconds('login');
+            $this->addError('general', 'Too many login attempts.');
+            return false;
+        }
+
         $email = strtolower(trim($data['email'] ?? ''));
         $password = $data['password'] ?? '';
         $remember = !empty($data['remember']);
@@ -446,19 +589,23 @@ class Auth {
         }
 
         if ($this->hasErrors()) {
+            $this->rateLimiter->hit('login');
             return false;
         }
 
         $user = $this->users->findByEmail($email);
 
         if ($user === false) {
+            $this->rateLimiter->hit('login');
             $this->errorType = 'auth';
             $this->addError('general', 'Invalid email or password.');
             return false;
         }
 
         if (empty($user['password'])) {
+            $this->rateLimiter->hit('login');
             $this->errorType = 'auth';
+
             $this->addError(
                 'general', 'This account uses Google Sign-In. Please continue with Google.'
             );
@@ -467,6 +614,7 @@ class Auth {
         }
 
         if (!$this->users->verifyPassword($user, $password)) {
+            $this->rateLimiter->hit('login');
             $this->errorType = 'auth';
             $this->addError('general', 'Invalid email or password.');
             return false;
@@ -506,6 +654,7 @@ class Auth {
         */
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
+        $this->rateLimiter->clear('login');
 
         if ($remember) {
             $this->rememberMe->create((int)$user['id']);

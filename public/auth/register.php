@@ -90,6 +90,7 @@ $auth->requireGuest();
                 </label>
 
                 <small class="an-auth__checkbox-error"></small>
+                <div class="an-auth__message"></div>
 
                 <button class="an-btn an-btn--primary an-auth__submit" type="submit" disabled>
                     Create Account
@@ -114,7 +115,7 @@ $auth->requireGuest();
                 </p>
 
                 <button class="an-btn an-btn--primary an-auth__resend" disabled type="button">
-                    Resend Email (<span class="an-auth__countdown">60</span>s)
+                    Resend Email
                 </button>
             </div>
 

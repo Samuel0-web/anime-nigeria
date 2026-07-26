@@ -9,6 +9,7 @@ export function setLoading(button, text) {
 }
 
 export function clearLoading(button) {
-    button.disabled = false;
     button.innerHTML = button.dataset.originalText;
+    delete button.dataset.originalText;
+    button.disabled = button.dataset.cooldown === "true";
 }

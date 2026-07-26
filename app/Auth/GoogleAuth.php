@@ -198,44 +198,6 @@ class GoogleAuth {
     }
 
     /**
-     * Create a brand-new Google account.
-     */
-    public function createGoogleUser(array $googleUser): array|false {
-        $this->db->beginTransaction();
-
-        try {
-            $userId = $this->users->create([
-                'fullname' => $googleUser['fullname'],
-                'email' => $googleUser['email'],
-                'provider' => 'google',
-                'google_id' => $googleUser['google_id'],
-                'avatar' => $googleUser['picture'] ?? null,
-                'email_verified_at' => date('Y-m-d H:i:s'),
-            ]);
-
-            if ($userId === false) {
-                throw new \RuntimeException('Unable to create Google account.');
-            }
-
-            $this->db->commit();
-            $user = $this->users->findById($userId);
-
-            if ($user === false) {
-                throw new \RuntimeException('Unable to load newly created account.');
-            }
-
-            return $this->login($user);
-        } catch (\Throwable) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-
-            $this->addError('Unable to create your account.');
-            return false;
-        }
-    }
-
-    /**
      * Complete Google registration after accepting Terms.
      */
     public function completeRegistration(array $data): array|false {
@@ -269,8 +231,10 @@ class GoogleAuth {
             }
 
             $this->db->commit();
+            unset($_SESSION['google_oauth']);
             unset($_SESSION['google_register']);
             $_SESSION['pending_username_user_id'] = $userId;
+            session_regenerate_id(true);
 
             return [
                 'redirect' => '/auth/username',
