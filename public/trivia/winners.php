@@ -93,6 +93,138 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
         </div>
     </section>
+
+    <!-- ===================================================================
+     RECOGNITION & ACHIEVEMENTS
+     =================================================================== -->
+    <section class="an-trivia-winners-recognition" aria-labelledby="an-trivia-winners-recognition-heading">
+        <div class="an-trivia-winners-recognition__glow" aria-hidden="true"></div>
+
+        <div class="an-container an-trivia-winners-recognition__inner">
+            <div class="an-trivia-winners-recognition__intro">
+                <span class="an-eyebrow an-trivia-winners-recognition__eyebrow">Recognition</span>
+                <h2 class="an-trivia-winners-recognition__heading" id="an-trivia-winners-recognition-heading">Recognition Beyond the Quiz</h2>
+                <p class="an-trivia-winners-recognition__subheading">
+                    Anime Trivia celebrates members who consistently demonstrate exceptional anime
+                    knowledge, quick thinking and fair competition throughout every challenge.
+                </p>
+                <div class="an-trivia-winners-recognition__rule" aria-hidden="true"></div>
+            </div>
+
+            <div class="an-trivia-winners-recognition__grid">
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:0">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-medal" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Weekly Recognition</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Outstanding performers may be recognised among the week's top Anime Trivia competitors.</p>
+                </article>
+
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:1">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Monthly Champions</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Consistent high performers can earn recognition as monthly Anime Trivia champions.</p>
+                </article>
+
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:2">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Leaderboard Achievement</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Strong performances help members climb the leaderboard and build a lasting competitive record.</p>
+                </article>
+
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:3">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Consistency Matters</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Success comes from performing well across multiple quizzes, not just a single challenge.</p>
+                </article>
+
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:4">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-handshake" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Fair Competition</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Every recognised achievement is based on verified scores earned through honest participation.</p>
+                </article>
+
+                <article class="an-trivia-winners-recognition__card an-reveal" style="--i:5">
+                    <span class="an-trivia-winners-recognition__icon"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span>
+                    <h3 class="an-trivia-winners-recognition__card-title">Community Recognition</h3>
+                    <p class="an-trivia-winners-recognition__card-text">Top performers become part of Anime Nigeria's growing Trivia community and are celebrated for their achievements.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================
+        FREQUENTLY ASKED QUESTIONS
+        =================================================================== -->
+    <section class="an-trivia-winners-faq an-reveal" aria-labelledby="an-trivia-winners-faq-heading">
+        <div class="an-container">
+            <div class="an-section-heading">
+                <span class="an-eyebrow">FAQ</span>
+                <h2 id="an-trivia-winners-faq-heading">Frequently Asked Questions</h2>
+                <p>Everything you need to know about Anime Trivia winners and how recognition is earned.</p>
+            </div>
+
+            <div class="an-trivia-winners-faq__list">
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>How are Anime Trivia winners selected?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>Trivia winners are recognised based on verified scores earned through strong performances across available quizzes.</p>
+                    </div>
+                </article>
+
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>How often are Trivia winners recognised?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>Recognition may be given on a weekly or monthly basis, depending on the competition and event schedule.</p>
+                    </div>
+                </article>
+
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>Can I become a winner more than once?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>Yes. Members can continue competing and earn recognition multiple times through consistent performance.</p>
+                    </div>
+                </article>
+
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>What happens if two members finish with the same score?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>If scores are tied, additional criteria such as overall performance and completion timing may be used to determine the final ranking.</p>
+                    </div>
+                </article>
+
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>How does Anime Nigeria ensure fair competition?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>Scores are reviewed and suspicious activity may be investigated to help maintain a fair and competitive environment.</p>
+                    </div>
+                </article>
+
+                <article class="an-trivia-winners-faq__item">
+                    <button class="an-trivia-winners-faq__question" type="button" aria-expanded="false">
+                        <span>Where can members view Trivia winners?</span>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <div class="an-trivia-winners-faq__answer">
+                        <p>Registered members can explore official Trivia winners and recognition through the Anime Nigeria platform once results have been published.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
 </main>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -69,7 +69,7 @@ require __DIR__ . '/vite.php';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-  <?php vite(); ?>
+  <?php vite('public'); ?>
 </head>
 <body>
 

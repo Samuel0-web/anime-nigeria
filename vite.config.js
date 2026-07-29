@@ -33,7 +33,9 @@ export default defineConfig(({ command }) => ({
         manifest: true,
         rollupOptions: {
             input: {
-                app: path.resolve(__dirname, 'resources/js/app.js'),
+                public: path.resolve(__dirname, 'resources/js/public.js'),
+                member: path.resolve(__dirname, 'resources/js/member.js'),
+                admin: path.resolve(__dirname, 'resources/js/admin.js'),
             },
         },
     },

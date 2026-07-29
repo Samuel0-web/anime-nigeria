@@ -78,7 +78,7 @@ if (str_contains($uri, '/api/')) {
 
 $routes = [
     '/'                         => 'index.php',
-    '/test'                         => 'test.php',
+    '/test'                     => 'test.php',
     '/privacy'                  => 'privacy-policy.php',
     '/terms'                    => 'terms-of-use.php',
 
@@ -104,7 +104,7 @@ $routes = [
     '/trivia/leaderboard'       => 'trivia/leaderboard.php',
     '/trivia/winners'           => 'trivia/winners.php',
 
-    '/blog'                     => 'blog.php',
+    '/blog'                     => 'blogs/index.php',
 
     '/awards-overview'          => 'awards/awards.php',
     '/awards/categories'        => 'awards/categories.php',
@@ -116,6 +116,9 @@ $routes = [
     '/contact'                  => 'contact.php',
 
     '/dashboard'                => 'member/dashboard.php',
+    '/member/profile'           => 'member/profile.php',
+
+    '/home'                     => 'admin/index.php',
 ];
 
 /*

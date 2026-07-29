@@ -68,8 +68,8 @@ $pageDescription = 'Verify your account';
                     It may be invalid, expired, or already used.
                 </p>
 
-                <a href="/auth/resend-verification" class="an-btn an-btn-primary an-auth__verify-button">
-                    Get a New Verification Link
+                <a href="/join" class="an-btn an-btn-primary an-auth__verify-button">
+                    Back
                 </a>
             </div>
         <?php endif; ?>

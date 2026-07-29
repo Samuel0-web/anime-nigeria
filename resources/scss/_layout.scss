@@ -396,3 +396,53 @@
 .an-reveal {
     will-change: opacity, transform;
 }
+
+.preloader {
+    position: fixed;
+    inset: 0;
+    z-index: $z-preloader;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $black;
+    overflow: hidden;
+    transition: opacity $transition-base, visibility $transition-base;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("/public/uploads/noise.png") repeat;
+        opacity: .07;
+        pointer-events: none;
+    }
+
+    &.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    &__wheel {
+        position: relative;
+        z-index: 1;
+        width: 120px;
+        height: 120px;
+        -webkit-user-select: none;
+        user-select: none;
+        pointer-events: none;
+        animation: preloader-spin 2.4s ease-in-out infinite;
+    }
+}
+
+@keyframes preloader-spin {
+    0%, 10% { transform: rotate(0deg); }
+
+    45% { transform: rotate(360deg); }
+
+    60% { transform: rotate(360deg); }
+
+    95% { transform: rotate(720deg); }
+
+    100% { transform: rotate(720deg); }
+}

@@ -67,10 +67,8 @@ $bp-xl: 1280px;
 $z-header:     100;
 $z-dropdown:   110;
 $z-mobile-nav: 120;
+$z-preloader: 9999;
 
-// Feature-card accents — extends the sakura/gold pair for the six
-// Community Features cards. Same desaturated, premium treatment;
-// each has a solid (icon/glow) and a dim (icon background) variant.
 $accent-ember:       #e0935f;
 $accent-ember-dim:   rgba(224, 147, 95, 0.14);
 $accent-violet:      #a88cd8;

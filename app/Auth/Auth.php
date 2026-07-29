@@ -64,6 +64,14 @@ class Auth {
         return !empty($this->errors);
     }
 
+    private function getDashboardRedirect(array $user): string {
+        return match ($user['role']) {
+            'admin', 'moderator' => '/home',
+            'member' => '/dashboard',
+            default => '/dashboard',
+        };
+    }
+
     private function validatePassword(string $password, string $confirm): void {
         if ($password === '') {
             $this->addError('password', 'Password is required.');
@@ -654,6 +662,7 @@ class Auth {
         */
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
+        $_SESSION['role'] = $user['role'];
         $this->rateLimiter->clear('login');
 
         if ($remember) {
@@ -661,7 +670,7 @@ class Auth {
         }
 
         return [
-            'redirect' => '/dashboard',
+            'redirect' => $this->getDashboardRedirect($user),
         ];
     }
 

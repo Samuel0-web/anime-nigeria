@@ -1,4 +1,4 @@
-import '../scss/app.scss';
+import '../scss/public.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { initStickyHeader } from './modules/sticky-header.js';
 import { initDropdowns } from './modules/dropdowns.js';
@@ -13,6 +13,8 @@ import { initAnimeAwards } from "./anime-awards.js";
 import { initContactFaq } from "./contact.js";
 import { initTriviaFaq } from "./trivia.js";
 import { initLeaderboardFaq } from "./trivia-leaderboard.js";
+import { initTriviaWinnersFaq } from "./trivia-winners.js";
+import { initBlogHero } from "./blog.js";
 import './honoured-ones.js';
 import './auth.js';
 import './legals.js';
@@ -25,8 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initAwardsNominationForm();
   initVotingFaq();
   initWinnersFaq();
-  initTriviaFaq();
+  initTriviaWinnersFaq();
+  initBlogHero();
   initLeaderboardFaq();
+  initTriviaWinnersFaq();
   initAnimeAwards();
   initDropdowns();
   initMobileNav();

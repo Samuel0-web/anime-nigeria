@@ -54,6 +54,14 @@ class GoogleAuth {
         exit;
     }
 
+    private function getDashboardRedirect(array $user): string {
+        return match ($user['role']) {
+            'admin', 'moderator' => '/home',
+            'member' => '/dashboard',
+            default => '/dashboard',
+        };
+    }
+
     /**
      * Handle Google's OAuth callback.
      */
@@ -190,10 +198,11 @@ class GoogleAuth {
 
         unset($_SESSION['pending_username_user_id']);
         $_SESSION['user_id'] = $user['id'];
+        $_SESSION['role'] = $user['role'];
         $this->rememberMe->create((int)$user['id']);
 
         return [
-            'redirect' => '/dashboard',
+            'redirect' => $this->getDashboardRedirect($user),
         ];
     }
 
@@ -222,7 +231,7 @@ class GoogleAuth {
                 'email'             => strtolower($googleUser['email']),
                 'provider'          => 'google',
                 'google_id'         => $googleUser['google_id'],
-                'avatar'            => $googleUser['picture'] ?? null,
+                'avatar'            => $googleUser['avatar'] ?? null,
                 'email_verified_at' => date('Y-m-d H:i:s'),
             ]);
 
