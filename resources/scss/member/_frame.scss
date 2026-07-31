@@ -9,15 +9,6 @@ $sidebar-width: 18.75rem;   // fixed, permanent width — no collapsed state
 $content-margin: 1.5rem;    // gap between panels
 $header-height: 7.25rem;    // reserved space for the taller two-line header
 
-.akd-dashboard {
-    display: flex;
-    min-height: 100vh;
-    background-color: $black;
-    color: $white;
-    font-family: $font-primary;
-    padding: $space-sm;
-}
-
 // ==========================================
 // HEADER
 // ==========================================
@@ -38,12 +29,14 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     padding: $space-sm $space-md;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 100px 55px rgba(0, 0, 0, 0.9);
     transition: left 0.35s cubic-bezier(.22, 1, .36, 1);
 
     @media (max-width: $bp-lg) {
         left: $dashboard-pad;
         right: $dashboard-pad;
+        min-height: 4rem;
+        padding: $space-xs $space-sm;
     }
 
     &__primary {
@@ -84,6 +77,11 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         display: flex;
         flex-direction: column;
         gap: 2px;
+
+        @media (max-width: $bp-lg) {
+            justify-content: center;
+            gap: 0;
+        }
     }
 
     &__actions {
@@ -148,23 +146,73 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         }
     }
 
-    &__avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: $radius-full;
-        object-fit: cover;
-        border: 1px solid $black-line;
+    &__greeting {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        margin-top: $space-xxs;
+        font-size: 1.375rem;
+        font-weight: $fw-semibold;
+        color: $white;
 
-        &--initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: $sakura-dim;
-            color: $sakura;
-            font-weight: $fw-bold;
-            font-size: $fs-xs;
-            border: 1px solid $sakura-dim;
+        @media (max-width: $bp-lg) {
+            display: none;
         }
+    }
+    
+    &__mobile-title {
+        display: none;
+        margin: 0;
+        font-size: $fs-lg;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: 1.2;
+
+        @media (max-width: $bp-lg) {
+            display: block;
+        }
+    }
+    
+    &__greeting-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        font-size: 1rem;
+    }
+
+    &__greeting-icon--morning {
+        color: #FDB813;
+        background: rgba(#FDB813, .12);
+    }
+
+    &__greeting-icon--afternoon {
+        color: #FF9F1C;
+        background: rgba(#FF9F1C, .12);
+    }
+
+    &__greeting-icon--evening {
+        color: #9AA5FF;
+        background: rgba(#9AA5FF, .12);
+    }
+
+    &__subtitle {
+        font-size: $fs-xs;
+        color: $white-faint;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        @media (max-width: $bp-lg) {
+            display: none;
+        }
+    }
+
+    &__dot {
+        margin: 0 0.5em;
+        opacity: 0.4;
     }
 }
 
@@ -209,55 +257,10 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         font-size: 8px;
         color: rgba($white-faint, 0.4);
     }
-}
 
-// Greeting block
-.akd-header__greeting {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    margin-top: $space-xxs;
-    font-size: 1.375rem;
-    font-weight: $fw-semibold;
-    color: $white;
-}
-
-.akd-header__greeting-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    font-size: 1rem;
-}
-
-.akd-header__greeting-icon--morning {
-    color: #FDB813;
-    background: rgba(#FDB813, .12);
-}
-
-.akd-header__greeting-icon--afternoon {
-    color: #FF9F1C;
-    background: rgba(#FF9F1C, .12);
-}
-
-.akd-header__greeting-icon--evening {
-    color: #9AA5FF;
-    background: rgba(#9AA5FF, .12);
-}
-
-.akd-header__subtitle {
-    font-size: $fs-xs;
-    color: $white-faint;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.akd-header__dot {
-    margin: 0 0.5em;
-    opacity: 0.4;
+    @media (max-width: $bp-lg) {
+        display: none;
+    }
 }
 
 // ==========================================
@@ -413,7 +416,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
             background-color: $sakura-dim;
             color: $sakura;
             font-weight: $fw-bold;
-            font-size: $fs-sm;
+            font-size: $fs-lg;
             border: 1px solid $sakura-dim;
         }
     }
@@ -608,8 +611,8 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 // ==========================================
 .akd-content {
     flex: 1;
-    margin-top: $dashboard-pad + $header-height + $content-margin;
-    margin-left: $sidebar-width + $content-margin;
+    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md;
+    margin-left: $sidebar-width + $content-margin + $space-xs;
     background-color: transparent;
     padding: 0;
     min-height: calc(100vh - #{$dashboard-pad} * 2);

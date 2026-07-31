@@ -390,6 +390,56 @@
     margin: 0;
 }
 
+
+.an-lightbox{
+    position:fixed;
+    inset:0;
+    display:grid;
+    place-items:center;
+    background:rgba(0,0,0,.92);
+    opacity:0;
+    visibility:hidden;
+    transition:.35s;
+    z-index:999;
+
+    &.is-open{
+        opacity:1;
+        visibility:visible;
+    }
+    
+    &__image{
+        max-width:90vw;
+        max-height:85vh;
+        border-radius:$radius-lg;
+    }
+    
+    &__close, &__prev, &__next{
+        position:absolute;
+        width:54px;
+        height:54px;
+        border:none;
+        border-radius:50%;
+        cursor:pointer;
+    }
+    
+    &__close{
+        top:2rem;
+        right:2rem;
+    }
+    
+    &__prev{
+        left:2rem;
+        top:50%;
+        transform:translateY(-50%);
+    }
+    
+    &__next{
+        right:2rem;
+        top:50%;
+        transform:translateY(-50%);
+    }
+}
+
 // =============================================================================
 // SCROLL REVEAL
 // =============================================================================

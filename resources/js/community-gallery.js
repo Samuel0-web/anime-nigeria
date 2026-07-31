@@ -11,11 +11,7 @@ export function initGallery() {
     filters.forEach(button => {
         button.addEventListener("click", () => {
             const filter = button.dataset.filter;
-
-            filters.forEach(btn =>
-                btn.classList.remove("is-active")
-            );
-
+            filters.forEach(btn => btn.classList.remove("is-active"));
             button.classList.add("is-active");
 
             items.forEach(item => {
@@ -59,9 +55,7 @@ export function initGallery() {
     `;
 
     document.body.appendChild(lightbox);
-
     const image = lightbox.querySelector(".an-lightbox__image");
-
     let visibleItems = [];
     let currentIndex = 0;
 
@@ -73,14 +67,10 @@ export function initGallery() {
 
     function open(index) {
         updateVisibleItems();
-
         currentIndex = index;
-
         const img = visibleItems[currentIndex].querySelector("img");
-
         image.src = img.src;
         image.alt = img.alt;
-
         lightbox.classList.add("is-open");
         document.body.style.overflow = "hidden";
     }
@@ -91,22 +81,15 @@ export function initGallery() {
     }
 
     function next() {
-        currentIndex =
-            (currentIndex + 1) % visibleItems.length;
-
+        currentIndex = (currentIndex + 1) % visibleItems.length;
         const img = visibleItems[currentIndex].querySelector("img");
-
         image.src = img.src;
         image.alt = img.alt;
     }
 
     function prev() {
-        currentIndex =
-            (currentIndex - 1 + visibleItems.length) %
-            visibleItems.length;
-
+        currentIndex = (currentIndex - 1 + visibleItems.length) % visibleItems.length;
         const img = visibleItems[currentIndex].querySelector("img");
-
         image.src = img.src;
         image.alt = img.alt;
     }
@@ -114,7 +97,6 @@ export function initGallery() {
     items.forEach(item => {
         item.addEventListener("click", () => {
             updateVisibleItems();
-
             const index = visibleItems.indexOf(item);
 
             if (index !== -1) {
@@ -123,17 +105,9 @@ export function initGallery() {
         });
     });
 
-    lightbox
-        .querySelector(".an-lightbox__close")
-        .addEventListener("click", close);
-
-    lightbox
-        .querySelector(".an-lightbox__next")
-        .addEventListener("click", next);
-
-    lightbox
-        .querySelector(".an-lightbox__prev")
-        .addEventListener("click", prev);
+    lightbox.querySelector(".an-lightbox__close").addEventListener("click", close);
+    lightbox.querySelector(".an-lightbox__next").addEventListener("click", next);
+    lightbox.querySelector(".an-lightbox__prev").addEventListener("click", prev);
 
     lightbox.addEventListener("click", e => {
         if (e.target === lightbox) close();

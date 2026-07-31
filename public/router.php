@@ -117,6 +117,7 @@ $routes = [
 
     '/dashboard'                => 'member/dashboard.php',
     '/member/profile'           => 'member/profile.php',
+    '/member/achievements'      => 'member/achievements.php',
 
     '/home'                     => 'admin/index.php',
 ];

@@ -1,21 +1,14 @@
-export function initSidebar({
-    dashboardId,
-    sidebarId,
-    toggleBtnId,
-    closeBtnId,
-    overlayId,
-    profileBtnId,
-    dropdownId,
+export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overlayId,
+    profileBtnId, dropdownId,
 }) {
-    const dashboard = document.getElementById(dashboardId);
+    const layout = document.getElementById(layoutId);
     const sidebar = document.getElementById(sidebarId);
     const toggleBtn = document.getElementById(toggleBtnId);
     const closeBtn = document.getElementById(closeBtnId);
     const overlay = document.getElementById(overlayId);
     const profileBtn = document.getElementById(profileBtnId);
     const dropdown = document.getElementById(dropdownId);
-
-    if (!dashboard || !sidebar) return;
+    if (!layout || !sidebar) return;
 
     const openSidebar = () => {
         sidebar.classList.add('is-open');

@@ -1,0 +1,1311 @@
+@use '../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// PAGE WRAPPER
+// ==========================================
+.akd-profile {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xl;
+    padding: $space-sm;
+}
+
+// ==========================================
+// SECTION 1 — HERO (identity + identity card)
+// ==========================================
+.akd-profile-hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-lg;
+    align-items: stretch;
+
+    @media (min-width: $bp-lg) {
+        grid-template-columns: 1.4fr 1fr;
+        gap: $space-xl;
+    }
+    
+    &__identity {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: $space-md;
+
+        @media (min-width: $bp-md) {
+            flex-direction: row;
+            align-items: center;
+            text-align: left;
+            gap: $space-lg;
+        }
+    }
+    
+    &__info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-xs;
+
+        @media (min-width: $bp-md) {
+            align-items: flex-start;
+        }
+    }
+    
+    &__name-row {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        @media (min-width: $bp-md) {
+            justify-content: flex-start;
+        }
+    }
+    
+    &__name {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        letter-spacing: -0.01em;
+        color: $white;
+        line-height: $lh-tight;
+    }
+    
+    &__username {
+        font-family: $font-mono;
+        font-size: $fs-sm;
+        color: $white-faint;
+    }
+    
+    &__email-row {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-size: $fs-sm;
+        color: $white-muted;
+
+        i:first-child {
+            font-size: $fs-xs;
+            color: $white-faint;
+            width: 14px;
+            text-align: center;
+        }
+    }
+}
+
+.akd-verified-icon {
+    color: $sakura;
+    font-size: $fs-xs;
+    margin-left: 2px;
+}
+
+// Chips (Member Since / Connected Account)
+.akd-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-xs;
+    justify-content: center;
+    margin-top: $space-sm;
+
+    @media (min-width: $bp-md) {
+        justify-content: flex-start;
+    }
+}
+
+.akd-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xxs;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    color: $white-muted;
+    background: rgba($white, 0.04);
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+
+    i {
+        color: $white-faint;
+        font-size: $fs-xs;
+    }
+
+    .akd-google-icon {
+        width: 13px;
+        height: 13px;
+    }
+}
+
+// Avatar with slow rotating gradient ring
+.akd-avatar-ring {
+    position: relative;
+    width: 108px;
+    height: 108px;
+    border-radius: $radius-full;
+    padding: 3px;
+    flex-shrink: 0;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: $radius-full;
+        background: conic-gradient(from 0deg, $sakura, transparent 45%, $sakura 100%);
+        opacity: 0.85;
+        animation: akd-ring-rotate 40s linear infinite;
+    }
+
+    &__image {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: $radius-full;
+        object-fit: cover;
+        background: $black-soft;
+        border: 2px solid $black;
+
+        &--initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: $font-primary;
+            font-size: $fs-3xl;
+            font-weight: $fw-bold;
+            color: $white;
+        }
+    }
+}
+
+@keyframes akd-ring-rotate {
+    to { transform: rotate(360deg); }
+}
+
+// Role badges
+.akd-role-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    padding: 3px 10px;
+    border-radius: $radius-full;
+
+    &--member    { background: rgba($white, 0.06); color: $white-muted; }
+    &--moderator { background: $sakura-dim;        color: $sakura; }
+    &--admin     { background: $gold-dim;          color: $gold; }
+}
+
+// ==========================================
+// IDENTITY CARD (membership card)
+// ==========================================
+.akd-identity-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: $space-lg;
+    padding: $space-lg;
+    border-radius: $radius-lg;
+    background: linear-gradient(160deg, rgba($white, 0.05), rgba($white, 0.015));
+    border: 1px solid $black-line;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba($white, 0.04);
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -20%;
+        width: 60%;
+        height: 60%;
+        background: radial-gradient(circle, rgba($sakura, 0.16), transparent 70%);
+        pointer-events: none;
+    }
+    
+    &__level {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        position: relative;
+    }
+    
+    &__eyebrow {
+        font-size: 11px;
+        font-weight: $fw-bold;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $white-faint;
+    }
+    
+    &__level-value {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        font-variant-numeric: tabular-nums;
+        line-height: $lh-tight;
+    }
+    
+    &__rank-title {
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $sakura;
+        opacity: 0.85;
+        margin-top: 2px;
+    }
+    
+    &__xp {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+        position: relative;
+    }
+
+    &__xp-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: $white-faint;
+
+        span:first-child {
+            font-weight: $fw-semibold;
+            color: $white-muted;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        gap: $space-xs;
+        position: relative;
+    }
+}
+
+.akd-xp-bar {
+    position: relative;
+    height: 7px;
+    border-radius: $radius-full;
+    background: rgba($white, 0.06);
+    overflow: hidden;
+    
+    &__fill {
+        position: relative;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, color.adjust($sakura, $lightness: -8%), $sakura);
+        transform-origin: left;
+        animation: akd-xp-grow 1.2s $ease-standard forwards;
+
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba($white, 0.35), transparent);
+            background-size: 60% 100%;
+            animation: akd-xp-shimmer 3.5s ease-in-out infinite;
+        }
+    }
+}
+
+@keyframes akd-xp-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+@keyframes akd-xp-shimmer {
+    0%   { background-position: -60% 0; }
+    100% { background-position: 160% 0; }
+}
+
+.akd-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: $font-primary;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-md;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all $transition-fast;
+    flex: 1;
+
+    &--primary {
+        background: $sakura;
+        color: $black;
+
+        &:hover:not(:disabled) { background: color.adjust($sakura, $lightness: 6%); }
+        &:disabled { cursor: default; opacity: 0.55; }
+    }
+
+    &--secondary {
+        background: rgba($white, 0.03);
+        border-color: $black-line;
+        color: $white-muted;
+
+        &:hover:not(:disabled) { background: rgba($white, 0.06); color: $white; }
+        &:disabled { cursor: not-allowed; opacity: 0.55; }
+    }
+
+    &--danger {
+        background: $accent-crimson;
+        color: $white;
+
+        &:hover:not(:disabled) { background: color.adjust($accent-crimson, $lightness: -6%); }
+    }
+}
+
+// ==========================================
+// SECTION 2 — STATISTICS
+// ==========================================
+.akd-profile-stats {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+// Shared card surface
+%akd-stat-surface {
+    position: relative;
+    border-radius: $radius-lg;
+    background: rgba($white, 0.025);
+    border: 1px solid $black-line;
+    box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 10px 28px rgba(0, 0, 0, 0.32);
+    transition: transform $transition-base, box-shadow $transition-base, border-color $transition-base;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: rgba($sakura, 0.25);
+        box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.38), 0 0 18px rgba($sakura, 0.06);
+    }
+}
+
+.akd-stat-featured {
+    @extend %akd-stat-surface;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-lg;
+
+    &__icon {
+        font-size: $fs-xl;
+        color: $sakura;
+        opacity: 0.9;
+        flex-shrink: 0;
+    }
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__label {
+        font-size: 11px;
+        font-weight: $fw-bold;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $white-faint;
+    }
+
+    &__value {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: $fs-xs;
+        color: $accent-teal;
+        margin-top: 2px;
+
+        i { font-size: 10px; }
+    }
+}
+
+.akd-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-md;
+
+    @media (min-width: $bp-lg) {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.akd-stat-card {
+    @extend %akd-stat-surface;
+    padding: $space-md;
+    overflow: hidden;
+
+    &__icon {
+        position: absolute;
+        top: $space-sm;
+        right: $space-sm;
+        font-size: 2.25rem;
+        color: $white;
+        opacity: 0.06;
+        transition: opacity $transition-fast, color $transition-fast;
+        pointer-events: none;
+    }
+
+    &:hover &__icon {
+        opacity: 0.12;
+        color: $sakura;
+    }
+
+    &__body {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__value {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+        font-variant-numeric: tabular-nums;
+        line-height: $lh-tight;
+    }
+
+    &__label {
+        font-size: 11px;
+        font-weight: $fw-semibold;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $white-faint;
+    }
+
+    &__trend {
+        font-size: 10px;
+        color: $accent-teal;
+    }
+}
+
+// ==========================================
+// EDIT PROFILE MODAL
+// ==========================================
+.akd-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: $z-mobile-nav + 10;
+    background: rgba(0, 0, 0, 0.7);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-md;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+
+    &.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.akd-modal {
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - #{$space-xl});
+    display: flex;
+    flex-direction: column;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    overflow: auto;
+    transform: translateY(16px) scale(0.97);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(.22, 1, .36, 1), opacity 0.3s ease;
+
+    &::-webkit-scrollbar{ display: none; }
+
+    .akd-modal-overlay.is-open & {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: $space-md $space-lg;
+        border-bottom: 1px solid $black-line;
+        flex-shrink: 0;
+    }
+    
+    &__title {
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+    
+    &__close {
+        background: rgba($white, 0.03);
+        border: 1px solid $black-line;
+        color: $white-muted;
+        width: 34px;
+        height: 34px;
+        border-radius: $radius-sm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.08);
+            color: $white;
+        }
+    }
+    
+    &__body {
+        padding: $space-lg;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: $space-lg;
+    }
+    
+    &__banner {
+        display: none;
+        align-items: center;
+        gap: $space-xs;
+        padding: $space-xs $space-sm;
+        border-radius: $radius-sm;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+
+        &.is-visible { display: flex; }
+
+        &--error {
+            background: $accent-crimson-dim;
+            color: $accent-crimson;
+            border: 1px solid rgba($accent-crimson, 0.25);
+        }
+
+        &--success {
+            background: $sakura-dim;
+            color: $sakura;
+            border: 1px solid rgba($sakura, 0.3);
+        }
+    }
+    
+    &__divider {
+        height: 1px;
+        background: $black-line;
+    }
+    
+    &__avatar-field {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-xs;
+    }
+    
+    &__avatar-wrap {
+        position: relative;
+        width: 88px;
+        height: 88px;
+    }
+    
+    &__avatar-preview {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: none;
+        background: none;
+        border-radius: $radius-full;
+        cursor: pointer;
+        transition: opacity $transition-fast;
+
+        &:hover { opacity: 0.85; }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+        }
+    }
+    
+    &__avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: $radius-full;
+        object-fit: cover;
+        border: 1px solid $black-line;
+        background: $black;
+
+        &--initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: $fw-bold;
+            font-size: $fs-xl;
+            color: $white;
+        }
+    }
+    
+    &__avatar-upload {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 30px;
+        height: 30px;
+        border-radius: $radius-full;
+        background: $sakura;
+        color: $black;
+        border: 2px solid $black-soft;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background $transition-fast, transform $transition-fast;
+
+        &:hover {
+            background: color.adjust($sakura, $lightness: 6%);
+            transform: scale(1.08);
+        }
+    }
+    
+    &__avatar-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+    
+    &__avatar-hint {
+        font-size: 11px;
+        color: $white-faint;
+    }
+    
+    &__avatar-error {
+        font-size: 11px;
+        color: $accent-crimson;
+        display: none;
+
+        &.is-visible { display: block; }
+    }
+    
+    &__avatar-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        color: $accent-crimson;
+        font-size: 11px;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        padding: 2px 4px;
+        opacity: 0.85;
+        transition: opacity $transition-fast;
+
+        i { font-size: 10px; }
+
+        &:hover { opacity: 1; text-decoration: underline; }
+        &[hidden] { display: none; }
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: $space-xs;
+        padding: $space-md $space-lg;
+        border-top: 1px solid $black-line;
+        flex-shrink: 0;
+    }
+}
+
+// Info note (Google-managed account)
+.akd-info-note {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    font-size: $fs-xs;
+    color: $white-muted;
+    background: rgba($white, 0.03);
+    border: 1px solid $black-line;
+    border-radius: $radius-sm;
+    padding: $space-xs $space-sm;
+
+    i {
+        color: $accent-teal;
+        font-size: $fs-sm;
+    }
+}
+
+// Password section
+.akd-password-section {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+.akd-password-rules {
+    list-style: none;
+    padding: 0;
+    margin: $space-xs 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: $white-faint;
+        transition: color $transition-fast;
+
+        i {
+            font-size: 9px;
+            color: $white-faint;
+            transition: color $transition-fast;
+        }
+
+        &.is-met {
+            color: $white-muted;
+
+            i { color: $accent-teal; }
+        }
+    }
+}
+
+.akd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    
+    &__label {
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $white-muted;
+    }
+    
+    &__control-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    &__affix {
+        position: absolute;
+        left: $space-sm;
+        color: $white-faint;
+        font-size: $fs-sm;
+        pointer-events: none;
+    }
+    
+    &__toggle {
+        position: absolute;
+        right: $space-xs;
+        background: none;
+        border: none;
+        color: $white-faint;
+        cursor: pointer;
+        font-size: $fs-sm;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        transition: color $transition-fast;
+
+        &:hover { color: $white-muted; }
+    }
+    
+    &__input {
+        width: 100%;
+        background: rgba($white, 0.03);
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        padding: $space-xs $space-sm;
+        font-size: $fs-sm;
+        color: $white;
+        font-family: $font-primary;
+        transition: border-color $transition-fast, background $transition-fast;
+
+        &:focus {
+            outline: none;
+            border-color: rgba($sakura, 0.5);
+            background: rgba($white, 0.05);
+        }
+
+        &--with-affix { padding-left: 1.6rem; }
+        &--with-toggle { padding-right: 2.25rem; }
+    }
+    
+    &__hint {
+        font-size: 11px;
+        color: $white-faint;
+    }
+    
+    &__error-msg {
+        display: none;
+        font-size: 11px;
+        color: $accent-crimson;
+    }
+    
+    &--error {
+        .akd-field__input {
+            border-color: $accent-crimson;
+            background: rgba($accent-crimson, 0.06);
+        }
+
+        .akd-field__error-msg { display: block; }
+    }
+}
+
+.akd-spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid rgba($black, 0.3);
+    border-top-color: $black;
+    animation: akd-spin 0.6s linear infinite;
+}
+
+@keyframes akd-spin {
+    to { transform: rotate(360deg); }
+}
+
+// ==========================================
+// CONFIRM DIALOG (delete avatar / discard changes)
+// ==========================================
+.akd-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: $z-mobile-nav + 20;
+    background: rgba(0, 0, 0, 0.75);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-md;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+
+    &.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.akd-confirm {
+    width: 100%;
+    max-width: 340px;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    padding: $space-lg;
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    transform: translateY(12px) scale(0.97);
+    opacity: 0;
+    transition: transform 0.25s cubic-bezier(.22, 1, .36, 1), opacity 0.25s ease;
+
+    .akd-confirm-overlay.is-open & {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    
+    &__title {
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+    
+    &__message {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-normal;
+    }
+    
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: $space-xs;
+        margin-top: $space-xs;
+
+        .akd-btn { flex: 0 0 auto; padding-left: $space-md; padding-right: $space-md; }
+    }
+}
+
+// ==========================================
+// MOTION PREFERENCES
+// ==========================================
+@media (prefers-reduced-motion: reduce) {
+    .akd-avatar-ring::before,
+    .akd-xp-bar__fill,
+    .akd-xp-bar__fill::after,
+    .akd-spinner {
+        animation: none;
+    }
+
+    .akd-xp-bar__fill {
+        transform: scaleX(1);
+    }
+
+    .akd-modal,
+    .akd-modal-overlay,
+    .akd-confirm,
+    .akd-confirm-overlay,
+    .an-lightbox {
+        transition: none;
+    }
+}
+
+// ==========================================
+// SHARED SECTION HEADING
+// ==========================================
+.akd-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $space-xs $space-md;
+
+    &__text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__title {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+        letter-spacing: -0.01em;
+    }
+
+    &__subtitle {
+        font-size: $fs-sm;
+        color: $white-faint;
+    }
+
+    &__action {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $sakura;
+        text-decoration: none;
+        transition: gap $transition-fast, color $transition-fast;
+
+        i {
+            font-size: 10px;
+            transition: transform $transition-fast;
+        }
+
+        &:hover {
+            color: color.adjust($sakura, $lightness: 8%);
+            i { transform: translateX(2px); }
+        }
+    }
+}
+
+// ==========================================
+// SECTION 3 — ACHIEVEMENTS
+// ==========================================
+.akd-achievements {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+.akd-achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-md;
+
+    @media (min-width: $bp-md) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (min-width: $bp-lg) {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.akd-achievement-card {
+    @extend %akd-stat-surface;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: $space-lg $space-md;
+    border: 1px solid $black-line;
+    cursor: pointer;
+    font-family: $font-primary;
+    overflow: hidden;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 30%, rgba($white, 0.07) 50%, transparent 70%);
+        background-size: 220% 100%;
+        background-position: -120% 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &:hover::after {
+        opacity: 1;
+        animation: akd-achievement-sweep 1s ease;
+    }
+
+    &:hover .akd-achievement-card__icon-wrap i {
+        transform: scale(1.08);
+    }
+
+    &__new {
+        position: absolute;
+        top: $space-sm;
+        right: $space-sm;
+        font-size: 9px;
+        font-weight: $fw-bold;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $sakura;
+        background: $sakura-dim;
+        padding: 2px 7px;
+        border-radius: $radius-full;
+        z-index: 1;
+    }
+
+    &__icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: $radius-full;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: $sakura-dim;
+        color: $sakura;
+        font-size: $fs-md;
+
+        i {
+            display: block;
+            transition: transform $transition-base;
+        }
+    }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: $lh-tight;
+    }
+
+    &__desc {
+        font-size: $fs-xs;
+        color: $white-faint;
+        line-height: $lh-snug;
+    }
+
+    &__date {
+        font-size: 10px;
+        font-weight: $fw-bold;
+        color: $white-faint;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 4px;
+    }
+}
+
+@keyframes akd-achievement-sweep {
+    from { background-position: -120% 0; }
+    to   { background-position: 120% 0; }
+}
+
+// Achievement Detail Modal (reuses .akd-modal, generated by achievements.js)
+.akd-achievement-modal__body {
+    align-items: center;
+    text-align: center;
+}
+
+.akd-achievement-modal__art {
+    width: 96px;
+    height: 96px;
+    border-radius: $radius-full;
+    background: $sakura-dim;
+    color: $sakura;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $fs-2xl;
+    margin: 0 auto;
+}
+
+.akd-achievement-modal__name {
+    font-size: $fs-md;
+    font-weight: $fw-bold;
+    color: $white;
+    margin-top: $space-sm;
+}
+
+.akd-achievement-modal__desc {
+    font-size: $fs-sm;
+    color: $white-muted;
+    margin-top: 4px;
+}
+
+.akd-achievement-modal__date {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: $fw-bold;
+    color: $white-faint;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: $space-xs;
+}
+
+.akd-achievement-modal__story {
+    font-size: $fs-sm;
+    color: $white-muted;
+    line-height: $lh-normal;
+    text-align: left;
+    margin-top: $space-md;
+    padding-top: $space-md;
+    border-top: 1px solid $black-line;
+    width: 100%;
+}
+
+// ==========================================
+// SECTION 4 — ACTIVITY TIMELINE
+// ==========================================
+.akd-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    
+    &__track {
+        display: flex;
+        flex-direction: column;
+        gap: $space-lg;
+    }
+    
+    &__group-label {
+        font-size: 11px;
+        font-weight: $fw-bold;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: $white-faint;
+        margin-bottom: $space-sm;
+    }
+    
+    &__list {
+        position: relative;
+        list-style: none;
+        margin: 0;
+        padding-left: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: $space-sm;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 8px;
+            bottom: 8px;
+            width: 1px;
+            background: $black-line;
+        }
+    }
+}
+
+.akd-timeline__item {
+    position: relative;
+}
+
+.akd-timeline__node {
+    position: absolute;
+    left: -40px;
+    top: $space-sm;
+    width: 30px;
+    height: 30px;
+    border-radius: $radius-full;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white-faint;
+    font-size: 11px;
+    transition: all $transition-base;
+    z-index: 1;
+}
+
+.akd-timeline__item:hover .akd-timeline__node {
+    color: $sakura;
+    border-color: rgba($sakura, 0.4);
+    box-shadow: 0 0 12px rgba($sakura, 0.25);
+}
+
+.akd-timeline__card {
+    @extend %akd-stat-surface;
+    padding: $space-sm $space-md;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.akd-timeline__item:hover .akd-timeline__card {
+    transform: translateX(3px);
+}
+
+.akd-timeline__title {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white;
+}
+
+.akd-timeline__desc {
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-timeline__time {
+    font-size: 10px;
+    font-weight: $fw-bold;
+    color: $white-faint;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+}
+
+// ==========================================
+// MOTION PREFERENCES — additions
+// ==========================================
+@media (prefers-reduced-motion: reduce) {
+    .akd-achievement-card::after {
+        animation: none;
+        display: none;
+    }
+}

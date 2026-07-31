@@ -4,15 +4,11 @@ $auth->requireAuth();
 require_once __DIR__ . '/../../../bootstrap.php';
 require __DIR__ . '/../../../includes/vite.php';
 
-require_once __DIR__ . '/../../../app/Models/User.php';
-$userModel = new \App\Models\User($db);
-$userId = $auth->id();
+$user = $auth->user();
 
-$user = $userModel->findById($userId);
-
-if (!$user) {
+if ($user === null) {
     $auth->logout();
-    header("Location: /login");
+    header('Location: /login');
     exit;
 }
 
@@ -57,7 +53,7 @@ if ($hour < 12) {
     $greeting = 'Good Morning';
     $greetingIcon = 'fa-solid fa-cloud-sun';
     $greetingClass = 'akd-header__greeting-icon--morning';
-} elseif ($hour < 17) {
+} elseif ($hour < 18) {
     $greeting = 'Good Afternoon';
     $greetingIcon = 'fa-solid fa-sun';
     $greetingClass = 'akd-header__greeting-icon--afternoon';
@@ -81,6 +77,7 @@ $todayDate = date('l, F j');
     <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
+    <link rel="preload" href="/uploads/upscalemedia-transformed (3).png" as="image">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,7 +90,7 @@ $todayDate = date('l, F j');
     <img src="/uploads/upscalemedia-transformed (3).png" alt="" class="preloader__wheel" draggable="false">
 </div>
 
-<div class="akd-dashboard" id="akdDashboard">
+<div class="akd-layout" id="akdLayout">
 
     <!-- Header -->
     <header class="akd-header">
@@ -103,9 +100,12 @@ $todayDate = date('l, F j');
             </button>
 
             <div class="akd-header__context">
+                <h1 class="akd-header__mobile-title">
+                    <?= htmlspecialchars($page_title) ?>
+                </h1>
+                
                 <nav class="akd-breadcrumbs" aria-label="Breadcrumb">
                     <?php foreach ($breadcrumbs as $i => $crumb): ?>
-
                         <?php if ($i > 0): ?>
                             <i class="fas fa-chevron-right akd-breadcrumbs__separator" aria-hidden="true"></i>
                         <?php endif; ?>
@@ -146,14 +146,6 @@ $todayDate = date('l, F j');
                 <i class="fas fa-bell"></i>
                 <span class="akd-header__badge">3</span>
             </button>
-
-            <a href="/member/profile" class="akd-header__avatar-link" aria-label="View profile">
-                <?php if ($user['avatar']): ?>
-                    <img src="<?= htmlspecialchars($user['avatar']) ?>" alt="" class="akd-header__avatar">
-                <?php else: ?>
-                    <div class="akd-header__avatar akd-header__avatar--initials"><?= htmlspecialchars($userInitials) ?></div>
-                <?php endif; ?>
-            </a>
         </div>
     </header>
 
@@ -223,10 +215,4 @@ $todayDate = date('l, F j');
             </div>
         </div>
     </nav>
-
-    <!-- Main Content -->
-    <main class="akd-content">
-        <!-- Page specific content goes here -->
-    </main>
-
 </div>
