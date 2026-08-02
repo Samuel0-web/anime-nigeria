@@ -33,12 +33,7 @@ class SmtpMailer implements Mailer {
 
         $mail->CharSet = 'UTF-8';
         $mail->Encoding = 'base64';
-
-        $mail->setFrom(
-            $_ENV['MAIL_FROM_ADDRESS'],
-            $_ENV['MAIL_FROM_NAME']
-        );
-
+        $mail->setFrom($_ENV['MAIL_FROM_ADDRESS'], $_ENV['MAIL_FROM_NAME']);
         $mail->isHTML(true);
 
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
@@ -62,8 +57,7 @@ class SmtpMailer implements Mailer {
             Logger::error($e);
 
             throw new RuntimeException('Unable to send verification email. Please try again.',
-                0,
-                $e
+                0, $e
             );
         }
     }

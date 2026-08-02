@@ -9,8 +9,7 @@ class PasswordResetToken {
         $this->deleteByUser($userId);
 
         $stmt = $this->db->prepare("INSERT INTO password_reset_tokens
-            (user_id, token_hash, expires_at)
-            VALUES (?, ?, ?)
+            (user_id, token_hash, expires_at) VALUES (?, ?, ?)
         ");
 
         return $stmt->execute([$userId, $hash, $expires]);

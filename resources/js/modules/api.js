@@ -1,4 +1,4 @@
-import { error } from "../toast";
+import { error } from "./toast";
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
@@ -22,14 +22,22 @@ export async function api(url, options = {}) {
         }
     }
 
-    const response = await fetch(url, {
-        ...restOptions,
-        headers: {
-            ...defaultHeaders,
-            "X-CSRF-Token": csrfToken
-        },
-        body: formattedBody
-    });
+    let response;
+
+    try {
+        response = await fetch(url, {
+            ...restOptions,
+            headers: {
+                ...defaultHeaders,
+                "X-CSRF-Token": csrfToken
+            },
+            body: formattedBody
+        });
+    } catch {
+        const err = new Error("Network error");
+        err.status = 0;
+        throw err;
+    }
 
     const data = await response.json().catch(() => ({}));
 
@@ -51,6 +59,10 @@ export async function api(url, options = {}) {
 
 export function handleApiError(err, fallback = "Something went wrong.") {
     switch (err.status) {
+        case 0:
+            error("You're offline. Please check your internet connection.");
+            break;
+            
         case 403:
             error(err.data?.message || "Your session has expired. Please refresh the page.");
             break;

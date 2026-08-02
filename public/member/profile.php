@@ -244,17 +244,23 @@ $activityGroups = [
 
     <!-- Edit Profile Modal -->
     <div class="akd-modal-overlay" id="editProfileOverlay">
-        <div class="akd-modal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle" id="editProfileModal">
-            <div class="akd-modal__header">
-                <h2 class="akd-modal__title" id="editProfileTitle">Edit Profile</h2>
-                <button type="button" class="akd-modal__close" data-modal-close aria-label="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+        <div class="akd-modal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle" aria-describedby="editProfileDescription" id="editProfileModal">
+            <div class="akd-modal__top">
+                <div class="akd-modal__drag-handle" aria-hidden="true"></div>
+
+                <div class="akd-modal__header">
+                    <div class="akd-modal__header-text">
+                        <h2 class="akd-modal__title" id="editProfileTitle">Edit Profile</h2>
+                        <p class="akd-modal__subtitle" id="editProfileDescription">Update your photo and personal details.</p>
+                    </div>
+                    <button type="button" class="akd-modal__close" data-modal-close aria-label="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
 
             <form novalidate data-is-google="<?= $isGoogle ? '1' : '0' ?>">
                 <div class="akd-modal__body">
-
                     <div class="akd-modal__banner" data-modal-banner role="status" aria-live="polite"></div>
 
                     <div class="akd-modal__avatar-field">
@@ -299,55 +305,63 @@ $activityGroups = [
 
                     <?php if (!$isGoogle): ?>
                         <div class="akd-modal__divider"></div>
-                        <div class="akd-password-section">
-                            <div class="akd-field" data-field="currentPassword">
-                                <label class="akd-field__label" for="editCurrentPassword">Current Password</label>
-                                <div class="akd-field__control-wrap">
-                                    <input type="password" id="editCurrentPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="current-password">
-                                    <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                </div>
-                                <span class="akd-field__hint">Needed to confirm it's you before changing your password.</span>
-                                <span class="akd-field__error-msg" data-field-error></span>
-                            </div>
 
-                            <div class="akd-field" data-field="newPassword">
-                                <label class="akd-field__label" for="editNewPassword">New Password</label>
-                                <div class="akd-field__control-wrap">
-                                    <input type="password" id="editNewPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
-                                    <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                </div>
-                                <ul class="akd-password-rules" data-password-rules>
-                                    <li data-rule="length"><i class="fa-solid fa-circle"></i> At least 8 characters</li>
-                                    <li data-rule="uppercase"><i class="fa-solid fa-circle"></i> One uppercase letter</li>
-                                    <li data-rule="number"><i class="fa-solid fa-circle"></i> One number</li>
-                                    <li data-rule="symbol"><i class="fa-solid fa-circle"></i> One symbol (! @ # $ % &amp; * ? ,)</li>
-                                </ul>
-                                <span class="akd-field__error-msg" data-field-error></span>
-                            </div>
+                        <div class="akd-password-collapse" data-password-collapse>
+                            <button type="button" class="akd-password-collapse__trigger" data-password-section-toggle aria-expanded="false" aria-controls="passwordSectionPanel">
+                                <span class="akd-password-collapse__trigger-text">
+                                    <i class="fa-solid fa-lock"></i>
+                                    Change Password
+                                </span>
+                                <i class="fa-solid fa-chevron-down akd-password-collapse__chevron" aria-hidden="true"></i>
+                            </button>
 
-                            <div class="akd-field" data-field="confirmPassword">
-                                <label class="akd-field__label" for="editConfirmPassword">Confirm New Password</label>
-                                <div class="akd-field__control-wrap">
-                                    <input type="password" id="editConfirmPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
-                                    <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                            <div class="akd-password-collapse__panel" id="passwordSectionPanel" data-password-panel>
+                                <div class="akd-password-collapse__inner">
+                                    <div class="akd-password-section">
+                                        <div class="akd-field" data-field="currentPassword">
+                                            <label class="akd-field__label" for="editCurrentPassword">Current Password</label>
+                                            <div class="akd-field__control-wrap">
+                                                <input type="password" id="editCurrentPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="current-password">
+                                                <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <span class="akd-field__hint">Needed to confirm it's you before changing your password.</span>
+                                            <span class="akd-field__error-msg" data-field-error></span>
+                                        </div>
+
+                                        <div class="akd-field" data-field="newPassword">
+                                            <label class="akd-field__label" for="editNewPassword">New Password</label>
+                                            <div class="akd-field__control-wrap">
+                                                <input type="password" id="editNewPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
+                                                <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <ul class="akd-password-rules" data-password-rules>
+                                                <li data-rule="length"><i class="fa-solid fa-circle"></i> At least 8 characters</li>
+                                                <li data-rule="uppercase"><i class="fa-solid fa-circle"></i> One uppercase letter</li>
+                                                <li data-rule="number"><i class="fa-solid fa-circle"></i> One number</li>
+                                                <li data-rule="symbol"><i class="fa-solid fa-circle"></i> One symbol (! @ # $ % &amp; * ? ,)</li>
+                                            </ul>
+                                            <span class="akd-field__error-msg" data-field-error></span>
+                                        </div>
+
+                                        <div class="akd-field" data-field="confirmPassword">
+                                            <label class="akd-field__label" for="editConfirmPassword">Confirm New Password</label>
+                                            <div class="akd-field__control-wrap">
+                                                <input type="password" id="editConfirmPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
+                                                <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <span class="akd-field__error-msg" data-field-error></span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="akd-field__error-msg" data-field-error></span>
                             </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="akd-modal__divider"></div>
-                        <div class="akd-info-note">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>This account is managed through Google.</span>
                         </div>
                     <?php endif; ?>
-
                 </div>
 
                 <div class="akd-modal__footer">
@@ -355,18 +369,6 @@ $activityGroups = [
                     <button type="submit" class="akd-btn akd-btn--primary" data-modal-save disabled>Save Changes</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Confirm Dialog (reused for delete-avatar + unsaved changes) -->
-    <div class="akd-confirm-overlay" id="akdConfirmOverlay">
-        <div class="akd-confirm" role="alertdialog" aria-modal="true" aria-labelledby="akdConfirmTitle" aria-describedby="akdConfirmMessage" id="akdConfirmDialog">
-            <h3 class="akd-confirm__title" id="akdConfirmTitle"></h3>
-            <p class="akd-confirm__message" id="akdConfirmMessage"></p>
-            <div class="akd-confirm__actions">
-                <button type="button" class="akd-btn akd-btn--secondary" data-confirm-cancel></button>
-                <button type="button" class="akd-btn akd-btn--danger" data-confirm-accept></button>
-            </div>
         </div>
     </div>
 

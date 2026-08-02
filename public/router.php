@@ -118,6 +118,13 @@ $routes = [
     '/dashboard'                => 'member/dashboard.php',
     '/member/profile'           => 'member/profile.php',
     '/member/achievements'      => 'member/achievements.php',
+    '/member/awards'            => 'member/awards.php',
+    '/member/voting'            => 'member/voting.php',
+    '/member/trivia'            => 'member/trivia.php',
+    '/member/leaderboard'       => 'member/leaderboard.php',
+    '/member/gallery'           => 'member/gallery.php',
+    '/member/blogs'             => 'member/blogs.php',
+    '/member/settings'          => 'member/settings.php',
 
     '/home'                     => 'admin/index.php',
 ];

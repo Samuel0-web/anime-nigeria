@@ -29,7 +29,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     padding: $space-sm $space-md;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
-    box-shadow: 0 0 100px 55px rgba(0, 0, 0, 0.9);
+    box-shadow: -27px -45px 17px 65px rgba(0, 0, 0, 0.9);
     transition: left 0.35s cubic-bezier(.22, 1, .36, 1);
 
     @media (max-width: $bp-lg) {

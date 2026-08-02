@@ -348,6 +348,12 @@
         &:disabled { cursor: not-allowed; opacity: 0.55; }
     }
 
+    &--success {
+        background: $accent-teal;
+        color: $black;
+        cursor: default;
+    }
+
     &--danger {
         background: $accent-crimson;
         color: $white;
@@ -518,18 +524,25 @@
 
 .akd-modal {
     width: 100%;
-    max-width: 440px;
-    max-height: calc(100vh - #{$space-xl});
+    max-width: 480px;
+    max-height: min(680px, calc(100vh - #{$space-xl}));
     display: flex;
     flex-direction: column;
     background: $black-soft;
     border: 1px solid $black-line;
     border-radius: $radius-lg;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
-    overflow: auto;
+    overflow: hidden;
     transform: translateY(16px) scale(0.97);
     opacity: 0;
     transition: transform 0.3s cubic-bezier(.22, 1, .36, 1), opacity 0.3s ease;
+
+    > form {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
 
     &::-webkit-scrollbar{ display: none; }
 
@@ -538,19 +551,44 @@
         opacity: 1;
     }
     
+    &__drag-handle {
+        display: none; // shown only on mobile, see media query below
+    }
+
+    &__top {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: $black-soft;
+    }
+
     &__header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
+        gap: $space-md;
         padding: $space-md $space-lg;
         border-bottom: 1px solid $black-line;
         flex-shrink: 0;
+    }
+
+    &__header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
     }
     
     &__title {
         font-size: $fs-md;
         font-weight: $fw-semibold;
         color: $white;
+    }
+
+    &__subtitle {
+        font-size: $fs-xs;
+        color: $white-faint;
+        line-height: $lh-snug;
     }
     
     &__close {
@@ -564,6 +602,7 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        flex-shrink: 0;
         transition: all $transition-fast;
 
         &:hover {
@@ -573,11 +612,20 @@
     }
     
     &__body {
+        flex: 1;
+        min-height: 0;
         padding: $space-lg;
-        overflow-y: auto;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
         gap: $space-lg;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        touch-action: pan-y;
+
+        &::-webkit-scrollbar { display: none; }
     }
     
     &__banner {
@@ -606,6 +654,7 @@
     
     &__divider {
         height: 1px;
+        flex-shrink: 0;
         background: $black-line;
     }
     
@@ -654,7 +703,7 @@
             align-items: center;
             justify-content: center;
             font-weight: $fw-bold;
-            font-size: $fs-xl;
+            font-size: $fs-2xl;
             color: $white;
         }
     }
@@ -730,24 +779,87 @@
         padding: $space-md $space-lg;
         border-top: 1px solid $black-line;
         flex-shrink: 0;
+
+        .akd-btn {
+            flex: 0 0 auto;
+            padding-left: $space-md;
+            padding-right: $space-md;
+            min-width: 108px;
+        }
     }
 }
 
-// Info note (Google-managed account)
-.akd-info-note {
-    display: flex;
-    align-items: center;
-    gap: $space-xs;
-    font-size: $fs-xs;
-    color: $white-muted;
-    background: rgba($white, 0.03);
-    border: 1px solid $black-line;
-    border-radius: $radius-sm;
-    padding: $space-xs $space-sm;
-
-    i {
-        color: $accent-teal;
+// ==========================================
+// COLLAPSIBLE PASSWORD SECTION
+// ==========================================
+.akd-password-collapse {
+    &__trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: rgba($white, 0.03);
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        padding: $space-sm;
+        color: $white-muted;
+        font-family: $font-primary;
         font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        transition: background $transition-fast, border-color $transition-fast, color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.05);
+            color: $white;
+        }
+
+        &[aria-expanded="true"] {
+            border-color: rgba($sakura, 0.3);
+            color: $white;
+
+            .akd-password-collapse__chevron {
+                transform: rotate(180deg);
+            }
+        }
+    }
+
+    &__trigger-text {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+
+        i:first-child {
+            font-size: $fs-xs;
+            color: $white-faint;
+        }
+    }
+
+    &__chevron {
+        font-size: 11px;
+        color: $white-faint;
+        transition: transform $transition-base;
+    }
+
+    // Height-animates via CSS grid rather than JS measuring scrollHeight —
+    // no layout jump, works with dynamic content, no reflow thrashing.
+    &__panel {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows $transition-base;
+
+        &.is-open {
+            grid-template-rows: 1fr;
+        }
+    }
+
+    &__inner {
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    &__inner > .akd-password-section {
+        padding-top: $space-md;
     }
 }
 
@@ -834,7 +946,7 @@
         background: rgba($white, 0.03);
         border: 1px solid $black-line;
         border-radius: $radius-sm;
-        padding: $space-xs $space-sm;
+        padding: 0.7rem $space-sm;
         font-size: $fs-sm;
         color: $white;
         font-family: $font-primary;
@@ -842,11 +954,11 @@
 
         &:focus {
             outline: none;
-            border-color: rgba($sakura, 0.5);
+            border-color: rgba($sakura, 0.55);
             background: rgba($white, 0.05);
         }
 
-        &--with-affix { padding-left: 1.6rem; }
+        &--with-affix { padding-left: 2.3rem; }
         &--with-toggle { padding-right: 2.25rem; }
     }
     
@@ -868,6 +980,46 @@
         }
 
         .akd-field__error-msg { display: block; }
+    }
+}
+
+// ==========================================
+// MOBILE — BOTTOM DRAWER
+// ==========================================
+@media (max-width: $bp-md) {
+    .akd-modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .akd-modal {
+        max-width: none;
+        width: 100%;
+        max-height: 92vh;
+        border-radius: $radius-lg $radius-lg 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(.32, .72, 0, 1), opacity 0.3s ease;
+
+        &__drag-handle {
+            display: block;
+            width: 36px;
+            height: 4px;
+            border-radius: $radius-full;
+            background: $black-line;
+            margin: $space-sm auto $space-xs;
+            flex-shrink: 0;
+        }
+
+        &__footer {
+            padding-bottom: calc(#{$space-md} + env(safe-area-inset-bottom));
+        }
+    }
+
+    .akd-modal-overlay.is-open .akd-modal {
+        transform: translateY(0);
     }
 }
 
@@ -957,10 +1109,7 @@
 // MOTION PREFERENCES
 // ==========================================
 @media (prefers-reduced-motion: reduce) {
-    .akd-avatar-ring::before,
-    .akd-xp-bar__fill,
-    .akd-xp-bar__fill::after,
-    .akd-spinner {
+    .akd-avatar-ring::before, .akd-xp-bar__fill, .akd-xp-bar__fill::after, .akd-spinner {
         animation: none;
     }
 
@@ -968,11 +1117,8 @@
         transform: scaleX(1);
     }
 
-    .akd-modal,
-    .akd-modal-overlay,
-    .akd-confirm,
-    .akd-confirm-overlay,
-    .an-lightbox {
+    .akd-modal, .akd-modal-overlay, .akd-confirm, .akd-confirm-overlay, .an-lightbox,
+    .akd-password-collapse__panel, .akd-password-collapse__chevron {
         transition: none;
     }
 }

@@ -1,4 +1,4 @@
-import { createConfirmDialog } from './confirm-dialog';
+import { useConfirmDialog } from '../modules/confirm-dialog';
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const AVATAR_ALLOWED_TYPES = ['image/png', 'image/jpeg'];
@@ -15,26 +15,20 @@ function collapseSpaces(value) {
     return value.trim().replace(/\s+/g, ' ');
 }
 
-export function initProfileModal({
-    overlayId = 'editProfileOverlay',
-    modalId = 'editProfileModal',
-    confirmOverlayId = 'akdConfirmOverlay',
-    confirmDialogId = 'akdConfirmDialog',
+export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'editProfileModal',
     lightboxId = 'akdAvatarLightbox',
 } = {}) {
+    
     const overlay = document.getElementById(overlayId);
     const modal = document.getElementById(modalId);
     if (!overlay || !modal) return;
-
-    const confirmDialog = createConfirmDialog({ overlayId: confirmOverlayId, dialogId: confirmDialogId });
+    const confirmDialog = useConfirmDialog();
     const lightbox = createLightbox(lightboxId);
-
     const closeBtn = modal.querySelector('[data-modal-close]');
     const cancelBtn = modal.querySelector('[data-modal-cancel]');
     const form = modal.querySelector('form');
     const saveBtn = modal.querySelector('[data-modal-save]');
     const banner = modal.querySelector('[data-modal-banner]');
-
     const isGoogleAccount = form?.dataset.isGoogle === '1';
 
     // ---- Fields ----
@@ -43,13 +37,11 @@ export function initProfileModal({
     const currentPasswordField = modal.querySelector('[data-field="currentPassword"]');
     const newPasswordField = modal.querySelector('[data-field="newPassword"]');
     const confirmPasswordField = modal.querySelector('[data-field="confirmPassword"]');
-
     const fullNameInput = fullNameField.querySelector('input');
     const usernameInput = usernameField.querySelector('input');
     const currentPasswordInput = currentPasswordField?.querySelector('input') ?? null;
     const newPasswordInput = newPasswordField?.querySelector('input') ?? null;
     const confirmPasswordInput = confirmPasswordField?.querySelector('input') ?? null;
-
     const originalFullName = fullNameInput.value;
     const originalUsername = usernameInput.value;
 
@@ -59,21 +51,35 @@ export function initProfileModal({
     const avatarInput = modal.querySelector('[data-avatar-input]');
     const avatarError = modal.querySelector('[data-avatar-error]');
     const avatarRemoveBtn = modal.querySelector('[data-avatar-remove]');
-
     const userInitials = avatarWrap?.dataset.userInitials || '';
     const avatarColor = avatarWrap?.dataset.avatarColor || '#3457D5';
     const hadOriginalAvatar = !!avatarPreviewBtn?.querySelector('img[data-avatar-img]');
     const originalAvatarSrc = hadOriginalAvatar ? avatarPreviewBtn.querySelector('img[data-avatar-img]').src : null;
 
+    // ---- Password section collapse (new) ----
+    const passwordToggleBtn = modal.querySelector('[data-password-section-toggle]');
+    const passwordPanel = modal.querySelector('[data-password-panel]');
+
+    function setPasswordSectionOpen(open) {
+        if (!passwordToggleBtn || !passwordPanel) return;
+        passwordToggleBtn.setAttribute('aria-expanded', String(open));
+        passwordPanel.classList.toggle('is-open', open);
+        passwordPanel.toggleAttribute('inert', !open);
+    }
+
+    passwordToggleBtn?.addEventListener('click', () => {
+        const isOpen = passwordToggleBtn.getAttribute('aria-expanded') === 'true';
+        setPasswordSectionOpen(!isOpen);
+    });
+
     let avatarState = 'original'; // 'original' | 'newFile' | 'removed'
     let isDirty = false;
     let state = 'idle'; // idle | loading | success
     let lastFocusedEl = null;
-
     const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])';
 
     function getFocusable() {
-        return Array.from(modal.querySelectorAll(focusableSelector));
+        return Array.from(modal.querySelectorAll(focusableSelector)).filter((el) => !el.closest('[inert]'));
     }
 
     // ---- Avatar rendering ----
@@ -101,6 +107,7 @@ export function initProfileModal({
         } else {
             renderInitialsAvatar();
         }
+
         avatarInput.value = '';
         avatarState = 'original';
         avatarRemoveBtn.hidden = !hadOriginalAvatar;
@@ -110,7 +117,6 @@ export function initProfileModal({
     avatarInput?.addEventListener('change', () => {
         const file = avatarInput.files?.[0];
         if (!file) return;
-
         setAvatarError(null);
 
         if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
@@ -126,16 +132,19 @@ export function initProfileModal({
         }
 
         const reader = new FileReader();
+
         reader.onload = () => {
             renderImageAvatar(reader.result);
             avatarState = 'newFile';
             avatarRemoveBtn.hidden = false;
             updateDirtyState();
         };
+
         reader.onerror = () => {
             setAvatarError('Could not load that image. Please try another.');
             avatarInput.value = '';
         };
+
         reader.readAsDataURL(file);
     });
 
@@ -151,7 +160,6 @@ export function initProfileModal({
         });
 
         if (!confirmed) return;
-
         renderInitialsAvatar();
         avatarInput.value = '';
         avatarState = hadOriginalAvatar ? 'removed' : 'original';
@@ -165,7 +173,7 @@ export function initProfileModal({
         lightbox.open(img.src);
     });
 
-    // ---- Password toggles ----
+    // ---- Password toggles (show/hide) ----
     modal.querySelectorAll('[data-password-toggle]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const input = btn.previousElementSibling;
@@ -223,10 +231,12 @@ export function initProfileModal({
             if (showError) setFieldError(fullNameField, 'Full name is required.');
             return false;
         }
+
         if (value.length > 100) {
             if (showError) setFieldError(fullNameField, 'Full name is too long.');
             return false;
         }
+
         return true;
     }
 
@@ -238,44 +248,53 @@ export function initProfileModal({
             if (showError) setFieldError(usernameField, 'Username is required.');
             return false;
         }
+
         if (value.length < 3 || value.length > 20) {
             if (showError) setFieldError(usernameField, 'Must be between 3 and 20 characters.');
             return false;
         }
+
         if (!USERNAME_PATTERN.test(value)) {
             if (showError) setFieldError(usernameField, 'Only letters, numbers and underscores.');
             return false;
         }
+
         return true;
     }
 
     function validateCurrentPassword(showError = true) {
         if (!isChangingPassword()) { clearFieldError(currentPasswordField); return true; }
         clearFieldError(currentPasswordField);
+
         if (!currentPasswordInput.value) {
             if (showError) setFieldError(currentPasswordField, 'Enter your current password.');
             return false;
         }
+
         return true;
     }
 
     function validateNewPassword(showError = true) {
         if (!isChangingPassword()) { clearFieldError(newPasswordField); return true; }
         clearFieldError(newPasswordField);
+
         if (!passwordMeetsAllRules(newPasswordInput.value)) {
             if (showError) setFieldError(newPasswordField, 'Password does not meet all requirements.');
             return false;
         }
+
         return true;
     }
 
     function validateConfirmPassword(showError = true) {
         if (!isChangingPassword()) { clearFieldError(confirmPasswordField); return true; }
         clearFieldError(confirmPasswordField);
+
         if (confirmPasswordInput.value !== newPasswordInput.value) {
             if (showError) setFieldError(confirmPasswordField, 'Passwords do not match.');
             return false;
         }
+
         return true;
     }
 
@@ -305,8 +324,8 @@ export function initProfileModal({
         const nameDirty = collapseSpaces(fullNameInput.value) !== originalFullName.trim();
         const usernameDirty = usernameInput.value.trim() !== originalUsername.trim();
         const avatarDirty = avatarState !== 'original';
-        const passwordDirty = !isGoogleAccount && (
-            (newPasswordInput?.value.length ?? 0) > 0 ||
+
+        const passwordDirty = !isGoogleAccount && ((newPasswordInput?.value.length ?? 0) > 0 ||
             (currentPasswordInput?.value.length ?? 0) > 0 ||
             (confirmPasswordInput?.value.length ?? 0) > 0
         );
@@ -340,15 +359,15 @@ export function initProfileModal({
             .forEach((f) => clearFieldError(f));
 
         saveBtn.disabled = true;
+        saveBtn.classList.remove('akd-btn--success');
         saveBtn.textContent = 'Save Changes';
-
         fullNameInput.value = originalFullName;
         usernameInput.value = originalUsername;
         if (currentPasswordInput) currentPasswordInput.value = '';
         if (newPasswordInput) newPasswordInput.value = '';
         if (confirmPasswordInput) confirmPasswordInput.value = '';
         updatePasswordRules();
-
+        setPasswordSectionOpen(false); // always collapsed on fresh open
         restoreOriginalAvatar();
         isDirty = false;
     }
@@ -408,6 +427,7 @@ export function initProfileModal({
 
     closeBtn?.addEventListener('click', requestClose);
     cancelBtn?.addEventListener('click', requestClose);
+
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) requestClose();
     });
@@ -416,7 +436,6 @@ export function initProfileModal({
     form?.addEventListener('submit', (e) => {
         e.preventDefault();
         if (state === 'loading' || !isDirty) return;
-
         fullNameInput.value = collapseSpaces(fullNameInput.value);
 
         const checks = [validateFullName(), validateUsername()];
@@ -425,8 +444,16 @@ export function initProfileModal({
         }
 
         if (checks.includes(false)) {
+            const erroredField = modal.querySelector('.akd-field--error');
+
+            // If the error is inside the collapsed password section, open it
+            // first — an error the user can't see is worse than no validation.
+            if (erroredField && passwordPanel?.contains(erroredField)) {
+                setPasswordSectionOpen(true);
+            }
+
             setBanner('error', 'Please fix the errors below.');
-            modal.querySelector('.akd-field--error input')?.focus();
+            erroredField?.querySelector('input')?.focus();
             return;
         }
 
@@ -440,7 +467,8 @@ export function initProfileModal({
         window.setTimeout(() => {
             state = 'success';
             setBanner('success', 'Profile updated successfully.');
-            saveBtn.textContent = 'Saved';
+            saveBtn.classList.add('akd-btn--success');
+            saveBtn.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Saved';
             window.setTimeout(reallyClose, 1100);
         }, 900);
     });
