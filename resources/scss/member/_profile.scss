@@ -167,7 +167,7 @@
             align-items: center;
             justify-content: center;
             font-family: $font-primary;
-            font-size: $fs-3xl;
+            font-size: $fs-2xl;
             font-weight: $fw-bold;
             color: $white;
         }
@@ -710,10 +710,10 @@
     
     &__avatar-upload {
         position: absolute;
-        bottom: -2px;
-        right: -2px;
-        width: 30px;
-        height: 30px;
+        bottom: 1px;
+        right: 2px;
+        width: 31px;
+        height: 31px;
         border-radius: $radius-full;
         background: $sakura;
         color: $black;

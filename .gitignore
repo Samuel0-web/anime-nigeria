@@ -8,6 +8,10 @@
 /storage/cache/*
 /storage/logs/*
 /storage/temp/*
+/public/storage/cache/*
+/public/storage/logs/*
+/public/storage/temp/*
+/public/storage/uploads/*
 
 !/storage/cache/.gitkeep
 !/storage/logs/.gitkeep

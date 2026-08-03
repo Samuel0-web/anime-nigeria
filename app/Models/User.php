@@ -235,4 +235,55 @@ class User {
             ':id' => $userId,
         ]);
     }
+
+    public function updateProfileBasics(int $id, string $fullname, string $username): bool {
+        $stmt = $this->db->prepare("UPDATE users SET fullname = :fullname, username = :username,
+            username_changed_at = CURRENT_TIMESTAMP WHERE id = :id
+        ");
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':fullname' => $fullname,
+            ':username' => $username,
+        ]);
+    }
+
+    /**
+     * Update profile information.
+     */
+    public function updateProfile(int $id, string $fullname, string $username,
+        ?string $passwordHash = null, ?string $avatar = null, bool $removeAvatar = false): bool {
+
+        $sql = "UPDATE users SET fullname=:fullname, username=:username";
+        $current = $this->findById($id);
+
+        if (strcasecmp($current['username'], $username) !== 0) {
+            $sql .= ",
+            username_changed_at=CURRENT_TIMESTAMP";
+        }
+
+        $params = [
+            ':id' => $id,
+            ':fullname' => $fullname,
+            ':username' => $username,
+        ];
+
+        if ($passwordHash !== null) {
+            $sql .= ", password = :password";
+            $params[':password'] = $passwordHash;
+        }
+
+        if ($avatar !== null) {
+            $sql .= ", avatar = :avatar";
+            $params[':avatar'] = $avatar;
+        }
+
+        if ($removeAvatar) {
+            $sql .= ", avatar = NULL";
+        }
+
+        $sql .= " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
 }

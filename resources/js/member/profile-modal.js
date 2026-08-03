@@ -1,4 +1,6 @@
 import { useConfirmDialog } from '../modules/confirm-dialog';
+import { api, handleApiError } from '../modules/api';
+import { success } from '../modules/toast';
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const AVATAR_ALLOWED_TYPES = ['image/png', 'image/jpeg'];
@@ -18,7 +20,7 @@ function collapseSpaces(value) {
 export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'editProfileModal',
     lightboxId = 'akdAvatarLightbox',
 } = {}) {
-    
+
     const overlay = document.getElementById(overlayId);
     const modal = document.getElementById(modalId);
     if (!overlay || !modal) return;
@@ -42,8 +44,8 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
     const currentPasswordInput = currentPasswordField?.querySelector('input') ?? null;
     const newPasswordInput = newPasswordField?.querySelector('input') ?? null;
     const confirmPasswordInput = confirmPasswordField?.querySelector('input') ?? null;
-    const originalFullName = fullNameInput.value;
-    const originalUsername = usernameInput.value;
+    let originalFullName = fullNameInput.value;
+    let originalUsername = usernameInput.value;
 
     // ---- Avatar ----
     const avatarWrap = modal.querySelector('.akd-modal__avatar-wrap');
@@ -51,10 +53,10 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
     const avatarInput = modal.querySelector('[data-avatar-input]');
     const avatarError = modal.querySelector('[data-avatar-error]');
     const avatarRemoveBtn = modal.querySelector('[data-avatar-remove]');
-    const userInitials = avatarWrap?.dataset.userInitials || '';
+    let userInitials = avatarWrap?.dataset.userInitials || '';
     const avatarColor = avatarWrap?.dataset.avatarColor || '#3457D5';
-    const hadOriginalAvatar = !!avatarPreviewBtn?.querySelector('img[data-avatar-img]');
-    const originalAvatarSrc = hadOriginalAvatar ? avatarPreviewBtn.querySelector('img[data-avatar-img]').src : null;
+    let hadOriginalAvatar = !!avatarPreviewBtn.querySelector('img[data-avatar-img]')?.getAttribute('src');
+    let originalAvatarSrc = avatarPreviewBtn.querySelector('img[data-avatar-img]')?.getAttribute('src') || null;
 
     // ---- Password section collapse (new) ----
     const passwordToggleBtn = modal.querySelector('[data-password-section-toggle]');
@@ -82,13 +84,21 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         return Array.from(modal.querySelectorAll(focusableSelector)).filter((el) => !el.closest('[inert]'));
     }
 
-    // ---- Avatar rendering ----
-    function renderInitialsAvatar() {
-        avatarPreviewBtn.innerHTML = `<div class="akd-modal__avatar-img akd-modal__avatar-img--initials" data-avatar-img style="background-color:${avatarColor}">${userInitials}</div>`;
-    }
+    function updateModalAvatar(src = null) {
+        const img = avatarPreviewBtn.querySelector('[data-avatar-img]');
+        const initials = avatarPreviewBtn.querySelector('[data-avatar-initials]');
 
-    function renderImageAvatar(src) {
-        avatarPreviewBtn.innerHTML = `<img src="${src}" alt="" class="akd-modal__avatar-img" data-avatar-img>`;
+        if (src) {
+            img.src = src;
+            img.style.display = '';
+            initials.style.display = 'none';
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            initials.style.display = 'flex';
+            initials.textContent = userInitials;
+            initials.style.backgroundColor = avatarWrap.dataset.avatarColor;
+        }
     }
 
     function hasAvatarImage() {
@@ -102,12 +112,7 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
     }
 
     function restoreOriginalAvatar() {
-        if (hadOriginalAvatar) {
-            renderImageAvatar(originalAvatarSrc);
-        } else {
-            renderInitialsAvatar();
-        }
-
+        updateModalAvatar(hadOriginalAvatar ? originalAvatarSrc : null);
         avatarInput.value = '';
         avatarState = 'original';
         avatarRemoveBtn.hidden = !hadOriginalAvatar;
@@ -134,7 +139,7 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         const reader = new FileReader();
 
         reader.onload = () => {
-            renderImageAvatar(reader.result);
+            updateModalAvatar(reader.result);
             avatarState = 'newFile';
             avatarRemoveBtn.hidden = false;
             updateDirtyState();
@@ -160,7 +165,7 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         });
 
         if (!confirmed) return;
-        renderInitialsAvatar();
+        updateModalAvatar();
         avatarInput.value = '';
         avatarState = hadOriginalAvatar ? 'removed' : 'original';
         avatarRemoveBtn.hidden = true;
@@ -432,22 +437,76 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         if (e.target === overlay) requestClose();
     });
 
+    function getInitials(name) {
+        return name.trim().split(/\s+/).slice(0, 2).map(part => part[0].toUpperCase()).join('');
+    }
+
+    function updateUserUI(user) {
+        document.querySelectorAll('[data-user-fullname]').forEach(el => {
+            el.textContent = user.fullname;
+        });
+
+        document.querySelectorAll('[data-user-username]').forEach(el => {
+            el.textContent = '@' + user.username;
+        });
+
+        const initials = getInitials(user.fullname);
+        const cacheBust = Date.now();
+
+        document.querySelectorAll('[data-user-avatar-container]').forEach(container => {
+            const img = container.querySelector('[data-user-avatar]');
+            const fallback = container.querySelector('[data-user-avatar-initials]');
+
+            if (user.avatar) {
+                if (img) {
+                    img.src = `${user.avatar}?v=${cacheBust}`;
+                    img.style.display = '';
+                }
+
+                if (fallback) {
+                    fallback.style.display = 'none';
+                }
+
+            } else {
+                if (img) {
+                    img.removeAttribute('src');
+                    img.style.display = 'none';
+                }
+
+                if (fallback) {
+                    fallback.style.display = 'flex';
+                    fallback.textContent = initials;
+                    fallback.style.backgroundColor = user.avatarColor;
+                    container.dataset.avatarColor = user.avatarColor;
+                }
+            }
+        });
+    }
+
     // ---- Submit ----
-    form?.addEventListener('submit', (e) => {
+    form?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (state === 'loading' || !isDirty) return;
+
+        if (state === 'loading' || !isDirty) {
+            return;
+        }
+
         fullNameInput.value = collapseSpaces(fullNameInput.value);
 
-        const checks = [validateFullName(), validateUsername()];
+        const checks = [
+            validateFullName(),
+            validateUsername(),
+        ];
+
         if (!isGoogleAccount) {
-            checks.push(validateCurrentPassword(), validateNewPassword(), validateConfirmPassword());
+            checks.push(validateCurrentPassword(), validateNewPassword(),
+                validateConfirmPassword()
+            );
         }
 
         if (checks.includes(false)) {
             const erroredField = modal.querySelector('.akd-field--error');
 
-            // If the error is inside the collapsed password section, open it
-            // first — an error the user can't see is worse than no validation.
             if (erroredField && passwordPanel?.contains(erroredField)) {
                 setPasswordSectionOpen(true);
             }
@@ -457,22 +516,106 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
             return;
         }
 
-        setBanner(null);
         state = 'loading';
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="akd-spinner" aria-hidden="true"></span> Saving\u2026';
+        saveBtn.innerHTML = '<span class="akd-spinner"></span> Saving...';
+        setBanner(null);
+        const formData = new FormData(form);
+        formData.set('fullname', collapseSpaces(fullNameInput.value));
+        formData.set('username', usernameInput.value.trim());
+        formData.set('removeAvatar', avatarState === 'removed' ? '1' : '0');
 
-        // Placeholder for the real request — swap this timeout for a fetch() call
-        // to your update-profile endpoint once it exists.
-        window.setTimeout(() => {
+        try {
+            const result = await api('/member/api/update-profile.php', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (result.success === false) {
+                state = 'idle';
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+                setBanner('error', 'Please fix the errors below.');
+
+                Object.entries(result.errors || {}).forEach(([field, message]) => {
+                    switch (field) {
+                        case 'fullname':
+                            setFieldError(fullNameField, message);
+                            break;
+
+                        case 'username':
+                            setFieldError(usernameField, message);
+                            break;
+
+                        case 'currentPassword':
+                            setPasswordSectionOpen(true);
+                            setFieldError(currentPasswordField, message);
+                            break;
+
+                        case 'newPassword':
+                            setPasswordSectionOpen(true);
+                            setFieldError(newPasswordField, message);
+                            break;
+
+                        case 'confirmPassword':
+                            setPasswordSectionOpen(true);
+                            setFieldError(confirmPasswordField, message);
+                            break;
+
+                        case 'avatar':
+                            setAvatarError(message);
+                            break;
+                    }
+                });
+
+                return;
+            }
+
+            updateUserUI(result.user);
+            userInitials = getInitials(result.user.fullname);
+            avatarWrap.dataset.userInitials = userInitials;
+            avatarWrap.dataset.avatarColor = result.user.avatarColor;
+            const modalInitials = modal.querySelector('[data-avatar-initials]');
+            modalInitials.textContent = userInitials;
+            originalFullName = result.user.fullname;
+            originalUsername = result.user.username;
+            fullNameInput.value = result.user.fullname;
+            usernameInput.value = result.user.username;
+
+            if (result.user.avatar) {
+                originalAvatarSrc = result.user.avatar;
+                hadOriginalAvatar = true;
+            } else {
+                originalAvatarSrc = null;
+                hadOriginalAvatar = false;
+            }
+
             state = 'success';
-            setBanner('success', 'Profile updated successfully.');
             saveBtn.classList.add('akd-btn--success');
-            saveBtn.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Saved';
-            window.setTimeout(reallyClose, 1100);
-        }, 900);
+            saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved';
+            success(result.message);
+            updateModalAvatar(result.user.avatar ? `${result.user.avatar}?v=${Date.now()}` : null);
+
+            setTimeout(() => {
+                reallyClose();
+            }, 700);
+
+        } catch (err) {
+            state = 'idle';
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+            handleApiError(err);
+        }
     });
 
+    // Apply the correct avatar colour on initial page load
+    const currentColor = avatarWrap.dataset.avatarColor;
+
+    document.querySelectorAll('[data-user-avatar-initials]').forEach(el => {
+        el.style.backgroundColor = currentColor;
+    });
+
+    modal.querySelector('[data-avatar-initials]').style.backgroundColor = currentColor;
     resetState();
 }
 

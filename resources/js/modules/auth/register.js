@@ -2,7 +2,7 @@ import { clearError, setError, maskEmail, startCountdown, showFormMessage, clear
 } from "./helpers.js";
 
 import { setLoading, clearLoading } from "./loading-state.js";
-import { api, handleApiError } from "./api.js";
+import { api, handleApiError } from "../api.js";
 import { startCooldown } from "./utils/cooldown.js";
 
 export function initRegister(form, updateButtons) {

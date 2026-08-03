@@ -1,4 +1,4 @@
-import { api, handleApiError } from "./api";
+import { api, handleApiError } from "../api.js";
 import { setLoading, clearLoading } from "./loading-state";
 import { setError, clearError, setValid, showFormMessage, clearFormMessage } from "./helpers";
 import { initEmailValidation } from "./email-validation";

@@ -4,6 +4,8 @@ $auth->requireAuth();
 require_once __DIR__ . '/../../../bootstrap.php';
 require __DIR__ . '/../../../includes/vite.php';
 
+use App\Security\Csrf;
+use App\Support\Avatar;
 $user = $auth->user();
 
 if ($user === null) {
@@ -45,15 +47,18 @@ $navGroups = [
     ],
     'System' => [
         ['label' => 'Settings', 'icon' => 'fa-solid fa-cog', 'url' => '/member/settings'],
+        ['label' => 'Help Center', 'icon' => 'fa-solid fa-question-circle', 'url' => '/member/help'],
     ],
 ];
 
+$avatarColor = Avatar::color($user['username'] !== '' ? $user['username'] : $user['fullname']);
 $hour = (int) date('G');
+
 if ($hour < 12) {
     $greeting = 'Good Morning';
     $greetingIcon = 'fa-solid fa-cloud-sun';
     $greetingClass = 'akd-header__greeting-icon--morning';
-} elseif ($hour < 18) {
+} elseif ($hour < 19) {
     $greeting = 'Good Afternoon';
     $greetingIcon = 'fa-solid fa-sun';
     $greetingClass = 'akd-header__greeting-icon--afternoon';
@@ -62,6 +67,7 @@ if ($hour < 12) {
     $greetingIcon = 'fa-solid fa-cloud-moon';
     $greetingClass = 'akd-header__greeting-icon--evening';
 }
+
 $todayDate = date('l, F j');
 ?>
 
@@ -73,6 +79,7 @@ $todayDate = date('l, F j');
     <title><?= htmlspecialchars($page_title) ?> | Anime Nigeria</title>
     <meta name="description" content="<?= htmlspecialchars($page_description) ?>">
     <meta name="theme-color" content="#000000">
+    <meta name="csrf-token" content="<?= htmlspecialchars(Csrf::token()) ?>">
 
     <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
@@ -168,23 +175,34 @@ $todayDate = date('l, F j');
             <!-- Profile Card with Dropdown -->
             <div class="akd-sidebar__profile-wrapper">
                 <button class="akd-sidebar__profile" id="profileDropdownTrigger" aria-expanded="false" aria-haspopup="true">
-                    <?php if ($user['avatar']): ?>
-                        <img src="<?= htmlspecialchars($user['avatar']) ?>" alt="<?= htmlspecialchars($user['fullname']) ?>" class="akd-sidebar__avatar">
-                    <?php else: ?>
-                        <div class="akd-sidebar__avatar akd-sidebar__avatar--initials"><?= htmlspecialchars($userInitials) ?></div>
-                    <?php endif; ?>
+                    <div class="akd-sidebar__avatar-wrap" data-user-avatar-container>
+                        <img data-user-avatar src="<?= htmlspecialchars($user['avatar'] ?? '') ?>"
+                            alt="<?= htmlspecialchars($user['fullname']) ?>" class="akd-sidebar__avatar"
+                            <?= !empty($user['avatar']) ? '' : 'style="display:none"' ?>
+                        >
+
+                        <div data-user-avatar-initials class="akd-sidebar__avatar akd-sidebar__avatar--initials"
+                            style="<?= !empty($user['avatar']) ? 'display:none;' : 'display:flex;' ?>; background-color: <?= htmlspecialchars($avatarColor) ?>;"
+                        >
+                            <?= htmlspecialchars($userInitials) ?>
+                        </div>
+                    </div>
 
                     <div class="akd-sidebar__profile-info">
-                        <span class="akd-sidebar__profile-name"><?= htmlspecialchars($user['fullname'] ?? 'User') ?></span>
-                        <span class="akd-sidebar__profile-username">@<?= htmlspecialchars($user['username'] ?? 'member') ?></span>
+                        <span data-user-fullname class="akd-sidebar__profile-name">
+                            <?= htmlspecialchars($user['fullname'] ?? 'User') ?>
+                        </span>
+
+                        <span data-user-username class="akd-sidebar__profile-username">
+                            @<?= htmlspecialchars($user['username'] ?? 'member') ?>
+                        </span>
                     </div>
+
                     <i class="fas fa-chevron-down akd-sidebar__profile-chevron"></i>
                 </button>
 
                 <div class="akd-sidebar__profile-dropdown" id="profileDropdown" role="menu">
                     <a href="/member/profile" class="akd-sidebar__dropdown-item" role="menuitem">View Profile</a>
-                    <a href="/member/settings" class="akd-sidebar__dropdown-item" role="menuitem">Settings</a>
-                    <a href="/help" class="akd-sidebar__dropdown-item" role="menuitem">Help Center</a>
                     <div class="akd-sidebar__dropdown-divider"></div>
                     <form action="/logout" method="POST" class="akd-sidebar__dropdown-logout-form">
                         <button type="submit" class="akd-sidebar__dropdown-item akd-sidebar__dropdown-item--logout" role="menuitem">Log Out</button>

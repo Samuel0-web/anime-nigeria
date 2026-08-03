@@ -24,24 +24,6 @@ $initial1     = substr($nameParts[0] ?? 'U', 0, 1);
 $initial2     = isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '';
 $userInitials = strtoupper($initial1 . $initial2);
 
-/**
- * Deterministic solid background color for initials avatars.
- * Same seed always resolves to the same color. Solid fills only —
- * no gradients, no near-black/near-white — so white text always reads clearly.
- */
-function akdAvatarColor(string $seed): string
-{
-    static $palette = [
-        '#3457D5', '#0F9B8E', '#1E8E5A', '#C23B5D',
-        '#5B4B8A', '#8B5FBF', '#D97B29', '#C2447A',
-    ];
-
-    $hash = crc32($seed);
-    return $palette[$hash % count($palette)];
-}
-
-$avatarColor = akdAvatarColor($username !== '' ? $username : $fullname);
-
 // ---- Hardcoded — no backing columns yet, kept as named vars for easy backend swap ----
 $level       = 12;
 $levelTitle  = 'Rising Member';
@@ -93,23 +75,27 @@ $activityGroups = [
 
         <!-- SECTION 1 — Profile Overview -->
         <section class="akd-profile-hero">
-
             <div class="akd-profile-hero__identity">
-                <div class="akd-avatar-ring">
-                    <?php if ($avatarUrl): ?>
-                        <img src="<?= htmlspecialchars($avatarUrl) ?>" alt="<?= htmlspecialchars($fullname) ?>" class="akd-avatar-ring__image">
-                    <?php else: ?>
-                        <div class="akd-avatar-ring__image akd-avatar-ring__image--initials" style="background-color: <?= htmlspecialchars($avatarColor) ?>"><?= htmlspecialchars($userInitials) ?></div>
-                    <?php endif; ?>
+                <div class="akd-avatar-ring" data-user-avatar-container>
+                    <img data-user-avatar src="<?= htmlspecialchars($avatarUrl ?? '') ?>"
+                        alt="<?= htmlspecialchars($fullname) ?>" class="akd-avatar-ring__image"
+                        <?= $avatarUrl ? '' : 'style="display:none"' ?>
+                    >
+
+                    <div data-user-avatar-initials class="akd-avatar-ring__image akd-avatar-ring__image--initials"
+                        style="<?= $avatarUrl ? 'display:none;' : 'display:flex;' ?>; background-color: <?= htmlspecialchars($avatarColor) ?>;"
+                    >
+                        <?= htmlspecialchars($userInitials) ?>
+                    </div>
                 </div>
 
                 <div class="akd-profile-hero__info">
                     <div class="akd-profile-hero__name-row">
-                        <h1 class="akd-profile-hero__name"><?= htmlspecialchars($fullname) ?></h1>
+                        <h1 data-user-fullname class="akd-profile-hero__name"><?= htmlspecialchars($fullname) ?></h1>
                         <span class="akd-role-badge akd-role-badge--<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($role) ?></span>
                     </div>
 
-                    <span class="akd-profile-hero__username">@<?= htmlspecialchars($username) ?></span>
+                    <span data-user-username class="akd-profile-hero__username">@<?= htmlspecialchars($username) ?></span>
 
                     <div class="akd-profile-hero__email-row">
                         <i class="fa-solid fa-envelope"></i>
@@ -259,25 +245,31 @@ $activityGroups = [
                 </div>
             </div>
 
-            <form novalidate data-is-google="<?= $isGoogle ? '1' : '0' ?>">
+            <form enctype="multipart/form-data" novalidate data-is-google="<?= $isGoogle ? '1' : '0' ?>">
                 <div class="akd-modal__body">
                     <div class="akd-modal__banner" data-modal-banner role="status" aria-live="polite"></div>
 
                     <div class="akd-modal__avatar-field">
-                        <div class="akd-modal__avatar-wrap" data-user-initials="<?= htmlspecialchars($userInitials) ?>" data-avatar-color="<?= htmlspecialchars($avatarColor) ?>">
-                            <button type="button" class="akd-modal__avatar-preview" data-avatar-preview aria-label="View profile picture">
-                                <?php if ($avatarUrl): ?>
-                                    <img src="<?= htmlspecialchars($avatarUrl) ?>" alt="" class="akd-modal__avatar-img" data-avatar-img>
-                                <?php else: ?>
-                                    <div class="akd-modal__avatar-img akd-modal__avatar-img--initials" data-avatar-img style="background-color: <?= htmlspecialchars($avatarColor) ?>"><?= htmlspecialchars($userInitials) ?></div>
-                                <?php endif; ?>
+                        <div class="akd-modal__avatar-wrap" data-user-initials="<?= htmlspecialchars($userInitials) ?>">
+                            <button type="button" class="akd-modal__avatar-preview" data-avatar-preview
+                                aria-label="View profile picture"
+                            >
+                                <img src="<?= htmlspecialchars($avatarUrl ?? '') ?>" alt=""
+                                    class="akd-modal__avatar-img" data-avatar-img
+                                >
+
+                                <div class="akd-modal__avatar-img akd-modal__avatar-img--initials" data-avatar-initials
+                                    style="background-color: <?= htmlspecialchars($avatarColor) ?>;"
+                                >
+                                    <?= htmlspecialchars($userInitials) ?>
+                                </div>
                             </button>
                             <label class="akd-modal__avatar-upload" for="avatarUploadInput" aria-label="Upload new photo">
-                                <i class="fa-solid fa-camera"></i>
+                                <i class="fa-solid fa-pen"></i>
                             </label>
                         </div>
 
-                        <input type="file" id="avatarUploadInput" accept="image/png,image/jpeg" class="akd-modal__avatar-input" data-avatar-input>
+                        <input type="file" name="avatar" id="avatarUploadInput" accept="image/png,image/jpeg" class="akd-modal__avatar-input" data-avatar-input>
                         <span class="akd-modal__avatar-hint" data-avatar-hint>PNG or JPG, up to 2MB</span>
                         <span class="akd-modal__avatar-error" data-avatar-error></span>
 
@@ -289,7 +281,7 @@ $activityGroups = [
                     <div class="akd-field" data-field="fullname">
                         <label class="akd-field__label" for="editFullname">Full Name</label>
                         <div class="akd-field__control-wrap">
-                            <input type="text" id="editFullname" class="akd-field__input" value="<?= htmlspecialchars($fullname) ?>" maxlength="100" autocomplete="off">
+                            <input type="text" name="fullname" id="editFullname" class="akd-field__input" value="<?= htmlspecialchars($fullname) ?>" maxlength="100" autocomplete="off">
                         </div>
                         <span class="akd-field__error-msg" data-field-error></span>
                     </div>
@@ -298,7 +290,7 @@ $activityGroups = [
                         <label class="akd-field__label" for="editUsername">Username</label>
                         <div class="akd-field__control-wrap">
                             <span class="akd-field__affix">@</span>
-                            <input type="text" id="editUsername" class="akd-field__input akd-field__input--with-affix" value="<?= htmlspecialchars($username) ?>" maxlength="20" autocomplete="off">
+                            <input type="text" name="username" id="editUsername" class="akd-field__input akd-field__input--with-affix" value="<?= htmlspecialchars($username) ?>" maxlength="20" autocomplete="off">
                         </div>
                         <span class="akd-field__error-msg" data-field-error></span>
                     </div>
@@ -321,7 +313,7 @@ $activityGroups = [
                                         <div class="akd-field" data-field="currentPassword">
                                             <label class="akd-field__label" for="editCurrentPassword">Current Password</label>
                                             <div class="akd-field__control-wrap">
-                                                <input type="password" id="editCurrentPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="current-password">
+                                                <input type="password" name="currentPassword" id="editCurrentPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="current-password">
                                                 <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
@@ -333,7 +325,7 @@ $activityGroups = [
                                         <div class="akd-field" data-field="newPassword">
                                             <label class="akd-field__label" for="editNewPassword">New Password</label>
                                             <div class="akd-field__control-wrap">
-                                                <input type="password" id="editNewPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
+                                                <input type="password" name="newPassword" id="editNewPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
                                                 <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
@@ -350,7 +342,7 @@ $activityGroups = [
                                         <div class="akd-field" data-field="confirmPassword">
                                             <label class="akd-field__label" for="editConfirmPassword">Confirm New Password</label>
                                             <div class="akd-field__control-wrap">
-                                                <input type="password" id="editConfirmPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
+                                                <input type="password" name="confirmPassword" id="editConfirmPassword" class="akd-field__input akd-field__input--with-toggle" autocomplete="new-password">
                                                 <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
