@@ -102,7 +102,8 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
     }
 
     function hasAvatarImage() {
-        return !!avatarPreviewBtn.querySelector('img[data-avatar-img]');
+        const img = avatarPreviewBtn.querySelector('[data-avatar-img]');
+        return !!(img && img.src && img.style.display !== 'none');
     }
 
     function setAvatarError(message) {
@@ -590,11 +591,11 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
                 hadOriginalAvatar = false;
             }
 
+            updateModalAvatar(result.user.avatar ? `${result.user.avatar}?v=${Date.now()}` : null);
             state = 'success';
             saveBtn.classList.add('akd-btn--success');
             saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved';
             success(result.message);
-            updateModalAvatar(result.user.avatar ? `${result.user.avatar}?v=${Date.now()}` : null);
 
             setTimeout(() => {
                 reallyClose();
