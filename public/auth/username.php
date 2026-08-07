@@ -35,8 +35,6 @@ $pageDescription = "Choose a unique username to complete your Anime Nigeria acco
             </div>
 
             <form class="an-auth__form" action="" method="post" novalidate>
-
-                <!-- Username -->
                 <div class="an-auth__field an-auth__field--username">
                     <input type="text" id="username" name="username" class="an-auth__input" 
                         placeholder=" " autocomplete="username" maxlength="20"

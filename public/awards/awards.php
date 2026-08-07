@@ -33,7 +33,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- =============================================================================
     ABOUT
     ============================================================================= -->
-
     <section class="an-awards-about" id="about">
         <div class="an-container">
             <div class="an-awards-about__grid">
@@ -98,7 +97,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- =============================================================================
     WHY ANAA EXISTS
     ============================================================================= -->
-
     <section class="an-awards-purpose">
         <div class="an-container">
             <div class="an-awards-purpose__card an-reveal">
@@ -212,7 +210,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- =============================================================================
     THE AWARD JOURNEY
     ============================================================================= -->
-
     <section class="an-awards-process">
         <div class="an-container">
             <div class="an-section-heading">
@@ -277,7 +274,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- =============================================================================
     FAQ
     ============================================================================= -->
-
     <section class="an-awards-faq an-reveal">
         <div class="an-container">
             <div class="an-section-heading">
@@ -359,7 +355,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- =============================================================================
     COMING SOON
     ============================================================================= -->
-
     <section class="an-awards-coming">
         <div class="an-container">
             <div class="an-awards-coming__card an-reveal">

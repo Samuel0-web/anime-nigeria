@@ -5,135 +5,107 @@ $pageDescription = "Meet the fans, creators, and community members recognized fo
 require_once __DIR__ . '/../../includes/header.php';
 
 $honoredOnes = [
-
     2025 => [
-
         [
             'category' => 'Most Active Male',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Community MVP',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Most Active Female',
             'winner' => 'Jumoke'
         ],
-
         [
             'category' => 'Best Newcomer',
             'winner' => 'John David'
         ],
-
         [
             'category' => 'Top Contributor',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Funniest',
             'winner' => 'Jedd'
         ],
-
         [
             'category' => 'Most Mature',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Most Knowledgeable',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Trivia Champion',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Best Event Participant',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Most Friendly Admin',
             'winner' => 'Jumoke'
         ],
-
         [
             'category' => 'Most Active Admin',
             'winner' => 'Jumoke'
         ]
-
     ],
 
     2024 => [
-
         [
             'category' => 'Most Active Male',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Community MVP',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Most Active Female',
             'winner' => 'Jumoke'
         ],
-
         [
             'category' => 'Best Newcomer',
             'winner' => 'John David'
         ],
-
         [
             'category' => 'Top Contributor',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Funniest',
             'winner' => 'Jedd'
         ],
-
         [
             'category' => 'Most Mature',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Most Knowledgeable',
             'winner' => 'SmiffCity'
         ],
-
         [
             'category' => 'Trivia Champion',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Best Event Participant',
             'winner' => 'Tony'
         ],
-
         [
             'category' => 'Most Friendly Admin',
             'winner' => 'Jumoke'
         ],
-
         [
             'category' => 'Most Active Admin',
             'winner' => 'Jumoke'
         ]
-
     ]
-
 ];
 
 $years = array_keys($honoredOnes);
@@ -185,9 +157,7 @@ $defaultYear = $years[0];
                         <?= htmlspecialchars($topHonoree) ?>
                     </span>
 
-                    <span class="an-honored__stat-label">
-                        Top Honoree
-                    </span>
+                    <span class="an-honored__stat-label">Top Honoree</span>
 
                     <span class="an-honored__stat-meta" id="topHonoreeAwards">
                         <?= $topHonoreeAwards ?> Awards

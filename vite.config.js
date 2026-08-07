@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
+import react from "@vitejs/plugin-react";
 import path from 'path';
 
 export default defineConfig(({ command }) => ({
+    plugins: [react()],
     base: command === 'build' ? '/build/' : '/',
     publicDir: false,
     
@@ -35,6 +37,7 @@ export default defineConfig(({ command }) => ({
             input: {
                 public: path.resolve(__dirname, 'resources/js/public.js'),
                 member: path.resolve(__dirname, 'resources/js/member.js'),
+                memberReact: path.resolve(__dirname, "resources/js/react/main.jsx"),
                 admin: path.resolve(__dirname, 'resources/js/admin.js'),
             },
         },

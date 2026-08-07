@@ -48,32 +48,18 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="an-community-hero__visual">
-
-                <!-- Background glow -->
                 <div class="an-community-hero__glow"></div>
-
-                <!-- Rotating Rings -->
                 <div class="an-community-hero__orbit an-community-hero__orbit--1"></div>
                 <div class="an-community-hero__orbit an-community-hero__orbit--2"></div>
                 <div class="an-community-hero__orbit an-community-hero__orbit--3"></div>
 
-                <!-- Connection SVG -->
-                <svg class="an-community-hero__links"
-                    viewBox="0 0 500 500"
-                    aria-hidden="true">
-
+                <svg class="an-community-hero__links" viewBox="0 0 500 500" aria-hidden="true">
                     <defs>
-
                         <linearGradient id="beam">
-
                             <stop offset="0%" stop-color="transparent"/>
-
                             <stop offset="50%" stop-color="#e8a3b3"/>
-
                             <stop offset="100%" stop-color="transparent"/>
-
                         </linearGradient>
-
                     </defs>
 
                     <line x1="250" y1="250" x2="250" y2="58"/>
@@ -82,17 +68,12 @@ require_once __DIR__ . '/../../includes/header.php';
                     <line x1="250" y1="250" x2="250" y2="442"/>
                     <line x1="250" y1="250" x2="82" y2="350"/>
                     <line x1="250" y1="250" x2="90" y2="145"/>
-
                 </svg>
 
-                <!-- Center Hub -->
                 <div class="an-community-hero__hub">
-
-                    <img
-                        src="/uploads/upscalemedia-transformed (1).png"
-                        alt="Anime Nigeria"
-                        class="an-community-hero__logo">
-
+                    <img src="/uploads/upscalemedia-transformed (1).png" alt="Anime Nigeria"
+                        class="an-community-hero__logo"
+                    >
                 </div>
 
                 <div class="an-community-hero__system">
@@ -137,9 +118,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <span>Watch</span>
                         </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
     </section>
@@ -154,7 +133,6 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="an-container an-community-story__panel">
             <div class="an-community-story__content an-reveal" style="--i:1">
                 <span class="an-eyebrow an-community-story__eyebrow">Our Story</span>
-
                 <h2 class="an-community-story__heading" id="an-community-story-heading">Built by Anime Fans. Made for the Community.</h2>
 
                 <p class="an-community-story__paragraph">
@@ -175,6 +153,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-compass" aria-hidden="true"></i>
                             Mission
                         </span>
+
                         <p class="an-community-story__card-text">
                             To build Nigeria's most welcoming and engaging anime community where every
                             fan feels at home.
@@ -186,6 +165,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
                             Vision
                         </span>
+
                         <p class="an-community-story__card-text">
                             To unite anime fans across Nigeria through meaningful experiences,
                             creativity, friendship and a shared passion for anime.
@@ -199,7 +179,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png"
                     alt="Anime fans gathering together through friendship, creativity and community."
-                    class="an-community-story__image">
+                    class="an-community-story__image"
+                >
 
                 <div class="an-community-story__grain" aria-hidden="true"></div>
 
@@ -212,7 +193,6 @@ require_once __DIR__ . '/../../includes/header.php';
                 <span class="an-community-story__petal an-community-story__petal--2"></span>
                 <span class="an-community-story__petal an-community-story__petal--3"></span>
                 <span class="an-community-story__petal an-community-story__petal--4"></span>
-
             </div>
         </div>
     </section>
@@ -228,11 +208,13 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-community-values__intro">
                 <span class="an-eyebrow an-community-values__eyebrow">Our Values</span>
                 <h2 class="an-community-values__heading" id="an-community-values-heading">What Brings Our Community Together</h2>
+                
                 <p class="an-community-values__subheading">
                     Anime Nigeria is built on more than a shared love for anime. Our community is guided
                     by values that encourage friendship, creativity, respect and meaningful connections
                     between fans across the country.
                 </p>
+
                 <div class="an-community-values__rule" aria-hidden="true"></div>
             </div>
 
@@ -279,11 +261,13 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-community-involve__intro">
                 <span class="an-eyebrow an-community-involve__eyebrow">Get Involved</span>
                 <h2 class="an-community-involve__heading" id="an-community-involve-heading">There's a Place for Every Anime Fan</h2>
+                
                 <p class="an-community-involve__subheading">
                     Whether you enjoy discussing your favourite anime, competing in weekly challenges,
                     testing your knowledge, or simply connecting with fellow fans, Anime Nigeria has
                     something for everyone.
                 </p>
+
                 <div class="an-community-involve__rule" aria-hidden="true"></div>
             </div>
 
@@ -328,11 +312,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="an-community-involve__cta">Browse Gallery <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
 
-                <a
-                    href="https://chat.whatsapp.com/ExampleInviteCode"
-                    class="an-community-involve__card an-reveal"
-                    style="--i:5"
-                    target="_blank"
+                <a href="https://chat.whatsapp.com/ExampleInviteCode"
+                    class="an-community-involve__card an-reveal" style="--i:5" target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Join the Conversation — Join WhatsApp (opens in a new tab)"
                 >
@@ -372,6 +353,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <img src="https://i.pravatar.cc/300?u=an-council-mosh-kim" alt="" class="an-community-council__photo">
                         <span class="an-community-council__crown" aria-hidden="true"><i class="fa-solid fa-crown"></i></span>
                     </span>
+
                     <span class="an-community-council__role">Student Council President</span>
                     <span class="an-community-council__name">Mosh Kim</span>
                 </article>
@@ -380,6 +362,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="an-community-council__avatar an-community-council__avatar--sakura">
                         <img src="https://i.pravatar.cc/300?u=an-council-charles-odigbo" alt="" class="an-community-council__photo">
                     </span>
+
                     <span class="an-community-council__role">Student Council Member</span>
                     <span class="an-community-council__name">Charles Odigbo</span>
                 </article>
@@ -388,6 +371,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="an-community-council__avatar an-community-council__avatar--ember">
                         <img src="https://i.pravatar.cc/300?u=an-council-jumoke" alt="" class="an-community-council__photo">
                     </span>
+
                     <span class="an-community-council__role">Student Council Member</span>
                     <span class="an-community-council__name">Jumoke</span>
                 </article>
@@ -396,6 +380,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="an-community-council__avatar an-community-council__avatar--violet">
                         <img src="https://i.pravatar.cc/300?u=an-council-bella" alt="" class="an-community-council__photo">
                     </span>
+
                     <span class="an-community-council__role">Student Council Member</span>
                     <span class="an-community-council__name">Bella</span>
                 </article>
@@ -404,6 +389,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="an-community-council__avatar an-community-council__avatar--teal">
                         <img src="https://i.pravatar.cc/300?u=an-council-kami" alt="" class="an-community-council__photo">
                     </span>
+
                     <span class="an-community-council__role">Student Council Member</span>
                     <span class="an-community-council__name">Kami</span>
                 </article>
@@ -422,10 +408,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-community-gallery__intro">
                 <span class="an-eyebrow an-community-gallery__eyebrow">Community Gallery</span>
                 <h2 class="an-community-gallery__heading" id="an-community-gallery-heading">Memories We've Made Together</h2>
+                
                 <p class="an-community-gallery__subheading">
                     Every meetup, cosplay event, watch party and community gathering tells part of the
                     Anime Nigeria story. Here are some of the moments we've shared together.
                 </p>
+
                 <div class="an-community-gallery__rule" aria-hidden="true"></div>
             </div>
 
@@ -433,6 +421,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/lagos-anime-meetup" class="an-community-gallery__item an-community-gallery__item--portrait an-reveal" style="--i:0">
                     <img src="https://picsum.photos/seed/an2-lagos-meetup/500/650" alt="Lagos Anime Meetup" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Lagos Anime Meetup</span>
                         <span class="an-community-gallery__date">July 2026</span>
@@ -442,6 +431,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/cosplay-competition" class="an-community-gallery__item an-community-gallery__item--square an-reveal" style="--i:1">
                     <img src="https://picsum.photos/seed/an2-cosplay-comp/600/600" alt="Cosplay Competition" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Cosplay Competition</span>
                         <span class="an-community-gallery__date">Anime Expo 2026</span>
@@ -451,6 +441,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/one-piece-watch-party" class="an-community-gallery__item an-community-gallery__item--landscape an-reveal" style="--i:2">
                     <img src="https://picsum.photos/seed/an2-op-watch-party/700/525" alt="One Piece Watch Party" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">One Piece Watch Party</span>
                         <span class="an-community-gallery__date">March 2026</span>
@@ -460,6 +451,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/anime-awards-night" class="an-community-gallery__item an-community-gallery__item--tall an-reveal" style="--i:3">
                     <img src="https://picsum.photos/seed/an2-awards-night/500/750" alt="Anime Awards Night" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Anime Awards Night</span>
                         <span class="an-community-gallery__date">September 2026</span>
@@ -469,6 +461,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/community-game-night" class="an-community-gallery__item an-community-gallery__item--square an-reveal" style="--i:4">
                     <img src="https://picsum.photos/seed/an2-game-night/600/600" alt="Community Game Night" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Community Game Night</span>
                         <span class="an-community-gallery__date">August 2026</span>
@@ -478,6 +471,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/abuja-fan-gathering" class="an-community-gallery__item an-community-gallery__item--landscape an-reveal" style="--i:5">
                     <img src="https://picsum.photos/seed/an2-abuja-gathering/700/525" alt="Abuja Fan Gathering" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Abuja Fan Gathering</span>
                         <span class="an-community-gallery__date">May 2026</span>
@@ -487,6 +481,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/convention-highlights" class="an-community-gallery__item an-community-gallery__item--portrait an-reveal" style="--i:6">
                     <img src="https://picsum.photos/seed/an2-convention/500/650" alt="Convention Highlights" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Convention Highlights</span>
                         <span class="an-community-gallery__date">October 2026</span>
@@ -496,6 +491,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="/gallery/otaku-hangout" class="an-community-gallery__item an-community-gallery__item--square an-reveal" style="--i:7">
                     <img src="https://picsum.photos/seed/an2-otaku-hangout/600/600" alt="Otaku Hangout" class="an-community-gallery__image" loading="lazy">
                     <span class="an-community-gallery__overlay" aria-hidden="true"></span>
+                    
                     <span class="an-community-gallery__caption">
                         <span class="an-community-gallery__title">Otaku Hangout</span>
                         <span class="an-community-gallery__date">November 2026</span>

@@ -22,8 +22,6 @@ $auth->requireGuest();
             </div>
 
             <form class="an-auth__form" action="" method="post" novalidate>
-
-                <!-- FULL NAME -->
                 <div class="an-auth__field">
                     <input type="text" id="fullname" name="fullname" class="an-auth__input" placeholder=" "
                         autocomplete="fullname" required>
@@ -33,7 +31,6 @@ $auth->requireGuest();
                     <small class="an-auth__error"></small>
                 </div>
 
-                <!-- EMAIL -->
                 <div class="an-auth__field">
                     <input type="email" id="email" name="email" class="an-auth__input" placeholder=" "
                         autocomplete="email" required aria-describedby="email-error">
@@ -43,8 +40,6 @@ $auth->requireGuest();
                     <small id="email-error" class="an-auth__error"></small>
                 </div>
 
-
-                <!-- PASSWORD -->
                 <div class="an-auth__field">
                     <input type="password" id="password" name="password" class="an-auth__input"
                         placeholder=" " autocomplete="new-password" required>
@@ -65,7 +60,6 @@ $auth->requireGuest();
                     <li data-rule="symbol">At least one symbol (! @ # $ % & * ? ,)</li>
                 </ul>
 
-                <!-- CONFIRM PASSWORD -->
                 <div class="an-auth__field">
                     <input type="password" id="confirm-password" name="confirm_password"
                         class="an-auth__input" placeholder=" " autocomplete="new-password" required>

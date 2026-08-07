@@ -1,10 +1,3 @@
-// =============================================================================
-// BLOG HERO
-// =============================================================================
-// Handles two purely visual behaviours: a fake search submission (no real
-// filtering or API call) and category pill selection using the ARIA
-// radiogroup pattern (roving tabindex, arrow-key navigation).
-
 export function initBlogHero() {
     initFakeSearch();
     initCategoryPills();
@@ -15,19 +8,16 @@ function initFakeSearch() {
     const input = document.getElementById("blog-search-input");
     const feedback = document.getElementById("blog-search-feedback");
     if (!form || !input || !feedback) return;
-
     let feedbackTimer = null;
 
     form.addEventListener("submit", (event) => {
         event.preventDefault();
-
         const query = input.value.trim();
 
         // No real search — this is a visual-only placeholder.
         console.log("[Blog search] fake submission:", query || "(empty)");
 
-        feedback.textContent = query
-            ? `Showing results for "${query}"`
+        feedback.textContent = query ? `Showing results for "${query}"`
             : "Enter a search term to explore articles.";
         feedback.classList.add("is-visible");
 

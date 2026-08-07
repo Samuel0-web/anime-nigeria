@@ -1,10 +1,3 @@
-// =============================================================================
-// TRIVIA WINNERS FAQ
-// =============================================================================
-// Behaviour mirrors initContactFaq() / initVotingFaq() / initWinnersFaq() /
-// initTriviaFaq() / initLeaderboardFaq(): first item open by default, only
-// one item open at a time, JS-driven max-height animation.
-
 export function initTriviaWinnersFaq() {
     const items = document.querySelectorAll(".an-trivia-winners-faq__item");
     if (!items.length) return;
@@ -12,7 +5,6 @@ export function initTriviaWinnersFaq() {
     items.forEach((item, index) => {
         const button = item.querySelector(".an-trivia-winners-faq__question");
         const answer = item.querySelector(".an-trivia-winners-faq__answer");
-
         if (!button || !answer) return;
 
         // Open first item
@@ -27,9 +19,7 @@ export function initTriviaWinnersFaq() {
             items.forEach(otherItem => {
                 const otherButton = otherItem.querySelector(".an-trivia-winners-faq__question");
                 const otherAnswer = otherItem.querySelector(".an-trivia-winners-faq__answer");
-
                 if (!otherButton || !otherAnswer) return;
-
                 closeTriviaWinnersFaqItem(otherItem, otherButton, otherAnswer);
             });
 

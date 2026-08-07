@@ -245,7 +245,7 @@
     }
     
     &__rank-title {
-        font-size: $fs-xs;
+        font-size: $fs-md;
         font-weight: $fw-semibold;
         color: $sakura;
         opacity: 0.85;
@@ -276,6 +276,45 @@
         display: flex;
         gap: $space-xs;
         position: relative;
+    }
+
+    &__badges {
+        display: flex;
+        gap: $space-xs;
+        align-items: center;
+    }
+}
+
+// Brain Cells badge (small identity card badge)
+.akd-brain-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: 6px 10px;
+    border-radius: $radius-full;
+    background: $sakura-dim;
+    color: $sakura;
+    font-weight: $fw-semibold;
+    font-size: $fs-sm;
+
+    i { font-size: 1rem; color: $sakura; }
+
+    &__text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+    }
+
+    &__label {
+        font-size: $fs-xs;
+        color: $sakura;
+        opacity: 0.95;
+    }
+
+    &__value {
+        font-weight: $fw-bold;
+        color: $white;
+        font-variant-numeric: tabular-nums;
     }
 }
 
@@ -1349,6 +1388,7 @@
     display: flex;
     flex-direction: column;
     gap: $space-md;
+    margin-top: $space-sm;
     
     &__track {
         display: flex;
@@ -1384,66 +1424,66 @@
             background: $black-line;
         }
     }
-}
-
-.akd-timeline__item {
-    position: relative;
-}
-
-.akd-timeline__node {
-    position: absolute;
-    left: -40px;
-    top: $space-sm;
-    width: 30px;
-    height: 30px;
-    border-radius: $radius-full;
-    background: $black-soft;
-    border: 1px solid $black-line;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $white-faint;
-    font-size: 11px;
-    transition: all $transition-base;
-    z-index: 1;
-}
-
-.akd-timeline__item:hover .akd-timeline__node {
-    color: $sakura;
-    border-color: rgba($sakura, 0.4);
-    box-shadow: 0 0 12px rgba($sakura, 0.25);
-}
-
-.akd-timeline__card {
-    @extend %akd-stat-surface;
-    padding: $space-sm $space-md;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    
+    &__item {
+        position: relative;
+        
+        &:hover .akd-timeline__node {
+            color: $sakura;
+            border-color: rgba($sakura, 0.4);
+            box-shadow: 0 0 12px rgba($sakura, 0.25);
+        }
+    }
+    
+    &__node {
+        position: absolute;
+        left: -40px;
+        top: $space-sm;
+        width: 30px;
+        height: 30px;
+        border-radius: $radius-full;
+        background: $black-soft;
+        border: 1px solid $black-line;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $white-faint;
+        font-size: 11px;
+        transition: all $transition-base;
+        z-index: 1;
+    }
+    
+    &__card {
+        @extend %akd-stat-surface;
+        padding: $space-sm $space-md;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    &__title {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+    
+    &__desc {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+    
+    &__time {
+        font-size: 10px;
+        font-weight: $fw-bold;
+        color: $white-faint;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 2px;
+    }
 }
 
 .akd-timeline__item:hover .akd-timeline__card {
     transform: translateX(3px);
-}
-
-.akd-timeline__title {
-    font-size: $fs-sm;
-    font-weight: $fw-semibold;
-    color: $white;
-}
-
-.akd-timeline__desc {
-    font-size: $fs-xs;
-    color: $white-faint;
-}
-
-.akd-timeline__time {
-    font-size: 10px;
-    font-weight: $fw-bold;
-    color: $white-faint;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-top: 2px;
 }
 
 // ==========================================

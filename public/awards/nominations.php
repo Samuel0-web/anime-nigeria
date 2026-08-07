@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <main id="main-content">
+
     <!-- ===================================================================
          HERO
          =================================================================== -->
@@ -38,10 +39,12 @@ require_once __DIR__ . '/../../includes/header.php';
                         <i class="fa-solid fa-trophy an-nomination-hero__trust-icon" aria-hidden="true"></i>
                         Community Driven
                     </li>
+
                     <li class="an-nomination-hero__trust-item">
                         <i class="fa-solid fa-scale-balanced an-nomination-hero__trust-icon" aria-hidden="true"></i>
                         Fair Review Process
                     </li>
+
                     <li class="an-nomination-hero__trust-item">
                         <i class="fa-solid fa-layer-group an-nomination-hero__trust-icon" aria-hidden="true"></i>
                         Multiple Award Categories
@@ -61,8 +64,8 @@ require_once __DIR__ . '/../../includes/header.php';
     </section>
 
     <!-- ===================================================================
-         HOW NOMINATIONS WORK
-         =================================================================== -->
+    HOW NOMINATIONS WORK
+    =================================================================== -->
     <section class="an-awards-steps" aria-labelledby="an-awards-steps-heading">
         <div class="an-awards-steps__glow" aria-hidden="true"></div>
 
@@ -70,10 +73,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-awards-steps__intro">
                 <span class="an-eyebrow an-awards-steps__eyebrow">How It Works</span>
                 <h2 class="an-awards-steps__heading" id="an-awards-steps-heading">Four Simple Steps</h2>
+                
                 <p class="an-awards-steps__subheading">
                     Submitting a nomination takes just a few moments. Once nominations close, eligible
                     entries are reviewed before official community voting begins.
                 </p>
+
                 <div class="an-awards-steps__rule" aria-hidden="true"></div>
             </div>
 
@@ -86,6 +91,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-list-check" aria-hidden="true"></i>
                             <span class="an-awards-steps__number" aria-hidden="true">01</span>
                         </span>
+
                         <h3 class="an-awards-steps__title">Choose a Category</h3>
                         <p class="an-awards-steps__text">Browse the available award categories and select the one you'd like to nominate for.</p>
                     </li>
@@ -95,6 +101,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
                             <span class="an-awards-steps__number" aria-hidden="true">02</span>
                         </span>
+
                         <h3 class="an-awards-steps__title">Submit Your Nomination</h3>
                         <p class="an-awards-steps__text">Enter your chosen nominee together with a short reason for your nomination.</p>
                     </li>
@@ -104,6 +111,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                             <span class="an-awards-steps__number" aria-hidden="true">03</span>
                         </span>
+
                         <h3 class="an-awards-steps__title">Review Process</h3>
                         <p class="an-awards-steps__text">Eligible nominations are reviewed and duplicate entries are consolidated where necessary.</p>
                     </li>
@@ -113,6 +121,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-square-poll-vertical" aria-hidden="true"></i>
                             <span class="an-awards-steps__number" aria-hidden="true">04</span>
                         </span>
+
                         <h3 class="an-awards-steps__title">Community Voting</h3>
                         <p class="an-awards-steps__text">Official nominees move on to the voting stage where the Anime Nigeria community decides the winners.</p>
                     </li>
@@ -131,10 +140,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-awards-categories__intro">
                 <span class="an-eyebrow an-awards-categories__eyebrow">Award Categories</span>
                 <h2 class="an-awards-categories__heading" id="an-awards-categories-heading">Choose Where Your Nomination Belongs</h2>
+                
                 <p class="an-awards-categories__subheading">
                     Explore every award category below. Select the one that best matches your nomination,
                     then complete the nomination form beneath.
                 </p>
+
                 <div class="an-awards-categories__rule" aria-hidden="true"></div>
             </div>
 
@@ -296,15 +307,16 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-awards-form__intro">
                 <span class="an-eyebrow an-awards-form__eyebrow">Submit Nomination</span>
                 <h2 class="an-awards-form__heading" id="an-awards-form-heading">Cast Your Nomination</h2>
+                
                 <p class="an-awards-form__subheading">
                     Tell us who deserves recognition. Every valid nomination helps shape the official
                     shortlist for the Anime Nigeria Awards.
                 </p>
+
                 <div class="an-awards-form__rule" aria-hidden="true"></div>
             </div>
 
             <div class="an-awards-form__stage an-reveal" style="--i:0">
-
                 <form class="an-awards-form__card an-awards-form__card--locked" novalidate inert aria-hidden="true">
                     <div class="an-awards-form__field">
                         <span class="an-awards-form__label" id="nom-category-label">Award Category</span>
@@ -312,13 +324,9 @@ require_once __DIR__ . '/../../includes/header.php';
                         <div class="an-awards-dropdown">
                             <input type="hidden" id="nom-category-value" name="award_category" value="anime-of-the-year">
 
-                            <button
-                                type="button"
-                                class="an-awards-dropdown__trigger"
-                                id="nom-category-trigger"
-                                aria-haspopup="listbox"
-                                aria-expanded="false"
-                                aria-controls="nom-category-panel"
+                            <button type="button" class="an-awards-dropdown__trigger"
+                                id="nom-category-trigger" aria-haspopup="listbox"
+                                aria-expanded="false" aria-controls="nom-category-panel"
                                 aria-labelledby="nom-category-label"
                             >
                                 <span class="an-awards-dropdown__trigger-icon"><i class="fa-solid fa-crown" aria-hidden="true"></i></span>
@@ -338,116 +346,139 @@ require_once __DIR__ . '/../../includes/header.php';
                                         <span class="an-awards-dropdown__option-text">Anime of the Year</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-action-anime" data-label="Best Action Anime" data-icon="fa-bolt" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Action Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-adventure-anime" data-label="Best Adventure Anime" data-icon="fa-mountain" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-mountain" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Adventure Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-comedy-anime" data-label="Best Comedy Anime" data-icon="fa-face-laugh-beam" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-face-laugh-beam" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Comedy Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-drama-anime" data-label="Best Drama Anime" data-icon="fa-masks-theater" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-masks-theater" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Drama Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-fantasy-anime" data-label="Best Fantasy Anime" data-icon="fa-wand-magic-sparkles" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Fantasy Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-romance-anime" data-label="Best Romance Anime" data-icon="fa-heart" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Romance Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-slice-of-life-anime" data-label="Best Slice of Life Anime" data-icon="fa-leaf" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-leaf" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Slice of Life Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-mystery-anime" data-label="Best Mystery Anime" data-icon="fa-magnifying-glass" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Mystery Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-sci-fi-anime" data-label="Best Sci-Fi Anime" data-icon="fa-satellite" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-satellite" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Sci-Fi Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-opening" data-label="Best Opening" data-icon="fa-music" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-music" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Opening</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-ending" data-label="Best Ending" data-icon="fa-flag-checkered" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Ending</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-soundtrack" data-label="Best Soundtrack" data-icon="fa-headphones" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-headphones" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Soundtrack</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-animation" data-label="Best Animation" data-icon="fa-film" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-film" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Animation</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-studio" data-label="Best Studio" data-icon="fa-building" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Studio</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-character" data-label="Best Character" data-icon="fa-user" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Character</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-protagonist" data-label="Best Protagonist" data-icon="fa-user-shield" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Protagonist</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-antagonist" data-label="Best Antagonist" data-icon="fa-user-ninja" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Antagonist</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-supporting-character" data-label="Best Supporting Character" data-icon="fa-user-group" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Supporting Character</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-voice-performance" data-label="Best Voice Performance" data-icon="fa-microphone" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-microphone" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Voice Performance</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-movie" data-label="Best Movie" data-icon="fa-ticket" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Movie</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-new-anime" data-label="Best New Anime" data-icon="fa-sparkles" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-sparkles" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best New Anime</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="best-continuing-series" data-label="Best Continuing Series" data-icon="fa-arrows-rotate" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Best Continuing Series</span>
                                         <i class="fa-solid fa-check an-awards-dropdown__option-check" aria-hidden="true"></i>
                                     </li>
+
                                     <li class="an-awards-dropdown__option" role="option" data-value="community-choice-award" data-label="Community Choice Award" data-icon="fa-people-group" tabindex="-1" aria-selected="false">
                                         <span class="an-awards-dropdown__option-icon"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span>
                                         <span class="an-awards-dropdown__option-text">Community Choice Award</span>
@@ -460,35 +491,12 @@ require_once __DIR__ . '/../../includes/header.php';
 
                     <div class="an-awards-form__field">
                         <label class="an-awards-form__label" for="nom-nominee">Nominee</label>
-                        <input
-                            type="text"
-                            id="nom-nominee"
-                            name="nominee"
+
+                        <input type="text" id="nom-nominee" name="nominee"
                             class="an-awards-form__input an-awards-form__input--large"
                             placeholder="Enter the anime, character, creator or title."
                         >
                     </div>
-
-                    <div class="an-awards-form__field">
-                        <label class="an-awards-form__label" for="nom-reason">Reason for Nomination</label>
-                        <textarea
-                            id="nom-reason"
-                            name="reason"
-                            class="an-awards-form__textarea"
-                            rows="5"
-                            maxlength="500"
-                            placeholder="Tell us why this nominee deserves to win."
-                        ></textarea>
-                        <span class="an-awards-form__counter" id="nom-reason-counter">0 / 500</span>
-                    </div>
-
-                    <label class="an-awards-form__agreement">
-                        <input type="checkbox" id="nom-agreement" name="agreement" class="an-awards-form__checkbox-input">
-                        <span class="an-awards-form__checkbox-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
-                        <span class="an-awards-form__agreement-text">I confirm this nomination follows the Anime Nigeria Awards guidelines and is submitted in good faith.</span>
-                    </label>
-
-                    <button type="submit" class="an-btn an-btn--primary an-awards-form__submit" id="nom-submit" disabled aria-disabled="true">Submit Nomination</button>
                 </form>
 
                 <div class="an-awards-form__overlay" role="region" aria-label="Sign in to submit a nomination">
@@ -522,10 +530,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-awards-guidelines__intro">
                 <span class="an-eyebrow an-awards-guidelines__eyebrow">Guidelines</span>
                 <h2 class="an-awards-guidelines__heading" id="an-awards-guidelines-heading">Nominate Fairly. Celebrate Greatness.</h2>
+                
                 <p class="an-awards-guidelines__subheading">
                     To keep the Anime Nigeria Awards fair and enjoyable for everyone, please review these
                     simple nomination guidelines before submitting your entry.
                 </p>
+
                 <div class="an-awards-guidelines__rule" aria-hidden="true"></div>
             </div>
 
@@ -581,7 +591,6 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="an-nomination-faq__list">
-
                 <article class="an-nomination-faq__item">
                     <button class="an-nomination-faq__question" type="button" aria-expanded="false">
                         <span>Can I submit more than one nomination?</span>
@@ -603,9 +612,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </button>
 
                     <div class="an-nomination-faq__answer">
-                        <p>
-                            Yes, provided the nominee is eligible for each selected category.
-                        </p>
+                        <p>Yes, provided the nominee is eligible for each selected category.</p>
                     </div>
                 </article>
 
@@ -664,7 +671,6 @@ require_once __DIR__ . '/../../includes/header.php';
                         </p>
                     </div>
                 </article>
-
             </div>
         </div>
     </section>

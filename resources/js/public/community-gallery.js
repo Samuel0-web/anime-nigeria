@@ -1,7 +1,6 @@
 export function initGallery() {
     const gallery = document.querySelector(".an-gallery-browser");
     if (!gallery) return;
-
     const filters = gallery.querySelectorAll("[data-filter]");
     const items = gallery.querySelectorAll(".an-gallery-item");
 

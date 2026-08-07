@@ -1,4 +1,4 @@
-import { api, handleApiError } from "../api.js";
+import { api, handleApiError } from "../../modules/api.js";
 import { setLoading, clearLoading } from "./loading-state";
 import { setError, clearError, setValid, showFormMessage, clearFormMessage } from "./helpers";
 import { initEmailValidation } from "./email-validation";
@@ -53,11 +53,11 @@ export function initLogin(form, updateButtons) {
                     return;
                 }
 
-                if (response.errors.email) {
+                if (response.errors?.email) {
                     setError(emailField, response.errors.email);
                 }
 
-                if (response.errors.password) {
+                if (response.errors?.password) {
                     setError(passwordField, response.errors.password);
                 }
 
@@ -66,7 +66,9 @@ export function initLogin(form, updateButtons) {
 
             window.location.href = response.redirect;
         } catch (err) {
-            handleApiError(err);
+            // handleApiError(err);
+            // debugger;
+            throw err;
         } finally {
             clearLoading(button);
             updateButtons();

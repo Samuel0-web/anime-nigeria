@@ -1,6 +1,6 @@
 import { clearError, setError, maskEmail, startCountdown } from "./helpers.js";
 import { setLoading, clearLoading } from "./loading-state.js";
-import { api, handleApiError } from "../api.js";
+import { api, handleApiError } from "../../modules/api.js";
 
 export function initResetPassword(form) {
     if (document.body.dataset.page !== "reset-password") return;

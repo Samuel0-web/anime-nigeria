@@ -1,23 +1,10 @@
-// =============================================================================
-// COMMUNITY AWARDS FAQ
-// =============================================================================
-
 export function initCommunityAwardsFaq() {
-    const items = document.querySelectorAll(
-        ".an-community-awards-faq__item"
-    );
-
+    const items = document.querySelectorAll(".an-community-awards-faq__item");
     if (!items.length) return;
 
     items.forEach((item, index) => {
-        const button = item.querySelector(
-            ".an-community-awards-faq__question"
-        );
-
-        const answer = item.querySelector(
-            ".an-community-awards-faq__answer"
-        );
-
+        const button = item.querySelector(".an-community-awards-faq__question");
+        const answer = item.querySelector(".an-community-awards-faq__answer");
         if (!button || !answer) return;
 
         // Open the first FAQ by default
@@ -30,21 +17,10 @@ export function initCommunityAwardsFaq() {
 
             // Close every FAQ
             items.forEach(otherItem => {
-                const otherButton = otherItem.querySelector(
-                    ".an-community-awards-faq__question"
-                );
-
-                const otherAnswer = otherItem.querySelector(
-                    ".an-community-awards-faq__answer"
-                );
-
+                const otherButton = otherItem.querySelector(".an-community-awards-faq__question");
+                const otherAnswer = otherItem.querySelector(".an-community-awards-faq__answer");
                 if (!otherButton || !otherAnswer) return;
-
-                closeCommunityFaqItem(
-                    otherItem,
-                    otherButton,
-                    otherAnswer
-                );
+                closeCommunityFaqItem(otherItem, otherButton, otherAnswer);
             });
 
             // Open the clicked one if it wasn't already open

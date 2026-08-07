@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <main id="main-content">
+
     <!-- =============================================================================
     GALLERY HERO
     ============================================================================= -->
@@ -47,13 +48,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     Community Gallery
                 </span>
 
-                <span class="an-gallery-hero__badge">
-                    Showcasing Nigeria's Anime Creativity
-                </span>
-
-                <h1 class="an-gallery-hero__heading">
-                    Every Creation Has a Story Worth Sharing.
-                </h1>
+                <span class="an-gallery-hero__badge">Showcasing Nigeria's Anime Creativity</span>
+                <h1 class="an-gallery-hero__heading">Every Creation Has a Story Worth Sharing.</h1>
 
                 <p class="an-gallery-hero__description">
                     Discover fan art, cosplay, photography, challenge highlights and
@@ -71,10 +67,8 @@ require_once __DIR__ . '/../../includes/header.php';
                         View Challenges
                     </a>
                 </div>
-
             </div>
         </div>
-
     </section>
 
     <!-- =============================================================================
@@ -83,8 +77,6 @@ require_once __DIR__ . '/../../includes/header.php';
     <section class="an-gallery-intro">
         <div class="an-container">
             <div class="an-gallery-intro__grid">
-
-                <!-- Content -->
                 <div class="an-gallery-intro__content an-reveal">
                     <span class="an-eyebrow">Inside the Gallery</span>
 
@@ -107,7 +99,6 @@ require_once __DIR__ . '/../../includes/header.php';
                     </p>
                 </div>
 
-                <!-- Stats -->
                 <div class="an-gallery-intro__stats">
                     <article class="an-gallery-stat an-reveal">
                         <h3>5</h3>
@@ -154,8 +145,6 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="an-gallery-grid">
-
-                <!-- Fan Art -->
                 <article class="an-gallery-item an-reveal" data-category="fanart">
                     <img src="/uploads/1783455914832.png" alt="">
 

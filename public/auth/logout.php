@@ -11,12 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $db = Database::connection();
-
-$mail = new Mail(
-    new SmtpMailer(),
-    $_ENV['APP_URL']
-);
-
+$mail = new Mail(new SmtpMailer(), $_ENV['APP_URL']);
 $auth = new Auth($db, $mail);
 $auth->logout();
 header('Location: /login');

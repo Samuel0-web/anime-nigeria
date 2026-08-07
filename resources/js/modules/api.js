@@ -39,7 +39,8 @@ export async function api(url, options = {}) {
         throw err;
     }
 
-    const data = await response.json().catch(() => ({}));
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
 
     // Validation error
     if (response.status === 422) {

@@ -7,15 +7,14 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <main id="main-content">
     <!-- ===================================================================
-         HERO
-         =================================================================== -->
+    HERO
+    =================================================================== -->
     <section class="an-winners-hero" aria-labelledby="an-winners-hero-heading">
         <div class="an-winners-hero__glow" aria-hidden="true"></div>
 
         <div class="an-container an-winners-hero__inner">
             <div class="an-winners-hero__content an-reveal" style="--i:0">
                 <span class="an-eyebrow an-winners-hero__eyebrow">Anime Nigeria Awards</span>
-
                 <h1 class="an-winners-hero__heading" id="an-winners-hero-heading">How Winners Are Chosen</h1>
 
                 <p class="an-winners-hero__paragraph">
@@ -33,8 +32,8 @@ require_once __DIR__ . '/../../includes/header.php';
     </section>
 
     <!-- ===================================================================
-         HOW WINNERS ARE DETERMINED
-         =================================================================== -->
+    HOW WINNERS ARE DETERMINED
+    =================================================================== -->
     <section class="an-winners-steps" id="winner-selection" aria-labelledby="an-winners-steps-heading">
         <div class="an-winners-steps__glow" aria-hidden="true"></div>
 
@@ -42,11 +41,13 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-winners-steps__intro">
                 <span class="an-eyebrow an-winners-steps__eyebrow">Winner Selection</span>
                 <h2 class="an-winners-steps__heading" id="an-winners-steps-heading">Every Winner Earns Their Place</h2>
+                
                 <p class="an-winners-steps__subheading">
                     From the moment voting closes to the official announcement, every step is
                     carefully reviewed to ensure the final results accurately reflect the community's
                     voice.
                 </p>
+
                 <div class="an-winners-steps__rule" aria-hidden="true"></div>
             </div>
 
@@ -59,6 +60,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
                             <span class="an-winners-steps__number" aria-hidden="true">01</span>
                         </span>
+
                         <h3 class="an-winners-steps__title">Voting Closes</h3>
                         <p class="an-winners-steps__text">Once the official voting period ends, no additional votes are accepted.</p>
                     </li>
@@ -68,6 +70,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                             <span class="an-winners-steps__number" aria-hidden="true">02</span>
                         </span>
+
                         <h3 class="an-winners-steps__title">Vote Verification</h3>
                         <p class="an-winners-steps__text">Submitted votes are reviewed to help ensure fairness and remove invalid activity where necessary.</p>
                     </li>
@@ -77,6 +80,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                             <span class="an-winners-steps__number" aria-hidden="true">03</span>
                         </span>
+
                         <h3 class="an-winners-steps__title">Final Review</h3>
                         <p class="an-winners-steps__text">Verified results are carefully prepared before the official announcement.</p>
                     </li>
@@ -86,6 +90,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-trophy" aria-hidden="true"></i>
                             <span class="an-winners-steps__number" aria-hidden="true">04</span>
                         </span>
+
                         <h3 class="an-winners-steps__title">Winner Announcement</h3>
                         <p class="an-winners-steps__text">The Anime Nigeria Awards winners are officially revealed after the review process is complete.</p>
                     </li>
@@ -104,11 +109,13 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-winners-recognition__intro">
                 <span class="an-eyebrow an-winners-recognition__eyebrow">Recognition</span>
                 <h2 class="an-winners-recognition__heading" id="an-winners-recognition-heading">More Than Just an Award</h2>
+                
                 <p class="an-winners-recognition__subheading">
                     Winning an Anime Nigeria Award is more than receiving recognition. It represents the
                     appreciation and support of the Anime Nigeria community and becomes part of the
                     awards' growing legacy.
                 </p>
+
                 <div class="an-winners-recognition__rule" aria-hidden="true"></div>
             </div>
 
@@ -157,6 +164,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>When are the winners announced?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>The official winners are announced after community voting has ended and all votes have been reviewed and verified.</p>
                     </div>
@@ -167,6 +175,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>How are winners selected?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>Winners are determined by verified community votes collected during the official voting period.</p>
                     </div>
@@ -177,6 +186,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Can there be a tie?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>If a tie occurs, Anime Nigeria will follow its official awards policy before confirming the final result.</p>
                     </div>
@@ -187,6 +197,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Will past winners be available to view?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>Yes. As the Anime Nigeria Awards grows, previous winners will become part of the Awards Hall of Honour.</p>
                     </div>
@@ -197,6 +208,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Do I need an Anime Nigeria account to view the winners?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>Members receive access to the complete winners experience once results are officially announced.</p>
                     </div>
@@ -207,6 +219,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Can winners be changed after they are announced?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-winners-faq__answer">
                         <p>Once the review process has been completed and the official announcement has been made, the published winners become the official results for that awards season.</p>
                     </div>
@@ -224,7 +237,6 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="an-container an-winners-access__inner">
             <div class="an-winners-access__card an-reveal" style="--i:0">
                 <span class="an-winners-access__label">Members Only</span>
-
                 <h2 class="an-winners-access__heading" id="an-winners-access-heading">Be Ready When the Winners Are Announced</h2>
 
                 <p class="an-winners-access__text">

@@ -1,6 +1,6 @@
 import { setError, clearError, resetField } from "./helpers.js";
-import { success } from "../toast.js";
-import { api, handleApiError } from "../api.js";
+import { success } from "../../modules/toast.js";
+import { api, handleApiError } from "../../modules/api.js";
 
 export function initUsername(form, updateButtons) {
     const input = form.querySelector("#username");

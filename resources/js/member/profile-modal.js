@@ -1,6 +1,7 @@
 import { useConfirmDialog } from '../modules/confirm-dialog';
 import { api, handleApiError } from '../modules/api';
 import { success } from '../modules/toast';
+import { useModal } from '../modules/modal';
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const AVATAR_ALLOWED_TYPES = ['image/png', 'image/jpeg'];
@@ -17,17 +18,17 @@ function collapseSpaces(value) {
     return value.trim().replace(/\s+/g, ' ');
 }
 
-export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'editProfileModal',
+export function initProfileModal({ templateId = 'editProfileTemplate',
     lightboxId = 'akdAvatarLightbox',
 } = {}) {
 
-    const overlay = document.getElementById(overlayId);
-    const modal = document.getElementById(modalId);
-    if (!overlay || !modal) return;
-    const confirmDialog = useConfirmDialog();
+    const template = document.getElementById(templateId);
+    if (!template) return;
+    const modalApi = useModal();
     const lightbox = createLightbox(lightboxId);
-    const closeBtn = modal.querySelector('[data-modal-close]');
-    const cancelBtn = modal.querySelector('[data-modal-cancel]');
+    const confirmDialog = useConfirmDialog();
+    const triggers = document.querySelectorAll('[data-modal-open="edit-profile"]');
+    if (!triggers.length) return;
     const form = modal.querySelector('form');
     const saveBtn = modal.querySelector('[data-modal-save]');
     const banner = modal.querySelector('[data-modal-banner]');
@@ -79,10 +80,6 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
     let state = 'idle'; // idle | loading | success
     let lastFocusedEl = null;
     const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])';
-
-    function getFocusable() {
-        return Array.from(modal.querySelectorAll(focusableSelector)).filter((el) => !el.closest('[inert]'));
-    }
 
     function updateModalAvatar(src = null) {
         const img = avatarPreviewBtn.querySelector('[data-avatar-img]');
@@ -349,15 +346,6 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         banner.classList.add(`akd-modal__banner--${type}`, 'is-visible');
     }
 
-    // ---- Open / close ----
-    function openModal(trigger) {
-        lastFocusedEl = trigger || document.activeElement;
-        overlay.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-        document.addEventListener('keydown', handleKeydown);
-        (getFocusable()[0] || modal).focus();
-    }
-
     function resetState() {
         state = 'idle';
         setBanner(null);
@@ -377,66 +365,6 @@ export function initProfileModal({overlayId = 'editProfileOverlay', modalId = 'e
         restoreOriginalAvatar();
         isDirty = false;
     }
-
-    function reallyClose() {
-        overlay.classList.remove('is-open');
-        document.body.style.overflow = '';
-        document.removeEventListener('keydown', handleKeydown);
-        resetState();
-        lastFocusedEl?.focus();
-    }
-
-    async function requestClose() {
-        if (state === 'loading') return;
-        if (!isDirty) { reallyClose(); return; }
-        if (!confirmDialog) { reallyClose(); return; }
-
-        const discard = await confirmDialog.ask({
-            title: 'Discard changes?',
-            message: 'You have unsaved changes.',
-            confirmLabel: 'Discard',
-            cancelLabel: 'Continue Editing',
-            destructive: true,
-        });
-
-        if (discard) reallyClose();
-    }
-
-    function handleKeydown(e) {
-        if (confirmDialog?.isOpen() || lightbox.isOpen()) return;
-
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            requestClose();
-            return;
-        }
-
-        if (e.key === 'Tab') {
-            const focusables = getFocusable();
-            if (!focusables.length) return;
-            const first = focusables[0];
-            const last = focusables[focusables.length - 1];
-
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
-            }
-        }
-    }
-
-    document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
-        trigger.addEventListener('click', () => openModal(trigger));
-    });
-
-    closeBtn?.addEventListener('click', requestClose);
-    cancelBtn?.addEventListener('click', requestClose);
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) requestClose();
-    });
 
     function getInitials(name) {
         return name.trim().split(/\s+/).slice(0, 2).map(part => part[0].toUpperCase()).join('');

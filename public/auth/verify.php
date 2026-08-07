@@ -37,6 +37,7 @@ $pageDescription = 'Verify your account';
         <a href="/" class="an-auth__logo">
             <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
         </a>
+        
         <?php if ($status === 'verified'): ?>
             <div class="an-auth__verify">
                 <div class="an-auth__verify-icon is-success">

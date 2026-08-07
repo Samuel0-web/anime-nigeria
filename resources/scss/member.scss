@@ -1,5 +1,8 @@
 // member.scss
 @use "layout";
 @use "base";
+@use "modal";
 @use "member/frame";
 @use "member/profile";
+@use "member/leaderboard";
+@use "member/player";

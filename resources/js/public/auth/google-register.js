@@ -1,4 +1,4 @@
-import { api, handleApiError } from "../api.js";
+import { api, handleApiError } from "../../modules/api.js";
 import { setLoading, clearLoading } from "./loading-state.js";
 
 export function initGoogleRegister(form) {

@@ -22,8 +22,6 @@ $auth->requireGuest();
             </div>
 
             <form class="an-auth__form" action="" method="post" novalidate>
-
-                <!-- Email -->
                 <div class="an-auth__field">
                     <input type="email" id="email" name="email" class="an-auth__input" placeholder=" "
                         autocomplete="email" required aria-describedby="email-error">
@@ -33,7 +31,6 @@ $auth->requireGuest();
                     <small id="email-error" class="an-auth__error"></small>
                 </div>
 
-                <!-- Password -->
                 <div class="an-auth__field">
                     <input type="password" id="password" name="password" class="an-auth__input"
                         placeholder=" " autocomplete="current-password" required>

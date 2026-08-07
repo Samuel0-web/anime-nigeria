@@ -21,9 +21,8 @@ if (!$linkValid) {
     header('Location: /auth/forgot-password');
     exit;
 }
-
-
 ?>
+
 <body data-page="reset-password">
     <main class="an-auth an-auth--register">
         <div class="an-auth__glow an-auth__glow--one" aria-hidden="true"></div>
@@ -33,6 +32,7 @@ if (!$linkValid) {
             <a href="/" class="an-auth__logo" aria-label="Anime Nigeria Home">
                 <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
             </a>
+
             <?php if ($linkValid): ?>
                 <div class="an-auth__intro">
                     <h1>Reset Your Password</h1>
@@ -42,7 +42,6 @@ if (!$linkValid) {
                 <form class="an-auth__form" action="" method="post" novalidate>
                     <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
 
-                    <!-- PASSWORD -->
                     <div class="an-auth__field">
                         <input type="password" id="password" name="password" class="an-auth__input"
                             placeholder=" " autocomplete="new-password" required>
@@ -61,7 +60,6 @@ if (!$linkValid) {
                         <li data-rule="symbol">At least one symbol (! @ # $ % & * ? ,)</li>
                     </ul>
 
-                    <!-- CONFIRM PASSWORD -->
                     <div class="an-auth__field">
                         <input type="password" id="confirm-password" name="confirm_password"
                             class="an-auth__input" placeholder=" " autocomplete="new-password" required>

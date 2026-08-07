@@ -153,6 +153,16 @@ class User {
         ]);
     }
 
+    public function updateLastLogin(int $id): bool {
+        $stmt = $this->db->prepare("UPDATE users SET last_login_at = CURRENT_TIMESTAMP
+            WHERE id = :id
+        ");
+
+        return $stmt->execute([
+            ':id' => $id,
+        ]);
+    }
+
     public function updateVerificationToken(int $id, string $token, string $expiresAt): bool {
         $stmt = $this->db->prepare("UPDATE users SET email_verification_token = :token,
             email_verification_expires_at = :expires, email_verification_sent_at = CURRENT_TIMESTAMP
@@ -183,8 +193,11 @@ class User {
     }
 
     public function updatePassword(int $userId, string $passwordHash): bool {
-        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
-        return $stmt->execute([$passwordHash, $userId]);
+        $stmt = $this->db->prepare("UPDATE users SET password = :password WHERE id = :id");
+        return $stmt->execute([
+            ':password' => $passwordHash,
+            ':id' => $userId
+        ]);
     }
 
     public function findByGoogleId(string $googleId): array|false {

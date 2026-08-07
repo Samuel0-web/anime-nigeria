@@ -659,6 +659,7 @@ class Auth {
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
+        $this->users->updateLastLogin((int) $user['id']);
         $this->rateLimiter->clear('login');
 
         if ($remember) {

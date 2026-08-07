@@ -1,6 +1,5 @@
 <?php
 namespace App\Auth;
-
 use PDO;
 
 class RememberMe {
@@ -129,10 +128,12 @@ class RememberMe {
      * Find a token by its selector.
      */
     private function findToken(string $selector): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM remember_tokens WHERE selector = ? LIMIT 1");
+        $stmt = $this->db->prepare("SELECT remember_tokens.*, users.role FROM remember_tokens
+            JOIN users ON users.id = remember_tokens.user_id WHERE selector = ? LIMIT 1"
+        );
+
         $stmt->execute([$selector]);
         $token = $stmt->fetch(PDO::FETCH_ASSOC);
-        
         return $token ?: null;
     }
 
@@ -248,6 +249,14 @@ class RememberMe {
         unset($_COOKIE[self::COOKIE_NAME]);
     }
 
+    private function updateLastLogin(int $userId): void {
+        $stmt = $this->db->prepare("UPDATE users SET last_login_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+
+        $stmt->execute([$userId]);
+    }
+
     // =========================================================================
     // PRIVATE - Login Completion
     // =========================================================================
@@ -259,7 +268,9 @@ class RememberMe {
         // Log the user in
         session_regenerate_id(true);
         $_SESSION['user_id'] = $token['user_id'];
-
+        $_SESSION['role'] = $token['role'];
+        $this->updateLastLogin((int)$token['user_id']);
+        
         // Remove the used token (token rotation for security)
         $this->deleteTokenById($token['id']);
 

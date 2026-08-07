@@ -342,6 +342,7 @@ class GoogleAuth {
         unset($_SESSION['pending_username_user_id']);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
+        $this->users->updateLastLogin((int) $user['id']);
         $this->rememberMe->create((int)$user['id']);
 
         return [

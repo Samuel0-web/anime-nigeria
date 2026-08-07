@@ -15,7 +15,6 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="an-container an-voting-hero__inner">
             <div class="an-voting-hero__content an-reveal" style="--i:0">
                 <span class="an-eyebrow an-voting-hero__eyebrow">Anime Nigeria Awards</span>
-
                 <h1 class="an-voting-hero__heading" id="an-voting-hero-heading">How Community Voting Works</h1>
 
                 <p class="an-voting-hero__paragraph">
@@ -33,8 +32,8 @@ require_once __DIR__ . '/../../includes/header.php';
     </section>
 
     <!-- ===================================================================
-         HOW VOTING WORKS
-         =================================================================== -->
+    HOW VOTING WORKS
+    =================================================================== -->
     <section class="an-voting-steps" id="voting-process" aria-labelledby="an-voting-steps-heading">
         <div class="an-voting-steps__glow" aria-hidden="true"></div>
 
@@ -42,10 +41,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-voting-steps__intro">
                 <span class="an-eyebrow an-voting-steps__eyebrow">Voting Process</span>
                 <h2 class="an-voting-steps__heading" id="an-voting-steps-heading">From Nominees to Winners</h2>
+                
                 <p class="an-voting-steps__subheading">
                     Every Anime Nigeria Award follows a simple and transparent process that ensures
                     community participation and fair results.
                 </p>
+
                 <div class="an-voting-steps__rule" aria-hidden="true"></div>
             </div>
 
@@ -58,6 +59,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
                             <span class="an-voting-steps__number" aria-hidden="true">01</span>
                         </span>
+
                         <h3 class="an-voting-steps__title">Official Nominees</h3>
                         <p class="an-voting-steps__text">After nominations close, eligible entries are reviewed and the official nominees are announced.</p>
                     </li>
@@ -67,6 +69,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-square-poll-vertical" aria-hidden="true"></i>
                             <span class="an-voting-steps__number" aria-hidden="true">02</span>
                         </span>
+
                         <h3 class="an-voting-steps__title">Community Voting</h3>
                         <p class="an-voting-steps__text">Registered Anime Nigeria members vote for their favourite nominees in each award category.</p>
                     </li>
@@ -76,6 +79,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                             <span class="an-voting-steps__number" aria-hidden="true">03</span>
                         </span>
+
                         <h3 class="an-voting-steps__title">Vote Verification</h3>
                         <p class="an-voting-steps__text">Submitted votes are reviewed to help ensure a fair and transparent outcome.</p>
                     </li>
@@ -85,6 +89,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="fa-solid fa-trophy" aria-hidden="true"></i>
                             <span class="an-voting-steps__number" aria-hidden="true">04</span>
                         </span>
+
                         <h3 class="an-voting-steps__title">Winner Announcement</h3>
                         <p class="an-voting-steps__text">The final winners are revealed during the Anime Nigeria Awards announcement.</p>
                     </li>
@@ -103,10 +108,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-voting-rules__intro">
                 <span class="an-eyebrow an-voting-rules__eyebrow">Voting Rules</span>
                 <h2 class="an-voting-rules__heading" id="an-voting-rules-heading">Fair Voting for Everyone</h2>
+                
                 <p class="an-voting-rules__subheading">
                     The Anime Nigeria Awards are built on fairness, transparency and genuine community
                     participation. Please keep these simple rules in mind when voting.
                 </p>
+
                 <div class="an-voting-rules__rule" aria-hidden="true"></div>
             </div>
 
@@ -167,6 +174,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Do I need an Anime Nigeria account to vote?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-voting-faq__answer">
                         <p>Yes. Community voting is available only to registered Anime Nigeria members.</p>
                     </div>
@@ -177,6 +185,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Can I vote every day?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-voting-faq__answer">
                         <p>Yes. Members can submit one complete ballot each day during the official voting period.</p>
                     </div>
@@ -187,6 +196,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>Can I change my vote after submitting?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-voting-faq__answer">
                         <p>No. Once a ballot has been submitted for the day, it cannot be edited.</p>
                     </div>
@@ -197,6 +207,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>How are winners determined?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-voting-faq__answer">
                         <p>Winners are decided by verified community votes collected during the official voting period.</p>
                     </div>
@@ -207,6 +218,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>What happens if suspicious voting is detected?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+
                     <div class="an-voting-faq__answer">
                         <p>Anime Nigeria reserves the right to investigate and remove fraudulent or invalid votes to maintain a fair competition.</p>
                     </div>
@@ -217,6 +229,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span>When will the winners be announced?</span>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+                    
                     <div class="an-voting-faq__answer">
                         <p>The official winners will be revealed after voting concludes and all results have been verified.</p>
                     </div>

@@ -1,0 +1,496 @@
+@use "../tokens" as *;
+@use "sass:color";
+
+// Shared glass-card treatment, local to this file so leaderboard.scss
+// doesn't depend on profile.scss's placeholder existing.
+%akd-glass-surface {
+    position: relative;
+    border-radius: $radius-lg;
+    background: rgba($white, 0.025);
+    border: 1px solid $black-line;
+    box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 10px 28px rgba(0, 0, 0, 0.32);
+    transition: transform $transition-base, box-shadow $transition-base, border-color $transition-base;
+}
+
+// ==========================================
+// PAGE WRAPPER
+// ==========================================
+.akd-leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xl;
+    padding: $space-sm;
+}
+
+// ==========================================
+// SHARED AVATAR CHIP
+// ==========================================
+.akd-avatar-chip {
+    flex-shrink: 0;
+    border-radius: $radius-full;
+    overflow: hidden;
+    border: 1px solid $black-line;
+    background: $black-soft;
+
+    &--sm { width: 44px; height: 44px; }
+    &--md { width: 56px; height: 56px; }
+    &--lg { width: 76px; height: 76px; }
+
+    &__image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    &__initials {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: $sakura-dim;
+        color: $sakura;
+        font-weight: $fw-bold;
+        font-family: $font-primary;
+    }
+
+    &--sm &__initials { font-size: $fs-sm; }
+    &--md &__initials { font-size: $fs-md; }
+    &--lg &__initials { font-size: $fs-xl; }
+}
+
+// ==========================================
+// PODIUM
+// ==========================================
+.akd-podium {
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: $space-md;
+
+        @media (min-width: $bp-md) {
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: center;
+            gap: $space-lg;
+        }
+    }
+
+    &__card {
+        @extend %akd-glass-surface;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        padding: $space-lg $space-md $space-md;
+
+        &:hover {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba($sakura, 0.2);
+        }
+
+        @media (min-width: $bp-md) {
+            flex: 1;
+            max-width: 240px;
+
+            &--rank-1 { order: 2; }
+            &--rank-2 { order: 1; }
+            &--rank-3 { order: 3; }
+        }
+
+        &--rank-1 {
+            padding: $space-xl $space-lg $space-lg;
+            border-color: rgba($gold, 0.3);
+            background: linear-gradient(160deg, rgba($gold, 0.06), rgba($white, 0.02));
+
+            .akd-podium__rank-icon { color: $gold; font-size: $fs-lg; }
+            .akd-podium__name { font-size: $fs-md; }
+            .akd-podium__badge { background: $gold-dim; color: $gold; }
+
+            @media (min-width: $bp-md) {
+                z-index: 1;
+                box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 16px 44px rgba(0, 0, 0, 0.45);
+            }
+        }
+
+        &--rank-2 .akd-podium__rank-icon { color: $white-muted; }
+        &--rank-2 .akd-podium__badge { background: rgba($white, 0.08); color: $white-muted; }
+
+        &--rank-3 .akd-podium__rank-icon { color: $accent-ember; }
+        &--rank-3 .akd-podium__badge { background: $accent-ember-dim; color: $accent-ember; }
+
+        &--current {
+            border-color: rgba($sakura, 0.45);
+            box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 1px rgba($sakura, 0.25),
+                0 12px 32px rgba(0, 0, 0, 0.4);
+        }
+    }
+
+    &__rank-icon {
+        font-size: $fs-base;
+        margin-bottom: 2px;
+    }
+
+    &__avatar { margin-bottom: $space-xs; }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: $lh-tight;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    &__username {
+        font-size: $fs-xs;
+        color: $white-faint;
+        margin-bottom: $space-xs;
+    }
+
+    &__xp {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+
+        strong {
+            font-size: $fs-md;
+            font-weight: $fw-bold;
+            color: $white;
+            font-variant-numeric: tabular-nums;
+        }
+
+        span {
+            font-size: 10px;
+            color: $white-faint;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+    }
+
+    &__badge {
+        margin-top: $space-xs;
+        font-size: 10px;
+        font-weight: $fw-bold;
+        padding: 2px 8px;
+        border-radius: $radius-full;
+    }
+
+    &__progress-chip {
+        margin-top: $space-xs;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        color: $sakura;
+        background: $sakura-dim;
+        padding: 3px 8px;
+        border-radius: $radius-full;
+
+        i { font-size: 8px; }
+    }
+}
+
+// ==========================================
+// REMAINING LIST
+// ==========================================
+.akd-leaderboard__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+}
+
+.akd-leaderboard__row {
+    @extend %akd-glass-surface;
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-sm $space-md;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: rgba($sakura, 0.2);
+        background: rgba($white, 0.04);
+    }
+
+    &--current {
+        border-color: rgba($sakura, 0.4);
+        background: linear-gradient(135deg, rgba($sakura, 0.07), rgba($gold, 0.03));
+        box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 1px rgba($sakura, 0.2);
+
+        &:hover {
+            background: linear-gradient(135deg, rgba($sakura, 0.07), rgba($gold, 0.03));
+            box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 1px rgba($sakura, 0.2);
+        }
+    }
+
+    @media (max-width: $bp-sm) {
+        grid-template-columns: auto auto 1fr;
+
+        .akd-leaderboard__stats {
+            grid-column: 1 / -1;
+            justify-content: space-between;
+        }
+
+        .akd-leaderboard__progress-chip {
+            grid-column: 1 / -1;
+        }
+    }
+}
+
+.akd-leaderboard__rank {
+    font-size: $fs-sm;
+    font-weight: $fw-bold;
+    color: $white-faint;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.akd-leaderboard__info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.akd-leaderboard__fullname {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.akd-leaderboard__you-tag {
+    flex-shrink: 0;
+    font-size: 9px;
+    font-weight: $fw-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $sakura;
+    background: $sakura-dim;
+    padding: 1px 6px;
+    border-radius: $radius-full;
+}
+
+.akd-leaderboard__username {
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-leaderboard__stats {
+    display: flex;
+    gap: $space-lg;
+    flex-shrink: 0;
+}
+
+.akd-leaderboard__xp,
+.akd-leaderboard__level {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    strong {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+        font-variant-numeric: tabular-nums;
+    }
+
+    span {
+        font-size: 10px;
+        color: $white-faint;
+    }
+}
+
+.akd-leaderboard__progress-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: $fw-semibold;
+    color: $sakura;
+    background: $sakura-dim;
+    padding: 3px 8px;
+    border-radius: $radius-full;
+    white-space: nowrap;
+
+    i { font-size: 8px; }
+}
+
+// ==========================================
+// RANK MOVEMENT INDICATOR
+// ==========================================
+.akd-rank-movement {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    font-weight: $fw-bold;
+    font-variant-numeric: tabular-nums;
+
+    i { font-size: 11px; }
+
+    &--up   { color: $accent-teal; }
+    &--down { color: $accent-crimson; }
+    &--none { color: $white-faint; }
+}
+
+.akd-leaderboard__rank-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 32px;
+    flex-shrink: 0;
+}
+
+.akd-podium__movement {
+    margin-top: 2px;
+}
+
+// ==========================================
+// PLAYER PROFILE LINKS
+// ==========================================
+.akd-leaderboard__name-link,
+.akd-podium__name-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    &:hover {
+        color: $sakura;
+        text-decoration: underline;
+    }
+}
+
+// ==========================================
+// STICKY CURRENT-USER CARD
+// ==========================================
+.akd-sticky-user {
+    position: fixed;
+    left: $space-md;
+    right: $space-md;
+    bottom: $space-md;
+    z-index: 95;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity $transition-base, transform $transition-base;
+
+    &--visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    &__inner {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        padding: $space-sm $space-md;
+        padding-bottom: calc(#{$space-sm} + env(safe-area-inset-bottom));
+        border-radius: $radius-lg;
+        background: rgba($black-soft, 0.92);
+        border: 1px solid rgba($sakura, 0.3);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+    }
+
+    &__info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    &__rank {
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $white-muted;
+
+        strong { color: $sakura; }
+    }
+
+    &__meta {
+        font-size: $fs-xs;
+        color: $white-faint;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        color: $sakura;
+        background: $sakura-dim;
+        padding: 3px 8px;
+        border-radius: $radius-full;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        i { font-size: 8px; }
+    }
+}
+
+// ==========================================
+// HIGHLIGHT PULSE (podium / row entering view)
+// ==========================================
+@keyframes akd-highlight-pulse {
+    0% {
+        box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 0 rgba($sakura, 0.5);
+        border-color: rgba($sakura, 0.9);
+    }
+    70% {
+        box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 14px rgba($sakura, 0);
+        border-color: rgba($sakura, 0.9);
+    }
+    100% {
+        box-shadow: 0 1px 0 rgba($white, 0.03) inset, 0 0 0 0 rgba($sakura, 0);
+    }
+}
+
+.is-pulsing {
+    animation: akd-highlight-pulse 1s $ease-standard;
+}
+
+// ==========================================
+// MOTION PREFERENCES
+// ==========================================
+@media (prefers-reduced-motion: reduce) {
+    .akd-sticky-user,
+    .akd-podium__card,
+    .akd-leaderboard__row {
+        transition: none;
+    }
+
+    .is-pulsing {
+        animation: none;
+    }
+}

@@ -86,11 +86,18 @@ $todayDate = date('l, F j');
     <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="preload" href="/uploads/upscalemedia-transformed (3).png" as="image">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-
     <?php vite('member'); ?>
+
+    <script type="module">
+        import RefreshRuntime from 'http://127.0.0.1:5173/@react-refresh';
+
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => (type) => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+    </script>
+
+    <?php vite('react'); ?>
 </head>
 <body>
 <div class="preloader" id="preloader">
@@ -202,10 +209,17 @@ $todayDate = date('l, F j');
                 </button>
 
                 <div class="akd-sidebar__profile-dropdown" id="profileDropdown" role="menu">
-                    <a href="/member/profile" class="akd-sidebar__dropdown-item" role="menuitem">View Profile</a>
+                    <a href="/member/profile" class="akd-sidebar__dropdown-item" role="menuitem">
+                        View Profile
+                    </a>
                     <div class="akd-sidebar__dropdown-divider"></div>
-                    <form action="/logout" method="POST" class="akd-sidebar__dropdown-logout-form">
-                        <button type="submit" class="akd-sidebar__dropdown-item akd-sidebar__dropdown-item--logout" role="menuitem">Log Out</button>
+                    <form action="/logout" method="POST" class="akd-sidebar__dropdown-logout-form" data-logout-form>
+                        <button type="submit" class="akd-sidebar__dropdown-item
+                            akd-sidebar__dropdown-item--logout" role="menuitem"
+                        >
+                            <i class="fas fa-sign-out-alt akd-sidebar__icon"></i>
+                            <span class="akd-sidebar__label">Sign Out</span>
+                        </button>
                     </form>
                 </div>
             </div>

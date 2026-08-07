@@ -1,7 +1,3 @@
-// =============================================================================
-// CONTACT FAQ
-// =============================================================================
-
 export function initContactFaq() {
     const items = document.querySelectorAll(".an-contact-faq__item");
     if (!items.length) return;
@@ -9,7 +5,6 @@ export function initContactFaq() {
     items.forEach((item, index) => {
         const button = item.querySelector(".an-contact-faq__question");
         const answer = item.querySelector(".an-contact-faq__answer");
-
         if (!button || !answer) return;
 
         // Open first item
@@ -24,9 +19,7 @@ export function initContactFaq() {
             items.forEach(otherItem => {
                 const otherButton = otherItem.querySelector(".an-contact-faq__question");
                 const otherAnswer = otherItem.querySelector(".an-contact-faq__answer");
-
                 if (!otherButton || !otherAnswer) return;
-
                 closeContactFaqItem(otherItem, otherButton, otherAnswer);
             });
 

@@ -1,11 +1,5 @@
-// =============================================================================
-// HONORED ONES
-// =============================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-
     if (typeof honoredOnes === 'undefined') return;
-
     const grid = document.getElementById('honoredGrid');
     const awardCount = document.getElementById('awardCount');
     const topHonoree = document.getElementById('topHonoree');
@@ -35,10 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.innerHTML = '';
 
             awards.forEach(({ category, winner }) => {
-
                 const card = document.createElement('article');
                 card.className = 'an-honored__card';
-
                 const icon = icons[category] ?? 'fa-trophy';
 
                 card.innerHTML = `
@@ -51,41 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
 
                 grid.appendChild(card);
-
             });
 
             awardCount.textContent = awards.length;
             const counts = {};
-
-            awards.forEach(({ winner }) => {
-                counts[winner] = (counts[winner] || 0) + 1;
-            });
-
+            awards.forEach(({ winner }) => {counts[winner] = (counts[winner] || 0) + 1;});
             const leader = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
             topHonoree.textContent = leader[0];
             topHonoreeAwards.textContent = `${leader[1]} Awards`;
             grid.classList.remove('is-changing');
-
         }, 250);
-
     }
 
     yearButtons.forEach(button => {
-
         button.addEventListener('click', () => {
-
-            yearButtons.forEach(btn =>
-                btn.classList.remove('is-active')
-            );
-
+            yearButtons.forEach(btn => btn.classList.remove('is-active'));
             button.classList.add('is-active');
-
             renderYear(button.dataset.year);
-
         });
-
     });
 
     renderYear(yearButtons[0].dataset.year);
-
 });

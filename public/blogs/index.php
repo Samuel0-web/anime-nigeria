@@ -15,7 +15,6 @@ require_once __DIR__ . '/../../includes/header.php';
         <div class="an-container an-blog-hero__inner">
             <div class="an-blog-hero__content an-reveal" style="--i:0">
                 <span class="an-eyebrow an-blog-hero__eyebrow">Anime Nigeria Blog</span>
-
                 <h1 class="an-blog-hero__heading" id="an-blog-hero-heading">Stories for Every Anime Fan</h1>
 
                 <p class="an-blog-hero__paragraph">
@@ -25,14 +24,12 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <form class="an-blog-hero__search" role="search" aria-label="Search blog articles" id="blog-search-form">
                     <i class="fa-solid fa-magnifying-glass an-blog-hero__search-icon" aria-hidden="true"></i>
-                    <input
-                        type="search"
-                        name="q"
-                        class="an-blog-hero__search-input"
-                        placeholder="Search articles..."
-                        aria-label="Search articles"
+                    
+                    <input type="search" name="q" class="an-blog-hero__search-input"
+                        placeholder="Search articles..." aria-label="Search articles"
                         id="blog-search-input"
                     >
+                    
                     <button type="submit" class="an-blog-hero__search-button">
                         <span>Search</span>
                         <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
