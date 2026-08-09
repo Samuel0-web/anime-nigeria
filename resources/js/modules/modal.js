@@ -1,15 +1,26 @@
-let instance = null;
+// resources/js/modules/modal.js
+// Generic, reusable modal shell. Knows nothing about any specific page's content.
 
-const FOCUSABLE_SELECTOR = ['button:not([disabled])', '[href]', 'input:not([disabled])',
-    'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])',
+let instance = null;
+let uid = 0;
+
+const FOCUSABLE_SELECTOR = [
+    'button:not([disabled])',
+    '[href]',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
 function createModalShell() {
+    const id = `akd-modal-${++uid}`;
     const overlay = document.createElement('div');
     overlay.className = 'akd-modal-overlay';
     overlay.setAttribute('data-modal-overlay', '');
     const modal = document.createElement('div');
     modal.className = 'akd-modal';
+    modal.id = id;
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('tabindex', '-1');
@@ -24,10 +35,10 @@ function createModalShell() {
     headerText.className = 'akd-modal__header-text';
     const title = document.createElement('h2');
     title.className = 'akd-modal__title';
-    title.setAttribute('data-modal-title', '');
+    title.id = `${id}-title`;
     const subtitle = document.createElement('p');
     subtitle.className = 'akd-modal__subtitle';
-    subtitle.setAttribute('data-modal-subtitle', '');
+    subtitle.id = `${id}-subtitle`;
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.className = 'akd-modal__close';
@@ -43,28 +54,28 @@ function createModalShell() {
     const footer = document.createElement('div');
     footer.className = 'akd-modal__footer';
     footer.setAttribute('data-modal-footer', '');
+    footer.hidden = true;
     modal.append(top, body, footer);
     overlay.appendChild(modal);
 
-    return { overlay, modal, top, dragHandle, header, title, subtitle, closeButton, body, footer, };
+    return { id, overlay, modal, top, dragHandle, header, title, subtitle, closeButton,
+        body, footer
+    };
 }
 
 function getFocusable(modal) {
-    return Array.from(
-        modal.querySelectorAll(FOCUSABLE_SELECTOR)
-    ).filter((el) => !el.closest('[inert]'));
+    return Array.from(modal.querySelectorAll(FOCUSABLE_SELECTOR))
+        .filter((el) => !el.closest('[inert]'));
 }
 
 export function useModal() {
-    if (instance) {
-        return instance.api;
-    }
-
-    const elements = createModalShell();
-    document.body.appendChild(elements.overlay);
+    if (instance) return instance.api;
+    const el = createModalShell();
+    document.body.appendChild(el.overlay);
     let isOpen = false;
     let lastFocusedEl = null;
     let closeHandler = null;
+    let closeRequest = null;
 
     function handleKeydown(event) {
         if (!isOpen) return;
@@ -76,11 +87,11 @@ export function useModal() {
         }
 
         if (event.key !== 'Tab') return;
-        const focusables = getFocusable(elements.modal);
+        const focusables = getFocusable(el.modal);
 
         if (!focusables.length) {
             event.preventDefault();
-            elements.modal.focus();
+            el.modal.focus();
             return;
         }
 
@@ -97,137 +108,123 @@ export function useModal() {
     }
 
     function setTitle(value) {
-        elements.title.textContent = value || '';
-        elements.title.hidden = !value;
+        el.title.textContent = value || '';
+        el.title.hidden = !value;
 
         if (value) {
-            elements.modal.setAttribute('aria-labelledby', elements.title.id || ensureTitleId());
+            el.modal.setAttribute('aria-labelledby', el.title.id);
         } else {
-            elements.modal.removeAttribute('aria-labelledby');
+            el.modal.removeAttribute('aria-labelledby');
         }
-    }
-
-    function ensureTitleId() {
-        const id = 'akdModalTitle';
-
-        if (!elements.title.id) {
-            elements.title.id = id;
-        }
-
-        return id;
     }
 
     function setSubtitle(value) {
-        elements.subtitle.textContent = value || '';
-        elements.subtitle.hidden = !value;
+        el.subtitle.textContent = value || '';
+        el.subtitle.hidden = !value;
 
         if (value) {
-            if (!elements.subtitle.id) {
-                elements.subtitle.id = 'akdModalDescription';
-            }
-
-            elements.modal.setAttribute('aria-describedby', elements.subtitle.id);
+            el.modal.setAttribute('aria-describedby', el.subtitle.id);
         } else {
-            elements.modal.removeAttribute('aria-describedby');
+            el.modal.removeAttribute('aria-describedby');
         }
     }
 
     function setContent(content) {
-        elements.body.replaceChildren();
+        el.body.replaceChildren();
 
         if (content instanceof Node) {
-            elements.body.appendChild(content);
-            return;
-        }
-
-        if (typeof content === 'string') {
-            elements.body.innerHTML = content;
+            el.body.appendChild(content);
+        } else if (typeof content === 'string') {
+            el.body.innerHTML = content;
         }
     }
 
     function setFooter(content) {
-        elements.footer.replaceChildren();
+        el.footer.replaceChildren();
 
         if (!content) {
-            elements.footer.hidden = true;
+            el.footer.hidden = true;
             return;
         }
 
-        elements.footer.hidden = false;
+        el.footer.hidden = false;
 
         if (content instanceof Node) {
-            elements.footer.appendChild(content);
-            return;
-        }
-
-        if (typeof content === 'string') {
-            elements.footer.innerHTML = content;
+            el.footer.appendChild(content);
+        } else if (typeof content === 'string') {
+            el.footer.innerHTML = content;
         }
     }
 
     function setSize(size = 'default') {
-        elements.modal.dataset.size = size;
+        if (size === 'default') {
+            delete el.modal.dataset.size;
+        } else {
+            el.modal.dataset.size = size;
+        }
     }
 
     function setClassName(className) {
-        elements.modal.className = 'akd-modal';
+        el.modal.className = 'akd-modal';
 
         if (className) {
-            elements.modal.classList.add(...className.split(' '));
+            el.modal.classList.add(...className.split(' ').filter(Boolean));
         }
     }
 
     function cleanup() {
-        elements.body.replaceChildren();
-        elements.footer.replaceChildren();
-        elements.footer.hidden = true;
-        elements.modal.removeAttribute('aria-labelledby');
-        elements.modal.removeAttribute('aria-describedby');
-        elements.modal.removeAttribute('data-size');
-        elements.modal.className = 'akd-modal';
+        el.body.replaceChildren();
+        el.footer.replaceChildren();
+        el.footer.hidden = true;
+        el.modal.removeAttribute('aria-labelledby');
+        el.modal.removeAttribute('aria-describedby');
+        delete el.modal.dataset.size;
+        el.modal.className = 'akd-modal';
     }
 
     function reallyClose() {
         if (!isOpen) return;
         isOpen = false;
-        elements.overlay.classList.remove('is-open');
+        el.overlay.classList.remove('is-open');
         document.body.style.overflow = '';
         document.removeEventListener('keydown', handleKeydown);
-        const handler = closeHandler;
         closeHandler = null;
         cleanup();
-
-        if (typeof handler === 'function') {
-            handler();
-        }
-
-        lastFocusedEl?.focus();
+        const toFocus = lastFocusedEl;
         lastFocusedEl = null;
+        toFocus?.focus();
     }
 
+    // Single source of truth for "can this modal close?". Escape, backdrop
+    // click, the close (X) button, and the public close() API all route
+    // through here — beforeClose can never be bypassed by any of them.
     async function requestClose() {
         if (!isOpen) return;
+        if (closeRequest) return closeRequest;
 
-        if (typeof closeHandler === 'function') {
-            // Close handling is deliberately owned by the caller.
-            // The handler may return false or a Promise<boolean>.
-            const result = await closeHandler();
-
-            if (result === false) {
-                return;
+        const request = (async () => {
+            if (typeof closeHandler === 'function') {
+                const result = await closeHandler();
+                if (result === false || !isOpen) return;
             }
-        }
 
-        reallyClose();
+            reallyClose();
+        })();
+
+        closeRequest = request;
+
+        try {
+            await request;
+        } finally {
+            if (closeRequest === request) closeRequest = null;
+        }
     }
 
     function open({ title = '', subtitle = '', content = null, footer = null, size = 'default',
         className = '', beforeClose = null, initialFocus = null,
     } = {}) {
-        if (isOpen) {
-            reallyClose();
-        }
-
+        if (isOpen) reallyClose();
+        closeRequest = null;
         lastFocusedEl = document.activeElement;
         setTitle(title);
         setSubtitle(subtitle);
@@ -237,7 +234,7 @@ export function useModal() {
         setClassName(className);
         closeHandler = beforeClose;
         isOpen = true;
-        elements.overlay.classList.add('is-open');
+        el.overlay.classList.add('is-open');
         document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKeydown);
 
@@ -247,51 +244,33 @@ export function useModal() {
                 return;
             }
 
-            const firstFocusable = getFocusable(elements.modal)[0];
-
-            if (firstFocusable) {
-                firstFocusable.focus();
-            } else {
-                elements.modal.focus();
-            }
+            const first = getFocusable(el.modal)[0];
+            (first || el.modal).focus();
         });
-    }
-
-    function close() {
-        reallyClose();
     }
 
     function isModalOpen() {
         return isOpen;
     }
 
-    function getBody() {
-        return elements.body;
-    }
+    el.closeButton.addEventListener('click', requestClose);
 
-    function getFooter() {
-        return elements.footer;
-    }
-
-    function getModal() {
-        return elements.modal;
-    }
-
-    function getOverlay() {
-        return elements.overlay;
-    }
-
-    elements.closeButton.addEventListener('click', requestClose);
-
-    elements.overlay.addEventListener('click', (event) => {
-        if (event.target === elements.overlay) {
-            requestClose();
-        }
+    el.overlay.addEventListener('click', (event) => {
+        if (event.target === el.overlay) requestClose();
     });
 
-    instance = { elements, api: { open, close, isOpen: isModalOpen, getBody, getFooter, getModal,
-        getOverlay,
-    },};
+    instance = {
+        elements: el,
+        api: {
+            open,
+            close: requestClose, // was reallyClose — bypassed beforeClose
+            isOpen: isModalOpen,
+            getBody: () => el.body,
+            getFooter: () => el.footer,
+            getModal: () => el.modal,
+            getOverlay: () => el.overlay,
+        },
+    };
 
     return instance.api;
 }

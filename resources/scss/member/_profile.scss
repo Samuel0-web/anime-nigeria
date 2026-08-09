@@ -536,296 +536,156 @@
 }
 
 // ==========================================
-// EDIT PROFILE MODAL
+// EDIT PROFILE MODAL — content specific to Edit Profile
+// (the modal shell itself is styled in _modal.scss)
 // ==========================================
-.akd-modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: $z-mobile-nav + 10;
-    background: rgba(0, 0, 0, 0.7);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+.akd-profile-form {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $space-md;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
+    flex-direction: column;
+    gap: $space-lg;
+}
 
-    &.is-open {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
+.akd-modal__banner {
+    display: none;
+    align-items: center;
+    gap: $space-xs;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+
+    &.is-visible { display: flex; }
+
+    &--error {
+        background: $accent-crimson-dim;
+        color: $accent-crimson;
+        border: 1px solid rgba($accent-crimson, 0.25);
+    }
+
+    &--success {
+        background: $sakura-dim;
+        color: $sakura;
+        border: 1px solid rgba($sakura, 0.3);
     }
 }
 
-.akd-modal {
-    width: 100%;
-    max-width: 480px;
-    max-height: min(680px, calc(100vh - #{$space-xl}));
+.akd-modal__divider {
+    height: 1px;
+    flex-shrink: 0;
+    background: $black-line;
+}
+
+.akd-modal__avatar-field {
     display: flex;
     flex-direction: column;
-    background: $black-soft;
+    align-items: center;
+    gap: $space-xs;
+}
+
+.akd-modal__avatar-wrap {
+    position: relative;
+    width: 88px;
+    height: 88px;
+}
+
+.akd-modal__avatar-preview {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: $radius-full;
+    cursor: pointer;
+    transition: opacity $transition-fast;
+
+    &:hover { opacity: 0.85; }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+}
+
+.akd-modal__avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: $radius-full;
+    object-fit: cover;
     border: 1px solid $black-line;
-    border-radius: $radius-lg;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
-    overflow: hidden;
-    transform: translateY(16px) scale(0.97);
-    opacity: 0;
-    transition: transform 0.3s cubic-bezier(.22, 1, .36, 1), opacity 0.3s ease;
+    background: $black;
 
-    > form {
+    &--initials {
         display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-    }
-
-    &::-webkit-scrollbar{ display: none; }
-
-    .akd-modal-overlay.is-open & {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
-    
-    &__drag-handle {
-        display: none; // shown only on mobile, see media query below
-    }
-
-    &__top {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: $black-soft;
-    }
-
-    &__header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: $space-md;
-        padding: $space-md $space-lg;
-        border-bottom: 1px solid $black-line;
-        flex-shrink: 0;
-    }
-
-    &__header-text {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        min-width: 0;
-    }
-    
-    &__title {
-        font-size: $fs-md;
-        font-weight: $fw-semibold;
+        align-items: center;
+        justify-content: center;
+        font-weight: $fw-bold;
+        font-size: $fs-2xl;
         color: $white;
     }
+}
 
-    &__subtitle {
-        font-size: $fs-xs;
-        color: $white-faint;
-        line-height: $lh-snug;
-    }
-    
-    &__close {
-        background: rgba($white, 0.03);
-        border: 1px solid $black-line;
-        color: $white-muted;
-        width: 34px;
-        height: 34px;
-        border-radius: $radius-sm;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: all $transition-fast;
+.akd-modal__avatar-upload {
+    position: absolute;
+    bottom: 1px;
+    right: 2px;
+    width: 31px;
+    height: 31px;
+    border-radius: $radius-full;
+    background: $sakura;
+    color: $black;
+    border: 2px solid $black-soft;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background $transition-fast, transform $transition-fast;
 
-        &:hover {
-            background: rgba($white, 0.08);
-            color: $white;
-        }
+    &:hover {
+        background: color.adjust($sakura, $lightness: 6%);
+        transform: scale(1.08);
     }
-    
-    &__body {
-        flex: 1;
-        min-height: 0;
-        padding: $space-lg;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        gap: $space-lg;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        scroll-behavior: smooth;
-        scrollbar-width: none;
-        touch-action: pan-y;
+}
 
-        &::-webkit-scrollbar { display: none; }
-    }
-    
-    &__banner {
-        display: none;
-        align-items: center;
-        gap: $space-xs;
-        padding: $space-xs $space-sm;
-        border-radius: $radius-sm;
-        font-size: $fs-xs;
-        font-weight: $fw-semibold;
+.akd-modal__avatar-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
 
-        &.is-visible { display: flex; }
+.akd-modal__avatar-hint {
+    font-size: 11px;
+    color: $white-faint;
+}
 
-        &--error {
-            background: $accent-crimson-dim;
-            color: $accent-crimson;
-            border: 1px solid rgba($accent-crimson, 0.25);
-        }
+.akd-modal__avatar-error {
+    font-size: 11px;
+    color: $accent-crimson;
+    display: none;
 
-        &--success {
-            background: $sakura-dim;
-            color: $sakura;
-            border: 1px solid rgba($sakura, 0.3);
-        }
-    }
-    
-    &__divider {
-        height: 1px;
-        flex-shrink: 0;
-        background: $black-line;
-    }
-    
-    &__avatar-field {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: $space-xs;
-    }
-    
-    &__avatar-wrap {
-        position: relative;
-        width: 88px;
-        height: 88px;
-    }
-    
-    &__avatar-preview {
-        display: block;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        border: none;
-        background: none;
-        border-radius: $radius-full;
-        cursor: pointer;
-        transition: opacity $transition-fast;
+    &.is-visible { display: block; }
+}
 
-        &:hover { opacity: 0.85; }
+.akd-modal__avatar-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: $accent-crimson;
+    font-size: 11px;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+    padding: 2px 4px;
+    opacity: 0.85;
+    transition: opacity $transition-fast;
 
-        &:focus-visible {
-            outline: 2px solid rgba($sakura, 0.6);
-            outline-offset: 2px;
-        }
-    }
-    
-    &__avatar-img {
-        width: 100%;
-        height: 100%;
-        border-radius: $radius-full;
-        object-fit: cover;
-        border: 1px solid $black-line;
-        background: $black;
+    i { font-size: 10px; }
 
-        &--initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: $fw-bold;
-            font-size: $fs-2xl;
-            color: $white;
-        }
-    }
-    
-    &__avatar-upload {
-        position: absolute;
-        bottom: 1px;
-        right: 2px;
-        width: 31px;
-        height: 31px;
-        border-radius: $radius-full;
-        background: $sakura;
-        color: $black;
-        border: 2px solid $black-soft;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 12px;
-        transition: background $transition-fast, transform $transition-fast;
-
-        &:hover {
-            background: color.adjust($sakura, $lightness: 6%);
-            transform: scale(1.08);
-        }
-    }
-    
-    &__avatar-input {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-    }
-    
-    &__avatar-hint {
-        font-size: 11px;
-        color: $white-faint;
-    }
-    
-    &__avatar-error {
-        font-size: 11px;
-        color: $accent-crimson;
-        display: none;
-
-        &.is-visible { display: block; }
-    }
-    
-    &__avatar-remove {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        background: none;
-        border: none;
-        color: $accent-crimson;
-        font-size: 11px;
-        font-weight: $fw-semibold;
-        cursor: pointer;
-        padding: 2px 4px;
-        opacity: 0.85;
-        transition: opacity $transition-fast;
-
-        i { font-size: 10px; }
-
-        &:hover { opacity: 1; text-decoration: underline; }
-        &[hidden] { display: none; }
-    }
-
-    &__footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: $space-xs;
-        padding: $space-md $space-lg;
-        border-top: 1px solid $black-line;
-        flex-shrink: 0;
-
-        .akd-btn {
-            flex: 0 0 auto;
-            padding-left: $space-md;
-            padding-right: $space-md;
-            min-width: 108px;
-        }
-    }
+    &:hover { opacity: 1; text-decoration: underline; }
 }
 
 // ==========================================
@@ -880,8 +740,8 @@
         transition: transform $transition-base;
     }
 
-    // Height-animates via CSS grid rather than JS measuring scrollHeight —
-    // no layout jump, works with dynamic content, no reflow thrashing.
+    // Grid-based height animation — no scrollHeight measuring, no reflow
+    // thrashing, and it doesn't fight the [inert] attribute the JS applies.
     &__panel {
         display: grid;
         grid-template-rows: 0fr;
@@ -902,7 +762,6 @@
     }
 }
 
-// Password section
 .akd-password-section {
     display: flex;
     flex-direction: column;
@@ -933,53 +792,67 @@
 
         &.is-met {
             color: $white-muted;
-
             i { color: $accent-teal; }
         }
     }
 }
 
+// ==========================================
+// FORM FIELDS
+// ==========================================
 .akd-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    
+
     &__label {
         font-size: $fs-xs;
         font-weight: $fw-semibold;
         color: $white-muted;
     }
-    
+
     &__control-wrap {
         position: relative;
         display: flex;
         align-items: center;
     }
-    
+
     &__affix {
         position: absolute;
         left: $space-sm;
         color: $white-faint;
         font-size: $fs-sm;
         pointer-events: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
-    
+
     &__toggle {
         position: absolute;
         right: $space-xs;
+        width: 30px;
+        height: 30px;
         background: none;
         border: none;
+        border-radius: $radius-sm;
         color: $white-faint;
         cursor: pointer;
         font-size: $fs-sm;
-        padding: 4px;
         display: flex;
         align-items: center;
-        transition: color $transition-fast;
+        justify-content: center;
+        transition: color $transition-fast, background $transition-fast;
 
         &:hover { color: $white-muted; }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 1px;
+        }
     }
-    
+
     &__input {
         width: 100%;
         background: rgba($white, 0.03);
@@ -991,27 +864,40 @@
         font-family: $font-primary;
         transition: border-color $transition-fast, background $transition-fast;
 
+        &::placeholder {
+            color: $white-faint;
+        }
+
+        &:hover:not(:focus):not(:disabled) {
+            border-color: rgba($white, 0.16);
+        }
+
         &:focus {
             outline: none;
             border-color: rgba($sakura, 0.55);
             background: rgba($white, 0.05);
         }
 
+        &:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
         &--with-affix { padding-left: 2.3rem; }
         &--with-toggle { padding-right: 2.25rem; }
     }
-    
+
     &__hint {
         font-size: 11px;
         color: $white-faint;
     }
-    
+
     &__error-msg {
         display: none;
         font-size: 11px;
         color: $accent-crimson;
     }
-    
+
     &--error {
         .akd-field__input {
             border-color: $accent-crimson;
@@ -1019,46 +905,6 @@
         }
 
         .akd-field__error-msg { display: block; }
-    }
-}
-
-// ==========================================
-// MOBILE — BOTTOM DRAWER
-// ==========================================
-@media (max-width: $bp-md) {
-    .akd-modal-overlay {
-        align-items: flex-end;
-        padding: 0;
-    }
-
-    .akd-modal {
-        max-width: none;
-        width: 100%;
-        max-height: 92vh;
-        border-radius: $radius-lg $radius-lg 0 0;
-        border-left: none;
-        border-right: none;
-        border-bottom: none;
-        transform: translateY(100%);
-        transition: transform 0.4s cubic-bezier(.32, .72, 0, 1), opacity 0.3s ease;
-
-        &__drag-handle {
-            display: block;
-            width: 36px;
-            height: 4px;
-            border-radius: $radius-full;
-            background: $black-line;
-            margin: $space-sm auto $space-xs;
-            flex-shrink: 0;
-        }
-
-        &__footer {
-            padding-bottom: calc(#{$space-md} + env(safe-area-inset-bottom));
-        }
-    }
-
-    .akd-modal-overlay.is-open .akd-modal {
-        transform: translateY(0);
     }
 }
 
@@ -1082,7 +928,7 @@
 .akd-confirm-overlay {
     position: fixed;
     inset: 0;
-    z-index: $z-mobile-nav + 20;
+    z-index: $z-confirm;
     background: rgba(0, 0, 0, 0.75);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);

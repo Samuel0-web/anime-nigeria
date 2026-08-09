@@ -2,6 +2,7 @@
 @use "layout";
 @use "base";
 @use "modal";
+@use "member/404" as member-404;
 @use "member/frame";
 @use "member/profile";
 @use "member/leaderboard";

@@ -50,14 +50,20 @@ export function useConfirmDialog() {
         return Array.from(dialog.querySelectorAll(focusableSelector));
     }
 
+    // Registered with capture:true so this fires before any modal's own
+    // (bubble-phase) keydown listener underneath it — stopPropagation keeps
+    // that listener from also reacting, so whichever layer is on top always
+    // owns Escape/Tab, regardless of what's stacked below it.
     function handleKeydown(e) {
         if (e.key === "Escape") {
             e.preventDefault();
+            e.stopPropagation();
             settle(false);
             return;
         }
 
         if (e.key === "Tab") {
+            e.stopPropagation();
             const focusables = getFocusable();
             if (!focusables.length) return;
             const first = focusables[0];
@@ -75,13 +81,13 @@ export function useConfirmDialog() {
 
     function open() {
         overlay.classList.add("is-open");
-        document.addEventListener("keydown", handleKeydown);
+        document.addEventListener("keydown", handleKeydown, true);
         (acceptBtn || dialog).focus();
     }
 
     function close() {
         overlay.classList.remove("is-open");
-        document.removeEventListener("keydown", handleKeydown);
+        document.removeEventListener("keydown", handleKeydown, true);
         lastFocusedEl?.focus();
     }
 

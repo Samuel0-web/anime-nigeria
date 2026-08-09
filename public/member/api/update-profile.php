@@ -1,6 +1,4 @@
 <?php
-require_once '../../../bootstrap.php';
-
 use App\Database\Database;
 use App\Models\User;
 use App\Services\ProfileService;

@@ -1,0 +1,82 @@
+@use '../tokens' as *;
+@use 'sass:color';
+
+.akd-route-404 {
+    position: relative;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: $space-xxl $space-md;
+    overflow: hidden;
+
+    &__code {
+        /* Positions the 404 as a massive, faint watermark behind the content */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: clamp(8rem, 25vw, 18rem);
+        line-height: 1;
+        font-weight: $fw-bold;
+        color: rgba($white, 0.03); 
+        z-index: 0;
+        pointer-events: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    &__content {
+        /* Elevates the actual text and button above the watermark */
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    &__icon {
+        font-size: $fs-2xl;
+        color: $white-faint;
+        margin-bottom: $space-sm;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__description {
+        margin-top: $space-sm;
+        max-width: 400px;
+        font-size: $fs-sm;
+        line-height: 1.6;
+        color: $white-faint;
+    }
+
+    &__actions {
+        margin-top: $space-lg;
+
+        /* Standardizes the single button's width */
+        .akd-btn {
+            min-width: 200px;
+            display: inline-flex;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        &__actions {
+            width: 100%;
+            max-width: 260px;
+
+            .akd-btn {
+                width: 100%;
+            }
+        }
+    }
+}

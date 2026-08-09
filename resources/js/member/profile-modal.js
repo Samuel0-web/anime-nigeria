@@ -1,3 +1,8 @@
+// resources/js/member/profile-modal.js
+// Edit Profile business logic: form state, avatar, password, validation,
+// dirty-state tracking, and API submission. Modal chrome (open/close, focus
+// trap, Escape, backdrop, scroll lock) is owned entirely by modal.js.
+
 import { useConfirmDialog } from '../modules/confirm-dialog';
 import { api, handleApiError } from '../modules/api';
 import { success } from '../modules/toast';
@@ -18,50 +23,176 @@ function collapseSpaces(value) {
     return value.trim().replace(/\s+/g, ' ');
 }
 
-export function initProfileModal({ templateId = 'editProfileTemplate',
+function getInitials(name) {
+    return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
+}
+
+// Explicit display control instead of the `hidden` attribute — avoids the
+// case where a leftover inline style from a previous state out-specificities
+// the [hidden] stylesheet rule and an element stays visually stuck.
+function setDisplay(element, visible, displayValue = '') {
+    if (!element) return;
+    element.style.display = visible ? displayValue : 'none';
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+    })[character]);
+}
+
+function createProfileTemplate({ isGoogle, userInitials, avatarColor, avatarUrl, fullname, username }) {
+    userInitials = escapeHtml(userInitials);
+    avatarColor = escapeHtml(avatarColor);
+    avatarUrl = escapeHtml(avatarUrl);
+    fullname = escapeHtml(fullname);
+    username = escapeHtml(username);
+
+    const template = document.createElement('template');
+    template.innerHTML = `
+        <form id="editProfileForm" class="akd-profile-form" enctype="multipart/form-data" novalidate data-is-google="${isGoogle ? '1' : '0'}">
+            <div class="akd-modal__banner" data-modal-banner role="status" aria-live="polite"></div>
+
+            <div class="akd-modal__avatar-field">
+                <div class="akd-modal__avatar-wrap" data-user-initials="${userInitials}" data-avatar-color="${avatarColor}">
+                    <button type="button" class="akd-modal__avatar-preview" data-avatar-preview aria-label="View profile picture">
+                        <img src="${avatarUrl}" alt="" class="akd-modal__avatar-img" data-avatar-img${avatarUrl ? '' : ' style="display:none;"'}>
+                        <div class="akd-modal__avatar-img akd-modal__avatar-img--initials" data-avatar-initials style="background-color: ${avatarColor};${avatarUrl ? ' display:none;' : ''}">${userInitials}</div>
+                    </button>
+                    <label class="akd-modal__avatar-upload" for="avatarUploadInput" aria-label="Upload new photo">
+                        <i class="fa-solid fa-pen"></i>
+                    </label>
+                </div>
+
+                <input type="file" name="avatar" id="avatarUploadInput" accept="image/png,image/jpeg" class="akd-modal__avatar-input" data-avatar-input>
+                <span class="akd-modal__avatar-hint" data-avatar-hint>PNG or JPG, up to 2MB</span>
+                <span class="akd-modal__avatar-error" data-avatar-error></span>
+                <button type="button" class="akd-modal__avatar-remove" data-avatar-remove${avatarUrl ? '' : ' style="display:none;"'}>
+                    <i class="fa-solid fa-trash-can"></i>
+                    Remove
+                </button>
+            </div>
+
+            <div class="akd-field" data-field="fullname">
+                <label class="akd-field__label" for="editFullname">Full Name</label>
+                <div class="akd-field__control-wrap">
+                    <input type="text" name="fullname" id="editFullname" class="akd-field__input" value="${fullname}" maxlength="100" autocomplete="off">
+                </div>
+                <span class="akd-field__error-msg" data-field-error></span>
+            </div>
+
+            <div class="akd-field" data-field="username">
+                <label class="akd-field__label" for="editUsername">Username</label>
+                <div class="akd-field__control-wrap">
+                    <span class="akd-field__affix">@</span>
+                    <input type="text" name="username" id="editUsername" class="akd-field__input akd-field__input--with-affix" value="${username}" maxlength="20" autocomplete="off">
+                </div>
+                <span class="akd-field__error-msg" data-field-error></span>
+            </div>
+
+            ${isGoogle ? '' : `
+                <div class="akd-modal__divider"></div>
+                <div class="akd-password-collapse" data-password-collapse>
+                    <button type="button" class="akd-password-collapse__trigger" data-password-section-toggle aria-expanded="false" aria-controls="passwordSectionPanel">
+                        <span class="akd-password-collapse__trigger-text"><i class="fa-solid fa-lock"></i> Change Password</span>
+                        <i class="fa-solid fa-chevron-down akd-password-collapse__chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="akd-password-collapse__panel" id="passwordSectionPanel" data-password-panel>
+                        <div class="akd-password-collapse__inner">
+                            <div class="akd-password-section">
+                                ${createPasswordField('currentPassword', 'Current Password', 'editCurrentPassword', 'current-password', 'Needed to confirm it\'s you before changing your password.')}
+                                ${createPasswordField('newPassword', 'New Password', 'editNewPassword', 'new-password', '', `
+                                    <ul class="akd-password-rules" data-password-rules>
+                                        <li data-rule="length"><i class="fa-solid fa-circle"></i> At least 8 characters</li>
+                                        <li data-rule="uppercase"><i class="fa-solid fa-circle"></i> One uppercase letter</li>
+                                        <li data-rule="number"><i class="fa-solid fa-circle"></i> One number</li>
+                                        <li data-rule="symbol"><i class="fa-solid fa-circle"></i> One symbol (! @ # $ % &amp; * ? ,)</li>
+                                    </ul>
+                                `)}
+                                ${createPasswordField('confirmPassword', 'Confirm New Password', 'editConfirmPassword', 'new-password')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}
+        </form>
+    `;
+    return template;
+}
+
+function createPasswordField(name, label, id, autocomplete, hint = '', extra = '') {
+    return `
+        <div class="akd-field" data-field="${name}">
+            <label class="akd-field__label" for="${id}">${label}</label>
+            <div class="akd-field__control-wrap">
+                <input type="password" name="${name}" id="${id}" class="akd-field__input akd-field__input--with-toggle" autocomplete="${autocomplete}">
+                <button type="button" class="akd-field__toggle" data-password-toggle aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+            </div>
+            ${hint ? `<span class="akd-field__hint">${hint}</span>` : ''}
+            ${extra}
+            <span class="akd-field__error-msg" data-field-error></span>
+        </div>
+    `;
+}
+
+export function initProfileModal({
+    triggerSelector = '[data-modal-open="edit-profile"]',
     lightboxId = 'akdAvatarLightbox',
 } = {}) {
-
-    const template = document.getElementById(templateId);
-    if (!template) return;
-    const modalApi = useModal();
-    const lightbox = createLightbox(lightboxId);
-    const confirmDialog = useConfirmDialog();
-    const triggers = document.querySelectorAll('[data-modal-open="edit-profile"]');
+    const triggers = document.querySelectorAll(triggerSelector);
     if (!triggers.length) return;
-    const form = modal.querySelector('form');
-    const saveBtn = modal.querySelector('[data-modal-save]');
-    const banner = modal.querySelector('[data-modal-banner]');
-    const isGoogleAccount = form?.dataset.isGoogle === '1';
 
-    // ---- Fields ----
-    const fullNameField = modal.querySelector('[data-field="fullname"]');
-    const usernameField = modal.querySelector('[data-field="username"]');
-    const currentPasswordField = modal.querySelector('[data-field="currentPassword"]');
-    const newPasswordField = modal.querySelector('[data-field="newPassword"]');
-    const confirmPasswordField = modal.querySelector('[data-field="confirmPassword"]');
+    const profile = document.querySelector('.akd-profile');
+    if (!profile?.dataset.profileConfig) return;
+
+    const profileConfig = JSON.parse(profile.dataset.profileConfig);
+
+    const modalApi = useModal();
+    const confirmDialog = useConfirmDialog();
+    const lightbox = createLightbox(lightboxId);
+
+    // Build the form once; modal.js moves this same node in and out of its body.
+    const form = createProfileTemplate(profileConfig).content.firstElementChild;
+
+    const isGoogleAccount = form.dataset.isGoogle === '1';
+    const banner = form.querySelector('[data-modal-banner]');
+
+    const fullNameField = form.querySelector('[data-field="fullname"]');
+    const usernameField = form.querySelector('[data-field="username"]');
+    const currentPasswordField = form.querySelector('[data-field="currentPassword"]');
+    const newPasswordField = form.querySelector('[data-field="newPassword"]');
+    const confirmPasswordField = form.querySelector('[data-field="confirmPassword"]');
+
     const fullNameInput = fullNameField.querySelector('input');
     const usernameInput = usernameField.querySelector('input');
     const currentPasswordInput = currentPasswordField?.querySelector('input') ?? null;
     const newPasswordInput = newPasswordField?.querySelector('input') ?? null;
     const confirmPasswordInput = confirmPasswordField?.querySelector('input') ?? null;
+
     let originalFullName = fullNameInput.value;
     let originalUsername = usernameInput.value;
 
     // ---- Avatar ----
-    const avatarWrap = modal.querySelector('.akd-modal__avatar-wrap');
-    const avatarPreviewBtn = modal.querySelector('[data-avatar-preview]');
-    const avatarInput = modal.querySelector('[data-avatar-input]');
-    const avatarError = modal.querySelector('[data-avatar-error]');
-    const avatarRemoveBtn = modal.querySelector('[data-avatar-remove]');
-    let userInitials = avatarWrap?.dataset.userInitials || '';
-    const avatarColor = avatarWrap?.dataset.avatarColor || '#3457D5';
-    let hadOriginalAvatar = !!avatarPreviewBtn.querySelector('img[data-avatar-img]')?.getAttribute('src');
-    let originalAvatarSrc = avatarPreviewBtn.querySelector('img[data-avatar-img]')?.getAttribute('src') || null;
+    const avatarWrap = form.querySelector('.akd-modal__avatar-wrap');
+    const avatarPreviewBtn = form.querySelector('[data-avatar-preview]');
+    const avatarImg = form.querySelector('[data-avatar-img]');
+    const avatarInitialsEl = form.querySelector('[data-avatar-initials]');
+    const avatarInput = form.querySelector('[data-avatar-input]');
+    const avatarError = form.querySelector('[data-avatar-error]');
+    const avatarRemoveBtn = form.querySelector('[data-avatar-remove]');
 
-    // ---- Password section collapse (new) ----
-    const passwordToggleBtn = modal.querySelector('[data-password-section-toggle]');
-    const passwordPanel = modal.querySelector('[data-password-panel]');
+    let userInitials = avatarWrap.dataset.userInitials || '';
+    let hadOriginalAvatar = avatarImg.style.display !== 'none' && !!avatarImg.getAttribute('src');
+    let originalAvatarSrc = avatarImg.getAttribute('src') || null;
+    let avatarState = 'original'; // 'original' | 'newFile' | 'removed'
+
+    // ---- Password collapse ----
+    const passwordToggleBtn = form.querySelector('[data-password-section-toggle]');
+    const passwordPanel = form.querySelector('[data-password-panel]');
 
     function setPasswordSectionOpen(open) {
         if (!passwordToggleBtn || !passwordPanel) return;
@@ -71,36 +202,96 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
     }
 
     passwordToggleBtn?.addEventListener('click', () => {
-        const isOpen = passwordToggleBtn.getAttribute('aria-expanded') === 'true';
-        setPasswordSectionOpen(!isOpen);
+        const isOpenNow = passwordToggleBtn.getAttribute('aria-expanded') === 'true';
+        setPasswordSectionOpen(!isOpenNow);
     });
 
-    let avatarState = 'original'; // 'original' | 'newFile' | 'removed'
-    let isDirty = false;
-    let state = 'idle'; // idle | loading | success
-    let lastFocusedEl = null;
-    const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])';
+    // ---- Password show/hide toggles ----
+    form.querySelectorAll('[data-password-toggle]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const input = btn.closest('.akd-field__control-wrap')?.querySelector('input');
+            if (!input) return;
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = showing ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        });
+    });
 
+    function resetPasswordVisibility() {
+        form.querySelectorAll('[data-password-toggle]').forEach((btn) => {
+            const input = btn.closest('.akd-field__control-wrap')?.querySelector('input');
+            if (input) input.type = 'password';
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fa-solid fa-eye';
+            btn.setAttribute('aria-label', 'Show password');
+        });
+    }
+
+    // ---- Password rules (live) ----
+    const ruleItems = form.querySelectorAll('[data-password-rules] li');
+
+    function updatePasswordRules() {
+        if (!newPasswordInput) return;
+        const value = newPasswordInput.value;
+        ruleItems.forEach((li) => {
+            const met = PASSWORD_RULES[li.dataset.rule]?.(value);
+            li.classList.toggle('is-met', !!met);
+            const icon = li.querySelector('i');
+            if (icon) icon.className = met ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle';
+        });
+    }
+
+    function passwordMeetsAllRules(value) {
+        return Object.values(PASSWORD_RULES).every((fn) => fn(value));
+    }
+
+    function isChangingPassword() {
+        return !isGoogleAccount && !!newPasswordInput && newPasswordInput.value.length > 0;
+    }
+
+    // ---- Footer (Save / Cancel), built once. The DOM nodes are reused for
+    // the lifetime of the page — only the wrapping fragment is rebuilt on
+    // each open(). A DocumentFragment's children are moved out, not copied,
+    // when it's appended, so reusing the same fragment instance across opens
+    // silently empties the footer from the second open onward. ----
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'akd-btn akd-btn--secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.setAttribute('data-modal-cancel', '');
+    cancelBtn.addEventListener('click', () => modalApi.close());
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'submit';
+    saveBtn.setAttribute('form', form.id);
+    saveBtn.className = 'akd-btn akd-btn--primary';
+    saveBtn.textContent = 'Save Changes';
+    saveBtn.setAttribute('data-modal-save', '');
+
+    function createFooterContent() {
+        const fragment = document.createDocumentFragment();
+        fragment.append(cancelBtn, saveBtn);
+        return fragment;
+    }
+
+    // ---- Avatar rendering ----
     function updateModalAvatar(src = null) {
-        const img = avatarPreviewBtn.querySelector('[data-avatar-img]');
-        const initials = avatarPreviewBtn.querySelector('[data-avatar-initials]');
-
         if (src) {
-            img.src = src;
-            img.style.display = '';
-            initials.style.display = 'none';
+            avatarImg.src = src;
+            setDisplay(avatarImg, true);
+            setDisplay(avatarInitialsEl, false);
         } else {
-            img.removeAttribute('src');
-            img.style.display = 'none';
-            initials.style.display = 'flex';
-            initials.textContent = userInitials;
-            initials.style.backgroundColor = avatarWrap.dataset.avatarColor;
+            avatarImg.removeAttribute('src');
+            setDisplay(avatarImg, false);
+            setDisplay(avatarInitialsEl, true, 'flex');
+            avatarInitialsEl.textContent = userInitials;
         }
     }
 
     function hasAvatarImage() {
-        const img = avatarPreviewBtn.querySelector('[data-avatar-img]');
-        return !!(img && img.src && img.style.display !== 'none');
+        return avatarImg.style.display !== 'none' && !!avatarImg.getAttribute('src');
     }
 
     function setAvatarError(message) {
@@ -113,7 +304,7 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
         updateModalAvatar(hadOriginalAvatar ? originalAvatarSrc : null);
         avatarInput.value = '';
         avatarState = 'original';
-        avatarRemoveBtn.hidden = !hadOriginalAvatar;
+        setDisplay(avatarRemoveBtn, hadOriginalAvatar);
         setAvatarError(null);
     }
 
@@ -139,7 +330,7 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
         reader.onload = () => {
             updateModalAvatar(reader.result);
             avatarState = 'newFile';
-            avatarRemoveBtn.hidden = false;
+            setDisplay(avatarRemoveBtn, true);
             updateDirtyState();
         };
 
@@ -152,8 +343,6 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
     });
 
     avatarRemoveBtn?.addEventListener('click', async () => {
-        if (!confirmDialog) return;
-
         const confirmed = await confirmDialog.ask({
             title: 'Remove profile picture?',
             message: 'This can\u2019t be undone. You can always upload a new one.',
@@ -163,53 +352,18 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
         });
 
         if (!confirmed) return;
+
         updateModalAvatar();
         avatarInput.value = '';
         avatarState = hadOriginalAvatar ? 'removed' : 'original';
-        avatarRemoveBtn.hidden = true;
+        setDisplay(avatarRemoveBtn, false);
         updateDirtyState();
     });
 
     avatarPreviewBtn?.addEventListener('click', () => {
         if (!hasAvatarImage()) return;
-        const img = avatarPreviewBtn.querySelector('img[data-avatar-img]');
-        lightbox.open(img.src);
+        lightbox.open(avatarImg.src);
     });
-
-    // ---- Password toggles (show/hide) ----
-    modal.querySelectorAll('[data-password-toggle]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const input = btn.previousElementSibling;
-            if (!input) return;
-            const showing = input.type === 'text';
-            input.type = showing ? 'password' : 'text';
-            btn.querySelector('i').className = showing ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
-            btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-        });
-    });
-
-    // ---- Password rules (live) ----
-    const ruleItems = modal.querySelectorAll('[data-password-rules] li');
-
-    function updatePasswordRules() {
-        if (!newPasswordInput) return;
-        const value = newPasswordInput.value;
-        ruleItems.forEach((li) => {
-            const rule = li.dataset.rule;
-            const met = PASSWORD_RULES[rule]?.(value);
-            li.classList.toggle('is-met', !!met);
-            const icon = li.querySelector('i');
-            if (icon) icon.className = met ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle';
-        });
-    }
-
-    function passwordMeetsAllRules(value) {
-        return Object.values(PASSWORD_RULES).every((fn) => fn(value));
-    }
-
-    function isChangingPassword() {
-        return !isGoogleAccount && !!newPasswordInput && newPasswordInput.value.length > 0;
-    }
 
     // ---- Validation ----
     function setFieldError(fieldWrap, message) {
@@ -234,12 +388,10 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             if (showError) setFieldError(fullNameField, 'Full name is required.');
             return false;
         }
-
         if (value.length > 100) {
             if (showError) setFieldError(fullNameField, 'Full name is too long.');
             return false;
         }
-
         return true;
     }
 
@@ -251,17 +403,14 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             if (showError) setFieldError(usernameField, 'Username is required.');
             return false;
         }
-
         if (value.length < 3 || value.length > 20) {
             if (showError) setFieldError(usernameField, 'Must be between 3 and 20 characters.');
             return false;
         }
-
         if (!USERNAME_PATTERN.test(value)) {
             if (showError) setFieldError(usernameField, 'Only letters, numbers and underscores.');
             return false;
         }
-
         return true;
     }
 
@@ -273,7 +422,6 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             if (showError) setFieldError(currentPasswordField, 'Enter your current password.');
             return false;
         }
-
         return true;
     }
 
@@ -285,7 +433,6 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             if (showError) setFieldError(newPasswordField, 'Password does not meet all requirements.');
             return false;
         }
-
         return true;
     }
 
@@ -297,7 +444,6 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             if (showError) setFieldError(confirmPasswordField, 'Passwords do not match.');
             return false;
         }
-
         return true;
     }
 
@@ -323,12 +469,16 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
     currentPasswordInput?.addEventListener('input', updateDirtyState);
 
     // ---- Dirty state ----
+    let isDirty = false;
+    let state = 'idle'; // idle | loading | success
+
     function updateDirtyState() {
         const nameDirty = collapseSpaces(fullNameInput.value) !== originalFullName.trim();
         const usernameDirty = usernameInput.value.trim() !== originalUsername.trim();
         const avatarDirty = avatarState !== 'original';
 
-        const passwordDirty = !isGoogleAccount && ((newPasswordInput?.value.length ?? 0) > 0 ||
+        const passwordDirty = !isGoogleAccount && (
+            (newPasswordInput?.value.length ?? 0) > 0 ||
             (currentPasswordInput?.value.length ?? 0) > 0 ||
             (confirmPasswordInput?.value.length ?? 0) > 0
         );
@@ -349,92 +499,77 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
     function resetState() {
         state = 'idle';
         setBanner(null);
+
         [fullNameField, usernameField, currentPasswordField, newPasswordField, confirmPasswordField]
-            .forEach((f) => clearFieldError(f));
+            .forEach(clearFieldError);
 
         saveBtn.disabled = true;
         saveBtn.classList.remove('akd-btn--success');
         saveBtn.textContent = 'Save Changes';
+
         fullNameInput.value = originalFullName;
         usernameInput.value = originalUsername;
+
         if (currentPasswordInput) currentPasswordInput.value = '';
         if (newPasswordInput) newPasswordInput.value = '';
         if (confirmPasswordInput) confirmPasswordInput.value = '';
+
+        resetPasswordVisibility();
         updatePasswordRules();
         setPasswordSectionOpen(false); // always collapsed on fresh open
         restoreOriginalAvatar();
         isDirty = false;
     }
 
-    function getInitials(name) {
-        return name.trim().split(/\s+/).slice(0, 2).map(part => part[0].toUpperCase()).join('');
-    }
-
     function updateUserUI(user) {
-        document.querySelectorAll('[data-user-fullname]').forEach(el => {
+        document.querySelectorAll('[data-user-fullname]').forEach((el) => {
             el.textContent = user.fullname;
         });
 
-        document.querySelectorAll('[data-user-username]').forEach(el => {
+        document.querySelectorAll('[data-user-username]').forEach((el) => {
             el.textContent = '@' + user.username;
         });
 
         const initials = getInitials(user.fullname);
         const cacheBust = Date.now();
 
-        document.querySelectorAll('[data-user-avatar-container]').forEach(container => {
+        document.querySelectorAll('[data-user-avatar-container]').forEach((container) => {
             const img = container.querySelector('[data-user-avatar]');
             const fallback = container.querySelector('[data-user-avatar-initials]');
 
             if (user.avatar) {
                 if (img) {
                     img.src = `${user.avatar}?v=${cacheBust}`;
-                    img.style.display = '';
+                    setDisplay(img, true);
                 }
-
-                if (fallback) {
-                    fallback.style.display = 'none';
-                }
-
+                setDisplay(fallback, false);
             } else {
                 if (img) {
                     img.removeAttribute('src');
-                    img.style.display = 'none';
+                    setDisplay(img, false);
                 }
-
                 if (fallback) {
-                    fallback.style.display = 'flex';
+                    setDisplay(fallback, true, 'flex');
                     fallback.textContent = initials;
                     fallback.style.backgroundColor = user.avatarColor;
-                    container.dataset.avatarColor = user.avatarColor;
                 }
             }
         });
     }
 
     // ---- Submit ----
-    form?.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        if (state === 'loading' || !isDirty) {
-            return;
-        }
-
+        if (state === 'loading' || !isDirty) return;
         fullNameInput.value = collapseSpaces(fullNameInput.value);
-
-        const checks = [
-            validateFullName(),
-            validateUsername(),
-        ];
+        const checks = [validateFullName(), validateUsername()];
 
         if (!isGoogleAccount) {
-            checks.push(validateCurrentPassword(), validateNewPassword(),
-                validateConfirmPassword()
-            );
+            checks.push(validateCurrentPassword(), validateNewPassword(), validateConfirmPassword());
         }
 
         if (checks.includes(false)) {
-            const erroredField = modal.querySelector('.akd-field--error');
+            const erroredField = form.querySelector('.akd-field--error');
 
             if (erroredField && passwordPanel?.contains(erroredField)) {
                 setPasswordSectionOpen(true);
@@ -449,13 +584,14 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="akd-spinner"></span> Saving...';
         setBanner(null);
+
         const formData = new FormData(form);
-        formData.set('fullname', collapseSpaces(fullNameInput.value));
+        formData.set('fullname', fullNameInput.value);
         formData.set('username', usernameInput.value.trim());
         formData.set('removeAvatar', avatarState === 'removed' ? '1' : '0');
 
         try {
-            const result = await api('/member/api/update-profile.php', {
+            const result = await api('/member/api/update-profile', {
                 method: 'POST',
                 body: formData,
             });
@@ -468,32 +604,21 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
 
                 Object.entries(result.errors || {}).forEach(([field, message]) => {
                     switch (field) {
-                        case 'fullname':
-                            setFieldError(fullNameField, message);
-                            break;
-
-                        case 'username':
-                            setFieldError(usernameField, message);
-                            break;
-
+                        case 'fullname': setFieldError(fullNameField, message); break;
+                        case 'username': setFieldError(usernameField, message); break;
                         case 'currentPassword':
                             setPasswordSectionOpen(true);
                             setFieldError(currentPasswordField, message);
                             break;
-
                         case 'newPassword':
                             setPasswordSectionOpen(true);
                             setFieldError(newPasswordField, message);
                             break;
-
                         case 'confirmPassword':
                             setPasswordSectionOpen(true);
                             setFieldError(confirmPasswordField, message);
                             break;
-
-                        case 'avatar':
-                            setAvatarError(message);
-                            break;
+                        case 'avatar': setAvatarError(message); break;
                     }
                 });
 
@@ -501,11 +626,13 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             }
 
             updateUserUI(result.user);
+
             userInitials = getInitials(result.user.fullname);
             avatarWrap.dataset.userInitials = userInitials;
             avatarWrap.dataset.avatarColor = result.user.avatarColor;
-            const modalInitials = modal.querySelector('[data-avatar-initials]');
-            modalInitials.textContent = userInitials;
+            avatarInitialsEl.textContent = userInitials;
+            avatarInitialsEl.style.backgroundColor = result.user.avatarColor;
+
             originalFullName = result.user.fullname;
             originalUsername = result.user.username;
             fullNameInput.value = result.user.fullname;
@@ -520,15 +647,15 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
             }
 
             updateModalAvatar(result.user.avatar ? `${result.user.avatar}?v=${Date.now()}` : null);
+            setDisplay(avatarRemoveBtn, hadOriginalAvatar);
+
+            isDirty = false;
             state = 'success';
             saveBtn.classList.add('akd-btn--success');
             saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved';
             success(result.message);
 
-            setTimeout(() => {
-                reallyClose();
-            }, 700);
-
+            setTimeout(() => modalApi.close(), 700);
         } catch (err) {
             state = 'idle';
             saveBtn.disabled = false;
@@ -537,18 +664,39 @@ export function initProfileModal({ templateId = 'editProfileTemplate',
         }
     });
 
-    // Apply the correct avatar colour on initial page load
-    const currentColor = avatarWrap.dataset.avatarColor;
+    // ---- beforeClose: single source of truth for "can this modal close?" ----
+    async function handleBeforeClose() {
+        if (state === 'loading') return false;
+        if (!isDirty) return true;
 
-    document.querySelectorAll('[data-user-avatar-initials]').forEach(el => {
-        el.style.backgroundColor = currentColor;
-    });
+        return confirmDialog.ask({
+            title: 'Discard changes?',
+            message: 'You have unsaved changes. Are you sure you want to discard them?',
+            confirmLabel: 'Discard',
+            cancelLabel: 'Continue Editing',
+            destructive: true,
+        });
+    }
 
-    modal.querySelector('[data-avatar-initials]').style.backgroundColor = currentColor;
-    resetState();
+    // ---- Trigger wiring ----
+    function openProfileModal() {
+        resetState();
+        modalApi.open({
+            title: 'Edit Profile',
+            subtitle: isGoogleAccount
+                ? 'Update your name and username.'
+                : 'Update your name, username, avatar and password.',
+            content: form,
+            footer: createFooterContent(),
+            beforeClose: handleBeforeClose,
+            initialFocus: fullNameInput,
+        });
+    }
+
+    triggers.forEach((trigger) => trigger.addEventListener('click', openProfileModal));
 }
 
-// ---- Lightbox (reuses the existing .an-lightbox component) ----
+// ---- Lightbox (reuses the existing .an-lightbox component; not owned by modal.js) ----
 function createLightbox(overlayId) {
     const overlay = document.getElementById(overlayId);
     const img = overlay?.querySelector('[data-lightbox-image]');
@@ -563,6 +711,7 @@ function createLightbox(overlayId) {
     function handleKeydown(e) {
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             close();
         }
     }
@@ -571,14 +720,15 @@ function createLightbox(overlayId) {
         lastFocusedEl = document.activeElement;
         img.src = src;
         overlay.classList.add('is-open');
-        document.addEventListener('keydown', handleKeydown);
+        document.addEventListener('keydown', handleKeydown, true);
         closeBtn?.focus();
     }
 
     function close() {
         overlay.classList.remove('is-open');
-        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('keydown', handleKeydown, true);
         lastFocusedEl?.focus();
+        lastFocusedEl = null;
     }
 
     closeBtn?.addEventListener('click', close);

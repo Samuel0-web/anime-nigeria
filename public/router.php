@@ -24,29 +24,58 @@ if ($uri === '') {
 |--------------------------------------------------------------------------
 | API Routing
 |--------------------------------------------------------------------------
-|
 */
-if (str_contains($uri, '/api/')) {
+
+$pathSegments = array_values(array_filter(explode('/', trim($uri, '/')),
+    static fn(string $segment): bool => $segment !== ''
+));
+
+$apiIndex = array_search('api', $pathSegments, true);
+
+if ($apiIndex !== false) {
     $method = $_SERVER['REQUEST_METHOD'];
 
     if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
         VerifyCsrf::handle();
     }
 
-    // Prevent directory traversal
-    if (preg_match('#\.\.#', $uri)) {
-        http_response_code(400);
+    $directory = array_slice($pathSegments, 0, $apiIndex);
+    $endpoint = array_slice($pathSegments, $apiIndex + 1);
+
+    // Every API endpoint must have something after /api/
+    if (empty($endpoint)) {
+        http_response_code(404);
         header('Content-Type: application/json');
 
         echo json_encode([
             'success' => false,
-            'message' => 'Invalid API route.',
+            'message' => 'API endpoint not found.',
         ]);
 
         exit;
     }
 
-    $apiFile = __DIR__ . $uri . '.php';
+    // Only allow safe URL path segments.
+    foreach (array_merge($directory, $endpoint) as $segment) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $segment)) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid API route.',
+            ]);
+
+            exit;
+        }
+    }
+
+    $apiFile = __DIR__
+        . '/'
+        . implode('/', $directory)
+        . '/api/'
+        . implode('/', $endpoint)
+        . '.php';
 
     if (is_file($apiFile)) {
         require $apiFile;
@@ -172,5 +201,35 @@ foreach ($routes as $route => $file) {
 */
 
 http_response_code(404);
+
+/*
+ * Determine which section of the application the
+ * requested URI belongs to.
+ */
+$firstSegment = $pathSegments[0] ?? '';
+
+switch ($firstSegment) {
+    case 'member':
+        $errorPage = __DIR__ . '/member/404.php';
+        break;
+
+    case 'admin':
+        $errorPage = __DIR__ . '/admin/404.php';
+        break;
+
+    default:
+        $errorPage = __DIR__ . '/404.php';
+        break;
+}
+
+if (is_file($errorPage)) {
+    require $errorPage;
+    exit;
+}
+
+/*
+ * Absolute fallback in case a section-specific
+ * 404 page is missing.
+ */
 require __DIR__ . '/404.php';
 exit;
