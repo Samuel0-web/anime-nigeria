@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <main class="akd-content">
-    <div id="react-root"></div>
+    <div id="react-root" data-page="help-centre"></div>
 </main>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

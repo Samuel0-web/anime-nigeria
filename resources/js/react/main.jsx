@@ -4,4 +4,6 @@ import App from "./App";
 
 const container = document.getElementById("react-root");
 
-createRoot(container).render(<App />);
+if (container) {
+    createRoot(container).render(<App />);
+}

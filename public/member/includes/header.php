@@ -84,7 +84,7 @@ $todayDate = date('l, F j');
     <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="preload" href="/uploads/upscalemedia-transformed (3).png" as="image">
+    <link rel="preload" href="/uploads/upscalemedia-transformed (3).png" as="image" fetchpriority="high">
 
     <?php vite('member'); ?>
 
@@ -101,7 +101,9 @@ $todayDate = date('l, F j');
 </head>
 <body>
 <div class="preloader" id="preloader">
-    <img src="/uploads/upscalemedia-transformed (3).png" alt="" class="preloader__wheel" draggable="false">
+    <img src="/uploads/upscalemedia-transformed (3).png" alt="" class="preloader__wheel" draggable="false"
+        fetchpriority="high" decoding="async"
+    >
 </div>
 
 <div class="akd-layout" id="akdLayout">

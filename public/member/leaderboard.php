@@ -10,6 +10,6 @@ $breadcrumbs = [
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div id="react-root"></div>
+<div id="react-root" data-page="leaderboard"></div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

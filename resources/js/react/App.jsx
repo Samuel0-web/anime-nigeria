@@ -1,5 +1,16 @@
 import Leaderboard from "./pages/Leaderboard";
+import HelpCentre from "./pages/HelpCentre";
 
 export default function App() {
-    return <Leaderboard />;
+    const root = document.getElementById("react-root");
+    const page = root?.dataset.page;
+
+    switch (page) {
+        case "leaderboard":
+            return <Leaderboard />;
+        case "help-centre":
+            return <HelpCentre />;
+        default:
+            return null;
+    }
 }

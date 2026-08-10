@@ -145,12 +145,9 @@ export function initProfileModal({
 } = {}) {
     const triggers = document.querySelectorAll(triggerSelector);
     if (!triggers.length) return;
-
     const profile = document.querySelector('.akd-profile');
     if (!profile?.dataset.profileConfig) return;
-
     const profileConfig = JSON.parse(profile.dataset.profileConfig);
-
     const modalApi = useModal();
     const confirmDialog = useConfirmDialog();
     const lightbox = createLightbox(lightboxId);

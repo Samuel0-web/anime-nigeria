@@ -150,6 +150,7 @@ $routes = [
     '/member/gallery'                           => 'member/gallery.php',
     '/member/blogs'                             => 'member/blogs.php',
     '/member/settings'                          => 'member/settings.php',
+    '/member/help'                              => 'member/help-centre.php',
 
     '/home'                                     => 'admin/index.php',
 ];

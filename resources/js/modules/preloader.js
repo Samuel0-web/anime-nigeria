@@ -50,7 +50,17 @@ export function initPreloader() {
     // ------------------------------------------------------------------
     // Real behaviour
     // ------------------------------------------------------------------
-    window.addEventListener("load", () => {
+    const preloaderImage = preloader.querySelector(".preloader__wheel");
+
+    window.addEventListener("load", async () => {
+        if (preloaderImage) {
+            try {
+                await preloaderImage.decode();
+            } catch {
+                // Ignore decode errors.
+            }
+        }
+
         hidePreloader();
     });
 
