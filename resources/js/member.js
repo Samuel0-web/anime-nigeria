@@ -8,9 +8,9 @@ import { initLogout } from "./modules/logout";
 import { initSidebar } from './member/sidebar';
 import { initProfileModal } from './member/profile-modal';
 import { initAchievementModal } from './member/achievements';
+import { initSettingsPage } from './member/settings';
 
 initPreloader();
-initLogout();
 
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar({layoutId: 'akdLayout', sidebarId: 'akdSidebar', toggleBtnId: 'sidebarToggle',
@@ -20,4 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initProfileModal();
     initAchievementModal();
+    initSettingsPage();
+    initLogout();
 });

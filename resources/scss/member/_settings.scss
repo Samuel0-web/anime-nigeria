@@ -1,2 +1,578 @@
 @use "../tokens" as *;
 @use "sass:color";
+
+// ============================================================
+// Page shell
+// ============================================================
+.akd-settings {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: $space-lg $space-sm $space-xxl;
+    display: flex;
+    flex-direction: column;
+}
+
+.akd-settings__intro {
+    margin-bottom: $space-lg;
+}
+
+.akd-settings__title {
+    margin: 0 0 $space-xxs;
+    color: $white;
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+}
+
+.akd-settings__subtitle {
+    margin: 0;
+    color: $white-faint;
+    font-size: $fs-base;
+}
+
+// ============================================================
+// Sections
+// ============================================================
+.akd-settings__section + .akd-settings__section {
+    margin-top: $space-lg;
+}
+
+.akd-settings__section-title {
+    margin: 0 0 $space-xs $space-xxs;
+    color: $white-muted;
+    font-size: $fs-sm;
+    font-weight: $fw-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &--danger {
+        color: $accent-crimson;
+    }
+}
+
+// Subtle entrance — sections settle in rather than pop
+@keyframes akd-settings-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.akd-settings__section {
+    animation: akd-settings-fade-in $transition-slow $ease-standard both;
+
+    @for $i from 1 through 5 {
+        &:nth-of-type(#{$i}) { animation-delay: $i * 60ms; }
+    }
+}
+
+// ============================================================
+// Grouped surface (replaces "big boxed section" pattern)
+// ============================================================
+.akd-settings-group {
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    overflow: hidden;
+
+    &--danger {
+        border-color: rgba($accent-crimson, 0.25);
+        background:
+            linear-gradient(180deg, rgba($accent-crimson, 0.05), rgba($accent-crimson, 0) 45%),
+            $black-soft;
+    }
+}
+
+.akd-settings-row {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-md $space-lg;
+
+    & + & {
+        border-top: 1px solid $black-line;
+    }
+
+    &__icon {
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: $radius-md;
+        background: $accent-violet-dim;
+        color: $accent-violet;
+        font-size: $fs-base;
+
+        &--security { background: $sakura-dim; color: $sakura; }
+        &--danger   { background: $accent-crimson-dim; color: $accent-crimson; }
+    }
+
+    &__content {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    &__top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: $space-xs;
+        margin-bottom: 2px;
+    }
+
+    &__label {
+        color: $white;
+        font-size: $fs-base;
+        font-weight: $fw-semibold;
+    }
+
+    &__desc {
+        margin: 2px 0 0;
+        color: $white-faint;
+        font-size: $fs-sm;
+        line-height: $lh-normal;
+    }
+
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: $white-muted;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+
+        &-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: $radius-full;
+            background: $white-faint;
+            transition: background $transition-fast;
+        }
+
+        &[data-state="on"] .akd-settings-row__status-dot {
+            background: $accent-teal;
+        }
+    }
+
+    &__action {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}
+
+// ============================================================
+// Switch — built fresh from tokens
+// ============================================================
+.akd-switch {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 44px; // 44px tap target; visible track is smaller
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &__track {
+        position: relative;
+        display: block;
+        width: 44px;
+        height: 24px;
+        border-radius: $radius-full;
+        background: rgba($white, 0.12);
+        border: 1px solid $black-line;
+        transition: background $transition-fast, border-color $transition-fast;
+    }
+
+    &__thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: $radius-full;
+        background: $white;
+        box-shadow: 0 1px 3px rgba($black, 0.4);
+        transition: transform $transition-fast, background $transition-fast;
+    }
+
+    &[aria-checked="true"] {
+        .akd-switch__track { background: $sakura; border-color: transparent; }
+        .akd-switch__thumb { transform: translateX(20px); background: $black-soft; }
+    }
+
+    &:focus-visible {
+        outline: none;
+        .akd-switch__track {
+            box-shadow: 0 0 0 2px $black-soft, 0 0 0 4px rgba($sakura, 0.6);
+        }
+    }
+}
+
+// ============================================================
+// Step transitions inside the shared modal (scoped, no edits
+// to _modal.scss needed — hooked via the modal's className option)
+// ============================================================
+.akd-modal--2fa,
+.akd-modal--delete {
+    .akd-modal__body {
+        transition: opacity $transition-fast, transform $transition-fast;
+
+        &.is-leaving  { opacity: 0; transform: translateX(-8px); }
+        &.is-entering { opacity: 0; transform: translateX(8px); }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-settings__section { animation: none; }
+
+    .akd-modal--2fa .akd-modal__body,
+    .akd-modal--delete .akd-modal__body {
+        transition: none;
+    }
+}
+
+// ============================================================
+// 2FA setup flow (content rendered inside the shared modal body)
+// ============================================================
+.akd-2fa {
+    &__meta { margin-bottom: $space-md; }
+
+    &__progress {
+        height: 4px;
+        border-radius: $radius-full;
+        background: rgba($white, 0.08);
+        overflow: hidden;
+    }
+
+    &__progress-bar {
+        display: block;
+        height: 100%;
+        background: $sakura;
+        border-radius: inherit;
+        transition: width $transition-base;
+    }
+
+    &__intro-icon {
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: $space-sm;
+        border-radius: $radius-md;
+        background: $sakura-dim;
+        color: $sakura;
+        font-size: $fs-lg;
+    }
+
+    &__heading {
+        margin: 0 0 $space-xs;
+        color: $white;
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+    }
+
+    &__text {
+        margin: 0 0 $space-sm;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: $lh-normal;
+    }
+
+    &__checklist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: $space-xxs;
+
+        li {
+            display: flex;
+            align-items: flex-start;
+            gap: $space-xs;
+            color: $white-muted;
+            font-size: $fs-sm;
+        }
+
+        i { color: $accent-teal; margin-top: 3px; }
+    }
+
+    &__qr {
+        width: 160px;
+        height: 160px;
+        margin: $space-sm auto 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed $black-line;
+        border-radius: $radius-md;
+        background: rgba($white, 0.03);
+        color: $white-faint;
+        font-size: 64px;
+    }
+
+    &__key {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $space-xs;
+        margin: $space-sm auto 0;
+        padding: $space-xxs $space-sm;
+        width: fit-content;
+        background: $input-bg;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+
+        &-label {
+            color: $white-faint;
+            font-size: $fs-xs;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        &-value {
+            color: $white;
+            font-family: $font-mono;
+            font-size: $fs-sm;
+            letter-spacing: 0.03em;
+        }
+    }
+
+    &__field { margin-top: $space-sm; }
+
+    &__label {
+        display: block;
+        margin-bottom: $space-xxs;
+        color: $white-muted;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+    }
+
+    &__error {
+        margin: $space-xxs 0 0;
+        color: $accent-crimson;
+        font-size: $fs-xs;
+    }
+
+    &__codes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: $space-xs;
+        margin: $space-sm 0;
+    }
+
+    &__code {
+        padding: $space-xs;
+        background: $input-bg;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        color: $white;
+        font-family: $font-mono;
+        font-size: $fs-sm;
+        text-align: center;
+        letter-spacing: 0.03em;
+    }
+
+    &__ack {
+        display: flex;
+        align-items: flex-start;
+        gap: $space-xs;
+        margin-top: $space-sm;
+        color: $white-muted;
+        font-size: $fs-sm;
+        cursor: pointer;
+
+        input[type="checkbox"] {
+            margin-top: 2px;
+            accent-color: $sakura;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+    }
+}
+
+.akd-code-input {
+    width: 100%;
+    max-width: 220px;
+    padding: $space-xs $space-sm;
+    background: $input-bg;
+    border: 1px solid $black-line;
+    border-radius: $radius-sm;
+    color: $white;
+    font-family: $font-mono;
+    font-size: $fs-md;
+    letter-spacing: 0.5em;
+    text-align: center;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+
+    &::placeholder { color: $white-faint; letter-spacing: normal; }
+
+    &:focus {
+        outline: none;
+        border-color: $sakura;
+        box-shadow: 0 0 0 3px $sakura-dim;
+    }
+
+    &[aria-invalid="true"] {
+        border-color: $accent-crimson;
+        box-shadow: 0 0 0 3px $accent-crimson-dim;
+    }
+}
+
+// ============================================================
+// Email preferences (inside modal)
+// ============================================================
+.akd-email-prefs {
+    display: flex;
+    flex-direction: column;
+
+    &__intro {
+        margin: 0 0 $space-sm;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: $lh-normal;
+    }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-sm;
+        padding: $space-sm 0;
+        border-top: 1px solid $black-line;
+
+        &:first-of-type { border-top: 0; padding-top: 0; }
+
+        &--locked { opacity: 0.85; }
+    }
+
+    &__label {
+        display: block;
+        color: $white;
+        font-size: $fs-base;
+        font-weight: $fw-semibold;
+    }
+
+    &__desc {
+        margin: 2px 0 0;
+        color: $white-faint;
+        font-size: $fs-xs;
+        line-height: $lh-normal;
+    }
+
+    &__locked-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: $space-xxs $space-xs;
+        border-radius: $radius-full;
+        background: rgba($white, 0.06);
+        color: $white-faint;
+        font-size: $fs-xs;
+        white-space: nowrap;
+    }
+}
+
+// ============================================================
+// Delete account — password re-entry + success view
+// ============================================================
+.akd-password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    &__input {
+        width: 100%;
+        padding: $space-xs 44px $space-xs $space-sm;
+        background: $input-bg;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        color: $white;
+        font-size: $fs-base;
+        transition: border-color $transition-fast, box-shadow $transition-fast;
+
+        &:focus {
+            outline: none;
+            border-color: $sakura;
+            box-shadow: 0 0 0 3px $sakura-dim;
+        }
+
+        &[aria-invalid="true"] {
+            border-color: $accent-crimson;
+            box-shadow: 0 0 0 3px $accent-crimson-dim;
+        }
+    }
+
+    &__toggle {
+        position: absolute;
+        right: $space-xxs;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: $radius-full;
+        background: transparent;
+        color: $white-faint;
+        cursor: pointer;
+        transition: background $transition-fast, color $transition-fast;
+
+        &:hover { background: rgba($white, 0.08); color: $white; }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+        }
+    }
+}
+
+.akd-delete-confirm {
+    &__text {
+        margin: 0 0 $space-sm;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: $lh-normal;
+    }
+
+    &__field { margin-top: $space-sm; }
+
+    &__error {
+        margin: $space-xxs 0 0;
+        color: $accent-crimson;
+        font-size: $fs-xs;
+    }
+
+    &--success {
+        text-align: center;
+        padding: $space-sm 0;
+    }
+
+    &__icon {
+        font-size: $fs-2xl;
+        color: $accent-teal;
+        margin-bottom: $space-sm;
+    }
+}
+
+// ============================================================
+// Responsive
+// ============================================================
+@media (max-width: $bp-md) {
+    .akd-settings { padding: $space-md $space-sm $space-xl; }
+
+    .akd-settings-row {
+        padding: $space-sm $space-md;
+        align-items: flex-start;
+    }
+
+    .akd-2fa__qr { width: 140px; height: 140px; font-size: 52px; }
+
+    .akd-2fa__codes { grid-template-columns: 1fr; }
+}
