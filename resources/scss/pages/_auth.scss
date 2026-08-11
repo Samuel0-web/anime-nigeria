@@ -748,3 +748,121 @@
 .an-auth__verify-button{
     width:100%;
 }
+
+// ======================================================================
+// TWO-FACTOR AUTHENTICATION
+// ======================================================================
+.an-auth__2fa-icon {
+    width: 64px;
+    aspect-ratio: 1;
+    margin: 0 auto $space-sm;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba($gold, .08);
+    border: 1px solid rgba($gold, .18);
+    color: $gold;
+    font-size: 1.5rem;
+}
+
+.an-auth__field--otp {
+    margin-bottom: $space-xs;
+}
+
+.an-auth__otp {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: .6rem;
+}
+
+.an-auth__otp-input {
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 1;
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: $fw-semibold;
+    font-family: $font-mono;
+    color: $white;
+    background: #ffffff08;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    transition: border-color $transition-base, background $transition-base,
+        transform $transition-fast;
+
+    &:focus {
+        outline: none;
+        border-color: $gold;
+        background: rgba(255, 255, 255, .045);
+        transform: translateY(-2px);
+    }
+}
+
+.an-auth__field--otp.is-invalid .an-auth__otp-input {
+    border-color: #ef4444;
+}
+
+.an-auth__recovery-field {
+    text-transform: uppercase;
+
+    &::placeholder { text-transform: none; }
+}
+
+.an-auth__switch {
+    display: block;
+    width: 100%;
+    margin-top: $space-md;
+    padding: 0;
+    border: none;
+    background: none;
+    color: $gold;
+    font: inherit;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    text-align: center;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+
+    &:focus-visible {
+        outline: 2px solid rgba($gold, .45);
+        outline-offset: 3px;
+        border-radius: $radius-sm;
+    }
+}
+
+.an-auth__otp-fieldset {
+    display: grid;
+    gap: .6rem;
+    border: none;
+    padding: 0;
+}
+
+.an-auth__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: $bp-sm) {
+    .an-auth__otp {
+        gap: .4rem;
+    }
+
+    .an-auth__otp-input {
+        font-size: 1.1rem;
+        border-radius: $radius-sm;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .an-auth__otp-input {
+        transition: none !important;
+    }
+}

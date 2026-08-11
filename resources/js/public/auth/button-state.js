@@ -19,6 +19,10 @@ export function initButtonState(form) {
             return true;
         }
 
+        if (page === "2fa") {
+           return true;
+        }
+
         // Forgot Password
         if (hasEmail && !hasPassword) {
             return email.closest(".an-auth__field").classList.contains("is-valid");

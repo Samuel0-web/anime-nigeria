@@ -16,6 +16,7 @@ import { initUsername } from "./username.js";
 import { initRegister } from "./register.js";
 import { initGoogleRegister } from "./google-register.js";
 import { initLogin } from "./login.js";
+import { initTwoFactor } from "./2fa.js";
 import { initGoogleAuth } from "./helpers.js";
 import { error as errorToast } from "../../modules/toast.js";
 
@@ -35,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initGoogleRegister(form);
     initLogin(form, updateButtons);
     initGoogleAuth();
+    initTwoFactor();
 
     if (window.oauthError) {
         errorToast(window.oauthError);

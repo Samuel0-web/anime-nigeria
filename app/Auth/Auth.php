@@ -5,7 +5,9 @@ use App\Mail\Mail;
 use App\Models\User;
 use App\Auth\RememberMe;
 use App\Models\PasswordResetToken;
+use App\Models\TwoFactorAuth;
 use App\Services\RateLimiter;
+use App\Services\TwoFactorService;
 use PDO;
 
 class Auth {
@@ -24,6 +26,8 @@ class Auth {
     private RememberMe $rememberMe;
     private PasswordResetToken $passwordResetTokens;
     private RateLimiter $rateLimiter;
+    private TwoFactorAuth $twoFactorAuth;
+    private TwoFactorService $twoFactorService;
     
     private array $errors = [];
     private string $errorType = 'validation';
@@ -39,6 +43,8 @@ class Auth {
         $this->rememberMe = new RememberMe($db);
         $this->passwordResetTokens = new PasswordResetToken($db);
         $this->rateLimiter = new RateLimiter($db);
+        $this->twoFactorAuth = new TwoFactorAuth($db);
+        $this->twoFactorService = new TwoFactorService($this->twoFactorAuth);
     }
 
     // =========================================================================
@@ -87,10 +93,28 @@ class Auth {
 
     public function user(): ?array {
         $id = $this->id();
+
         if ($id === null) {
             return null;
         }
+        
         return $this->users->findById($id) ?: null;
+    }
+
+    /**
+     * Verify a password against the currently authenticated user's stored hash.
+     *
+     * Used by sensitive account actions (e.g. disabling 2FA) that require
+     * password re-confirmation outside of the login flow.
+     */
+    public function verifyPassword(string $password): bool {
+        $user = $this->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->users->verifyPassword($user, $password);
     }
 
     public function requireAuth(string $redirect = '/login'): void {
@@ -287,9 +311,11 @@ class Auth {
         if ($email === '') {
             $this->addError('email', 'Email is required.');
         }
+
         if ($password === '') {
             $this->addError('password', 'Password is required.');
         }
+
         if ($this->hasErrors()) {
             $this->rateLimiter->hit('login');
             return false;
@@ -297,13 +323,16 @@ class Auth {
 
         // Find user
         $user = $this->users->findByEmail($email);
+
         if ($user === false) {
             return $this->failedLogin('Invalid email or password.');
         }
 
         // Check provider
         if (empty($user['password'])) {
-            return $this->failedLogin('This account uses Google Sign-In. Please continue with Google.');
+            return $this->failedLogin(
+                'This account uses Google Sign-In. Please continue with Google.'
+            );
         }
 
         // Verify password
@@ -314,18 +343,221 @@ class Auth {
         // Check email verification
         if ($user['email_verified_at'] === null) {
             $this->errorType = 'auth';
-            $this->addError('general', 'Please verify your email before signing in.');
+            $this->addError('general', 'Please verify your email before signing in.'
+            );
+
             return false;
         }
 
         // Check username completion
         if (empty($user['username'])) {
-            $_SESSION['pending_username_user_id'] = $user['id'];
-            return ['redirect' => '/auth/username'];
+            $_SESSION['pending_username_user_id'] = (int) $user['id'];
+
+            return [
+                'redirect' => '/auth/username',
+            ];
         }
 
-        // Successful login
+        /*
+        * Password authentication has succeeded at this point.
+        *
+        * Do NOT create the authenticated session yet.
+        * If 2FA is enabled, the user must complete the second factor first.
+        */
+        if ($this->twoFactorAuth->isEnabled((int) $user['id'])) {
+            $_SESSION['pending_2fa_user_id'] = (int) $user['id'];
+            $_SESSION['pending_2fa_remember'] = $remember;
+
+            /*
+            * Store only the fact that password authentication succeeded.
+            * Do not store the password itself.
+            */
+            $_SESSION['pending_2fa_started_at'] = time();
+            $this->rateLimiter->clear('login');
+
+            return [
+                'redirect' => '/auth/2fa',
+            ];
+        }
+
+        // No 2FA: complete login normally.
         return $this->completeLogin($user, $remember);
+    }
+
+    /**
+     * Check whether there is a pending 2FA login.
+     */
+    public function hasPendingTwoFactor(): bool {
+        return isset($_SESSION['pending_2fa_user_id']);
+    }
+
+    /**
+     * Get the user ID currently waiting for 2FA.
+     */
+    public function pendingTwoFactorUserId(): ?int {
+        if (!isset($_SESSION['pending_2fa_user_id'])) {
+            return null;
+        }
+
+        return (int) $_SESSION['pending_2fa_user_id'];
+    }
+
+
+    /**
+     * Complete a login using a TOTP authentication code.
+     */
+    public function verifyTwoFactor(string $code): array|false {
+        $this->resetState();
+        $this->errorType = 'auth';
+        $userId = $this->pendingTwoFactorUserId();
+
+        if ($userId === null) {
+            $this->addError('general', 'Your two-factor authentication session is invalid.');
+            return false;
+        }
+
+        /*
+        * Prevent abandoned 2FA sessions from remaining valid indefinitely.
+        */
+        $startedAt = $_SESSION['pending_2fa_started_at'] ?? null;
+
+        if (!is_int($startedAt) && !ctype_digit((string) $startedAt)) {
+            $this->clearPendingTwoFactor();
+            $this->addError('general', 'Your two-factor authentication session has expired.');
+            return false;
+        }
+
+        if (time() - (int) $startedAt > 10 * 60) {
+            $this->clearPendingTwoFactor();
+            $this->addError('general', 'Your two-factor authentication session has expired.');
+            return false;
+        }
+
+        $setup = $this->twoFactorAuth->findByUserId($userId);
+
+        if ($setup === false || $setup['enabled_at'] === null) {
+            $this->clearPendingTwoFactor();
+
+            $this->addError(
+                'general', 'Two-factor authentication is not enabled for this account.'
+            );
+
+            return false;
+        }
+
+        $code = trim($code);
+
+        if ($code === '') {
+            $this->addError('code', 'Authentication code is required.');
+            return false;
+        }
+
+        if (!preg_match('/^\d{6}$/', $code)) {
+            $this->addError('code', 'Enter the 6-digit authentication code.');
+            return false;
+        }
+
+        if (!$this->twoFactorService->verifyCode($setup['secret'], $code)) {
+            $this->addError('code', 'Invalid authentication code.');
+            return false;
+        }
+
+        return $this->completePendingTwoFactorLogin();
+    }
+
+
+    /**
+     * Complete a login using a recovery code.
+     */
+    public function verifyTwoFactorRecoveryCode(string $code): array|false {
+        $this->resetState();
+        $this->errorType = 'auth';
+        $userId = $this->pendingTwoFactorUserId();
+
+        if ($userId === null) {
+            $this->addError('general', 'Your two-factor authentication session is invalid.');
+            return false;
+        }
+
+        $startedAt = $_SESSION['pending_2fa_started_at'] ?? null;
+
+        if (!is_int($startedAt) && !ctype_digit((string) $startedAt)) {
+            $this->clearPendingTwoFactor();
+            $this->addError('general', 'Your two-factor authentication session has expired.');
+            return false;
+        }
+
+        if (time() - (int) $startedAt > 10 * 60) {
+            $this->clearPendingTwoFactor();
+            $this->addError('general', 'Your two-factor authentication session has expired.');
+            return false;
+        }
+
+        $storedCodes = $this->twoFactorAuth->getRecoveryCodes($userId);
+
+        if ($storedCodes === false || $storedCodes === null) {
+            $this->addError('code', 'No recovery codes are available for this account.');
+            return false;
+        }
+
+        $code = strtoupper(trim($code));
+
+        if ($code === '') {
+            $this->addError('code', 'Recovery code is required.');
+            return false;
+        }
+
+        $remainingCodes = $this->twoFactorService->verifyRecoveryCode($code, $storedCodes);
+
+        if ($remainingCodes === false) {
+            $this->addError('code', 'Invalid recovery code.');
+            return false;
+        }
+
+        $remainingCodesJson = json_encode($remainingCodes, JSON_THROW_ON_ERROR);
+
+        if (!$this->twoFactorAuth->updateRecoveryCodes($userId, $remainingCodesJson)) {
+            $this->addError('general', 'Unable to update your recovery codes.');
+            return false;
+        }
+
+        /*
+        * A recovery code is single-use.
+        * Once successfully consumed, finish authentication normally.
+        */
+        return $this->completePendingTwoFactorLogin();
+    }
+
+    /**
+     * Complete authentication after successful 2FA.
+     */
+    private function completePendingTwoFactorLogin(): array {
+        $userId = $this->pendingTwoFactorUserId();
+
+        if ($userId === null) {
+            throw new \RuntimeException('Unable to complete two-factor authentication.');
+        }
+
+        $remember = !empty($_SESSION['pending_2fa_remember']);
+        $user = $this->users->findById($userId);
+
+        if ($user === false) {
+            $this->clearPendingTwoFactor();
+            throw new \RuntimeException('Unable to find the authenticated user.');
+        }
+
+        $this->clearPendingTwoFactor();
+        return $this->completeLogin($user, $remember);
+    }
+
+
+    /**
+     * Clear the temporary 2FA authentication state.
+     */
+    private function clearPendingTwoFactor(): void {
+        unset($_SESSION['pending_2fa_user_id'], $_SESSION['pending_2fa_remember'],
+            $_SESSION['pending_2fa_started_at']
+        );
     }
 
     public function logout(): void {
@@ -334,9 +566,7 @@ class Auth {
 
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
+            setcookie(session_name(), '',
                 [
                     'expires' => time() - 3600,
                     'path' => $params['path'],

@@ -39,8 +39,7 @@ export function initLogin(form, updateButtons) {
                     if (response.meta?.cooldown) {
                         startCooldown(form, response.meta.cooldown,
                             (time) => {
-                                showFormMessage(
-                                    form, `Too many login attempts. Try again in ${time}.`
+                                showFormMessage(form, `Too many login attempts. Try again in ${time}.`
                                 );
                             },
                             () => {

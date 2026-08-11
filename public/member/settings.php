@@ -12,11 +12,6 @@ require_once __DIR__ . '/includes/header.php';
 
 <main class="akd-content">
     <div class="akd-settings">
-        <header class="akd-settings__intro">
-            <h1 class="akd-settings__title">Settings</h1>
-            <p class="akd-settings__subtitle">Manage your security, preferences, and account data.</p>
-        </header>
-
         <!-- Security -->
         <section class="akd-settings__section" aria-labelledby="settings-security-heading">
             <h2 class="akd-settings__section-title" id="settings-security-heading">Security</h2>
@@ -33,7 +28,7 @@ require_once __DIR__ . '/includes/header.php';
                                 <span data-2fa-status-text>Not enabled</span>
                             </span>
                         </div>
-                        <p class="akd-settings-row__desc">Add an extra layer of protection to your account with a verification code at sign-in.</p>
+                        <p class="akd-settings-row__desc" data-2fa-desc>Add an extra layer of security when signing in.</p>
                     </div>
                     <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-2fa-trigger>
                         <span data-2fa-action-label>Set up</span>
@@ -47,7 +42,7 @@ require_once __DIR__ . '/includes/header.php';
             <h2 class="akd-settings__section-title" id="settings-preferences-heading">Preferences</h2>
             <div class="akd-settings-group">
                 <div class="akd-settings-row">
-                    <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-sparkles"></i></div>
+                    <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
                     <div class="akd-settings-row__content">
                         <span class="akd-settings-row__label" id="motif-label">Achievement motif</span>
                         <p class="akd-settings-row__desc">Show subtle animated effects when you unlock achievements.</p>
@@ -72,7 +67,7 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></div>
                     <div class="akd-settings-row__content">
                         <span class="akd-settings-row__label">Email preferences</span>
-                        <p class="akd-settings-row__desc" data-email-summary>Achievement &amp; Quiz emails on · Account emails always on</p>
+                        <p class="akd-settings-row__desc" data-email-summary>All optional emails on. Account emails always on.</p>
                     </div>
                     <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-email-trigger>Manage</button>
                 </div>
@@ -89,8 +84,9 @@ require_once __DIR__ . '/includes/header.php';
                         <span class="akd-settings-row__label">Download my data</span>
                         <p class="akd-settings-row__desc" data-download-desc>Get a copy of your profile, achievements, and activity.</p>
                     </div>
+                    
                     <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-download-trigger>
-                        <span data-download-label>Request download</span>
+                        <span data-download-label>Download</span>
                     </button>
                 </div>
             </div>

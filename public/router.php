@@ -112,6 +112,7 @@ $routes = [
     '/auth/google/callback'                     => 'auth/google-auth/callback.php',
     '/auth/username'                            => 'auth/username.php',
     '/auth/verify'                              => 'auth/verify.php',
+    '/auth/2fa'                                 => 'auth/2fa.php',
     '/auth/forgot-password'                     => 'auth/forgot-password.php',
     '/auth/reset-password'                      => 'auth/reset-password.php',
     '/logout'                                   => 'auth/logout.php',
