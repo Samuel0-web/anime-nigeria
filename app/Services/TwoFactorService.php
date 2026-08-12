@@ -4,10 +4,12 @@ use App\Models\TwoFactorAuth;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
 use OTPHP\TOTP;
+use DateTimeImmutable;
+use DateTimeZone;
 
 class TwoFactorService {
     private TwoFactorAuth $twoFactorAuth;
-
+    private RateLimiter $rateLimiter;
     private const ISSUER = 'Anime Nigeria';
     private const TOTP_SECRET_BYTES = 20;
 
@@ -21,8 +23,9 @@ class TwoFactorService {
      */
     private const RECOVERY_CODE_COUNT = 10;
 
-    public function __construct(TwoFactorAuth $twoFactorAuth) {
+    public function __construct(TwoFactorAuth $twoFactorAuth, RateLimiter $rateLimiter) {
         $this->twoFactorAuth = $twoFactorAuth;
+        $this->rateLimiter = $rateLimiter;
     }
 
     /**
@@ -32,7 +35,10 @@ class TwoFactorService {
      */
     public function startSetup(int $userId, string $email): array {
         $secret = $this->generateSecret();
-        $setupExpiresAt = date('Y-m-d H:i:s', time() + self::SETUP_LIFETIME);
+
+        $setupExpiresAt = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+            ->modify('+' . self::SETUP_LIFETIME . ' seconds')->format('Y-m-d H:i:s');
+            
         $created = $this->twoFactorAuth->create($userId, $secret, $setupExpiresAt);
 
         if (!$created) {
@@ -133,15 +139,24 @@ class TwoFactorService {
             throw new \RuntimeException('Two-factor authentication setup is invalid.');
         }
 
-        if (strtotime($setup['setup_expires_at']) <= time()) {
+        $expiresAt = new \DateTimeImmutable($setup['setup_expires_at'], new \DateTimeZone('UTC'));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+
+        if ($expiresAt <= $now) {
             $this->twoFactorAuth->delete($userId);
             throw new \RuntimeException('Two-factor authentication setup has expired.');
         }
 
+        if ($this->rateLimiter->tooManyAttempts('two_factor')) {
+            throw new \RuntimeException('Too many verification attempts. Please try again later.');
+        }
+
         if (!$this->verifyCode($setup['secret'], $code)) {
+            $this->rateLimiter->hit('two_factor');
             throw new \RuntimeException('Invalid authentication code.');
         }
 
+        $this->rateLimiter->clear('two_factor');
         $recoveryCodes = $this->generateRecoveryCodes();
         $hashedRecoveryCodes = $this->hashRecoveryCodes($recoveryCodes);
 
@@ -160,6 +175,10 @@ class TwoFactorService {
      * Verify a recovery code and consume it.
      */
     public function verifyRecoveryCode(string $code, string $storedCodes): array|false {
+        if ($this->rateLimiter->tooManyAttempts('two_factor_recovery')) {
+            throw new \RuntimeException('Too many recovery-code attempts. Please try again later.');
+        }
+
         $hashedCodes = json_decode($storedCodes, true, 512, JSON_THROW_ON_ERROR);
 
         foreach ($hashedCodes as $index => $hash) {
@@ -168,9 +187,11 @@ class TwoFactorService {
             }
 
             unset($hashedCodes[$index]);
+            $this->rateLimiter->clear('two_factor_recovery');
             return array_values($hashedCodes);
         }
 
+        $this->rateLimiter->hit('two_factor_recovery');
         return false;
     }
 }

@@ -2,19 +2,18 @@ import { useModal } from '../modules/modal.js';
 import { useConfirmDialog } from '../modules/confirm-dialog.js';
 import { api, handleApiError } from '../modules/api.js';
 import { error as errorToast } from '../modules/toast.js';
-import { setLoading, clearLoading } from '../public/auth/loading-state.js';
+import { startCooldown } from '../modules/cooldown.js';
+import { setLoading, clearLoading } from '../modules/loading-state.js';
 
 const SETTINGS_ENDPOINT = '/member/api/settings';
 
 export function initSettingsPage() {
     const root = document.querySelector('.akd-settings');
     if (!root) return;
-
     const modal = useModal();
     const confirmDialog = useConfirmDialog();
-
     initToggleSwitches(root);
-    init2fa(root, modal);
+    init2fa(root, modal, confirmDialog);
     initEmailPreferences(root, modal);
     initDownloadData(root);
     initDeleteAccount(root, modal, confirmDialog);
@@ -62,47 +61,67 @@ function openPasswordConfirmModal(modal, {
         footer: buildPasswordFooter(),
         className,
     });
+
     wirePasswordView();
 
     function buildPasswordView() {
         const wrap = document.createElement('div');
         wrap.className = 'akd-delete-confirm';
+
         wrap.innerHTML = `
             <p class="akd-delete-confirm__text">${description}</p>
+
             <div class="akd-delete-confirm__field">
-                <label class="akd-2fa__label" for="akdPasswordConfirmInput">Current password</label>
+                <label class="akd-2fa__label" for="akdPasswordConfirmInput">
+                    Current password
+                </label>
+
                 <div class="akd-password-field">
-                    <input type="password" id="akdPasswordConfirmInput" class="akd-password-field__input"
-                        autocomplete="current-password" data-password-input>
+                    <input type="password" id="akdPasswordConfirmInput"
+                        class="akd-password-field__input" autocomplete="current-password"
+                        data-password-input
+                    >
+
                     <button type="button" class="akd-password-field__toggle" data-password-toggle
-                        aria-label="Show password" aria-pressed="false">
+                        aria-label="Show password" aria-pressed="false"
+                    >
                         <i class="fa-solid fa-eye" aria-hidden="true"></i>
                     </button>
                 </div>
+
                 <p class="akd-delete-confirm__error" role="alert" data-password-error hidden>
                     Enter your password to continue.
                 </p>
+
+                <div class="akd-delete-confirm__cooldown" data-password-cooldown role="status"
+                    aria-live="polite" hidden
+                >
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+
+                    <span>
+                        Too many attempts. Try again in
+                        <strong data-password-cooldown-time>00:00</strong>
+                    </span>
+                </div>
             </div>
         `;
+
         return wrap;
     }
 
     function buildPasswordFooter() {
         const fragment = document.createDocumentFragment();
-
         const cancel = document.createElement('button');
         cancel.type = 'button';
         cancel.className = 'akd-btn akd-btn--secondary';
         cancel.textContent = 'Cancel';
         cancel.addEventListener('click', () => modal.close());
-
         const confirmBtn = document.createElement('button');
         confirmBtn.type = 'button';
         confirmBtn.className = 'akd-btn akd-btn--danger';
         confirmBtn.textContent = confirmLabel;
         confirmBtn.disabled = true; // stays disabled until the field has a value
         confirmBtn.addEventListener('click', handleConfirm);
-
         fragment.append(cancel, confirmBtn);
         return fragment;
     }
@@ -126,6 +145,11 @@ function openPasswordConfirmModal(modal, {
         input.addEventListener('input', () => {
             input.setAttribute('aria-invalid', 'false');
             body.querySelector('[data-password-error]').hidden = true;
+
+            if (input.dataset.cooldown === 'true') {
+                return;
+            }
+
             confirmBtn.disabled = !input.value.trim();
         });
     }
@@ -134,6 +158,8 @@ function openPasswordConfirmModal(modal, {
         const body = modal.getBody();
         const input = body.querySelector('[data-password-input]');
         const error = body.querySelector('[data-password-error]');
+        const cooldown = body.querySelector('[data-password-cooldown]');
+        const cooldownTime = body.querySelector('[data-password-cooldown-time]');
         const confirmBtn = modal.getFooter().querySelector('.akd-btn--danger');
 
         if (!input.value.trim()) {
@@ -144,8 +170,7 @@ function openPasswordConfirmModal(modal, {
             return;
         }
 
-        // Delete-account doesn't pass onConfirmed (still a preview flow,
-        // out of scope for this refactor) — preserve its old behavior.
+        // Delete-account doesn't pass onConfirmed.
         if (!onConfirmed) {
             showSuccessView();
             return;
@@ -157,6 +182,37 @@ function openPasswordConfirmModal(modal, {
             await onConfirmed(input.value);
             showSuccessView();
         } catch (err) {
+
+            // --------------------------------------------------------
+            // Rate limited
+            // --------------------------------------------------------
+            if (err.rateLimited && err.retryAfter > 0) {
+                error.hidden = true;
+                input.setAttribute('aria-invalid', 'false');
+
+                startCooldown(body, err.retryAfter,
+                    (time) => {
+                        cooldown.hidden = false;
+                        cooldownTime.textContent = time;
+                    },
+                    () => {
+                        cooldown.hidden = true;
+                        cooldownTime.textContent = '00:00';
+                        input.value = '';
+                        input.setAttribute('aria-invalid', 'false');
+                        error.hidden = true;
+
+                        // Input is enabled again by startCooldown().
+                        // Confirm must remain disabled because the input is empty.
+                        confirmBtn.disabled = true;
+                        input.focus();
+                    },
+                    [confirmBtn]
+                );
+
+                return;
+            }
+
             error.textContent = err.message || 'Something went wrong. Please try again.';
             error.hidden = false;
             input.setAttribute('aria-invalid', 'true');
@@ -177,6 +233,7 @@ function openPasswordConfirmModal(modal, {
 
         window.setTimeout(() => {
             if (titleEl) titleEl.textContent = successTitle;
+
             if (subtitleEl) {
                 subtitleEl.hidden = true;
                 subtitleEl.textContent = '';
@@ -185,11 +242,9 @@ function openPasswordConfirmModal(modal, {
 
             body.replaceChildren(buildSuccessView());
             footer.replaceChildren(buildSuccessFooter());
-
             body.classList.remove('is-leaving');
             body.classList.add('is-entering');
             requestAnimationFrame(() => body.classList.remove('is-entering'));
-
             focusFirst(footer);
         }, 160);
     }
@@ -197,10 +252,12 @@ function openPasswordConfirmModal(modal, {
     function buildSuccessView() {
         const wrap = document.createElement('div');
         wrap.className = 'akd-delete-confirm akd-delete-confirm--success';
+
         wrap.innerHTML = `
             <div class="akd-delete-confirm__icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></div>
             <p class="akd-delete-confirm__text">${successText}</p>
         `;
+
         return wrap;
     }
 
@@ -276,7 +333,7 @@ function downloadBackupCodesFile(codes) {
 // ------------------------------------------------------------
 // Two-factor authentication
 // ------------------------------------------------------------
-function init2fa(root, modal) {
+function init2fa(root, modal, confirmDialog) {
     const row = root.querySelector('[data-settings-row="2fa"]');
     if (!row) return;
     const trigger = row.querySelector('[data-2fa-trigger]');
@@ -365,15 +422,99 @@ function init2fa(root, modal) {
         setupData = null;
         recoveryCodes = null;
 
+        // Tracks which security state we're in — this is what beforeClose
+        // branches on. Step 2 = unfinished, cancellable setup. Step 3 =
+        // already-enabled 2FA; only the one-time code display is at stake.
+        let currentStep = 1;
+
+        // Blocks every close path while a request that changes step or
+        // server state is in flight (prevents the "Escape mid-request"
+        // race, and duplicate cancel-setup submissions).
+        let isBusy = false;
+
+        // Lets the deliberate "Finish setup" action skip the Step 3
+        // leave-warning — it's not an abandonment, it's completion.
+        let isFinishing = false;
+
         modal.open({
             title: 'Two-factor authentication',
             subtitle: 'Step 1 of 3',
             content: renderPanel(1),
             footer: renderFooter(1),
             className: 'akd-modal--2fa',
+            beforeClose: handleBeforeClose,
         });
-
         wireStepEvents(1);
+
+        // ---------------- Close interception (single choke point) ----------------
+        async function handleBeforeClose() {
+            if (isBusy) return false;
+            if (isFinishing) return true;
+            if (currentStep === 2) return requestCancelPendingSetup();
+            if (currentStep === 3) return requestLeaveWithoutSavingCodes();
+            return true; // Step 1: nothing exists server-side yet.
+        }
+
+        async function requestCancelPendingSetup() {
+            const confirmed = await confirmDialog.ask({
+                title: 'Cancel 2FA setup?',
+                message: "Your current 2FA setup hasn't been completed. If you leave now, this setup will be discarded and you'll need to start again.",
+                confirmLabel: 'Cancel setup',
+                cancelLabel: 'Keep setting up',
+                destructive: true,
+            });
+
+            if (!confirmed) return false; // stay on Step 2, do nothing
+            isBusy = true;
+            setStepInteractive(false);
+
+            try {
+                const response = await postAction('2fa.cancel-setup');
+
+                if (!response.success) {
+                    errorToast(response.message || 'Unable to cancel setup. Please try again.');
+                    return false; // keep the modal open so they can retry
+                }
+
+                setupData = null;
+                recoveryCodes = null;
+                applyTwoFactorState(response.settings['2fa']);
+                return true;
+            } catch (err) {
+                handleApiError(err, 'Unable to cancel setup. Please try again.');
+                return false;
+            } finally {
+                isBusy = false;
+                setStepInteractive(true);
+            }
+        }
+
+        async function requestLeaveWithoutSavingCodes() {
+            const confirmed = await confirmDialog.ask({
+                title: 'Leave without saving your recovery codes?',
+                message: 'These recovery codes are shown only once. If you leave now, you may not be able to access these codes again.',
+                confirmLabel: 'Leave',
+                cancelLabel: 'Stay',
+                destructive: true,
+            });
+
+            if (!confirmed) return false; // stay on Step 3
+
+            // Nothing to send to the server — 2FA is already enabled and
+            // stays that way. Only the plaintext codes are discarded.
+            recoveryCodes = null;
+            setupData = null;
+            return true;
+        }
+
+        function setStepInteractive(enabled) {
+            const body = modal.getBody();
+            const footer = modal.getFooter();
+            const closeBtn = modal.getModal().querySelector('.akd-modal__close');
+            body.querySelectorAll('input, button').forEach((el) => { el.disabled = !enabled; });
+            footer.querySelectorAll('button').forEach((el) => { el.disabled = !enabled; });
+            if (closeBtn) closeBtn.disabled = !enabled;
+        }
 
         function renderPanel(n) {
             const wrap = document.createElement('div');
@@ -447,17 +588,18 @@ function init2fa(root, modal) {
             return wrap;
         }
 
+        // Secondary button no longer navigates backward at any step —
+        // per the lifecycle rules, there's no path back to a prior step,
+        // only "cancel the whole thing" (Step 2) or "leave" (Step 3).
+        // Both route through modal.close() so beforeClose is the one
+        // and only place that logic lives.
         function renderFooter(n) {
             const fragment = document.createDocumentFragment();
             const secondary = document.createElement('button');
             secondary.type = 'button';
             secondary.className = 'akd-btn akd-btn--secondary';
-            secondary.textContent = n > 1 ? 'Back' : 'Cancel';
-            secondary.addEventListener('click', () => {
-                if (n > 1) goToStep(n - 1);
-                else modal.close();
-            });
-
+            secondary.textContent = n === 3 ? 'Leave' : 'Cancel';
+            secondary.addEventListener('click', () => modal.close());
             const primary = document.createElement('button');
             primary.type = 'button';
             primary.className = 'akd-btn akd-btn--primary';
@@ -469,6 +611,7 @@ function init2fa(root, modal) {
         }
 
         function goToStep(n) {
+            currentStep = n;
             const body = modal.getBody();
             const footer = modal.getFooter();
             const subtitleEl = modal.getModal().querySelector('.akd-modal__subtitle');
@@ -514,12 +657,14 @@ function init2fa(root, modal) {
 
             // Step 1 -> 2: actually start the server-side setup.
             if (n === 1) {
+                isBusy = true;
                 setLoading(primary, 'Preparing…');
 
                 try {
                     const response = await postAction('2fa.setup');
 
                     if (!response.success) {
+                        isBusy = false;
                         clearLoading(primary);
                         modal.close();
                         errorToast(response.message || 'Unable to start setup.');
@@ -527,9 +672,11 @@ function init2fa(root, modal) {
                     }
 
                     setupData = response.setup;
+                    isBusy = false;
                     clearLoading(primary);
                     goToStep(2);
                 } catch (err) {
+                    isBusy = false;
                     clearLoading(primary);
                     modal.close();
                     handleApiError(err, 'Unable to start two-factor authentication setup.');
@@ -555,6 +702,7 @@ function init2fa(root, modal) {
                 }
 
                 errorEl.hidden = true;
+                isBusy = true;
                 setLoading(primary, 'Verifying…');
 
                 try {
@@ -568,25 +716,76 @@ function init2fa(root, modal) {
                         return;
                     }
 
+                    // The server already enabled 2FA inside completeSetup() —
+                    // reflect that now, not only if the user clicks Finish.
+                    // If they Leave from here instead, the badge must still
+                    // be correct behind the modal.
                     recoveryCodes = response.recovery_codes;
+                    applyTwoFactorState(response.settings['2fa']);
                     goToStep(3);
                 } catch (err) {
                     handleApiError(err, 'Unable to verify your code.');
                 } finally {
+                    isBusy = false;
                     clearLoading(primary);
                 }
 
                 return;
             }
 
-            // Step 3: done. PHP already enabled 2FA inside completeSetup().
+            // Step 3: deliberate completion. State is already applied (see
+            // above) — this just clears the plaintext codes and closes,
+            // bypassing the "leave without saving" warning since the user
+            // explicitly confirmed they saved them (ack checkbox).
             if (n === 3) {
-                modal.close();
-                applyTwoFactorState({ enabled: true, managed_externally: false });
+                isFinishing = true;
                 recoveryCodes = null;
                 setupData = null;
+                modal.close();
             }
         }
+    }
+
+    function openDisable2faPasswordStep() {
+        openPasswordConfirmModal(modal, {
+            className: 'akd-modal--2fa',
+            modalTitle: 'Confirm your password',
+            modalSubtitle: 'For your security, re-enter your password to continue.',
+            description: 'Enter your current password to confirm you want to disable two-factor authentication.',
+            confirmLabel: 'Disable 2FA',
+            successTitle: 'Two-factor authentication disabled',
+            successText: 'Two-factor authentication has been turned off for your account.',
+
+            onConfirmed: async (password) => {
+                let response;
+
+                try {
+                    response = await postAction('2fa.disable', { password });
+                } catch (err) {
+                    if (err.data?.retry_after > 0) {
+                        const rateLimitError = new Error(err.data.message ||
+                            'Too many incorrect attempts.'
+                        );
+
+                        rateLimitError.rateLimited = true;
+                        rateLimitError.retryAfter = Number(err.data.retry_after);
+                        throw rateLimitError;
+                    }
+
+                    throw new Error(err.data?.message || 'Something went wrong. Please try again.');
+                }
+
+                if (!response.success) {
+                    throw new Error(
+                        response.errors?.password ||
+                        response.message ||
+                        'Incorrect password.'
+                    );
+                }
+
+                applyTwoFactorState(response.settings['2fa']);
+            },
+        });
     }
 
     // ---------------- Manage view (shown once enabled) ----------------
@@ -637,29 +836,16 @@ function init2fa(root, modal) {
         });
 
         wrap.querySelector('[data-manage-disable]')?.addEventListener('click', () => {
-            openPasswordConfirmModal(modal, {
-                className: 'akd-modal--2fa',
-                modalTitle: 'Confirm your password',
-                modalSubtitle: 'For your security, re-enter your password to continue.',
-                description: 'Enter your current password to confirm you want to disable two-factor authentication.',
-                confirmLabel: 'Disable 2FA',
-                successTitle: 'Two-factor authentication disabled',
-                successText: 'Two-factor authentication has been turned off for your account.',
-                onConfirmed: async (password) => {
-                    let response;
-
-                    try {
-                        response = await postAction('2fa.disable', { password });
-                    } catch (err) {
-                        throw new Error(err.data?.message || 'Something went wrong. Please try again.');
-                    }
-
-                    if (!response.success) {
-                        throw new Error(response.errors?.password || response.message || 'Incorrect password.');
-                    }
-
-                    applyTwoFactorState(response.settings['2fa']);
-                },
+            confirmDialog.ask({
+                title: 'Disable two-factor authentication?',
+                message: 'This will remove the extra verification step from your sign-ins. You can set up two-factor authentication again later.',
+                confirmLabel: 'Continue',
+                cancelLabel: 'Cancel',
+                destructive: true,
+            }).then((confirmed) => {
+                if (confirmed) {
+                    openDisable2faPasswordStep();
+                }
             });
         });
 
@@ -716,7 +902,6 @@ function init2fa(root, modal) {
 function initEmailPreferences(root, modal) {
     const row = root.querySelector('[data-settings-row="email"]');
     if (!row) return;
-
     const trigger = row.querySelector('[data-email-trigger]');
     const summary = row.querySelector('[data-email-summary]');
 
@@ -818,7 +1003,6 @@ function initEmailPreferences(root, modal) {
 function initDownloadData(root) {
     const row = root.querySelector('[data-settings-row="download"]');
     if (!row) return;
-
     const trigger = row.querySelector('[data-download-trigger]');
     const label = row.querySelector('[data-download-label]');
     const desc = row.querySelector('[data-download-desc]');
@@ -869,17 +1053,15 @@ function initDeleteAccount(root, modal, confirmDialog) {
     if (!trigger) return;
 
     trigger.addEventListener('click', () => {
-        confirmDialog
-            .ask({
-                title: 'Delete your account?',
-                message: "This will permanently remove your account, achievements, and activity. This can't be undone.",
-                confirmLabel: 'Continue',
-                cancelLabel: 'Cancel',
-                destructive: true,
-            })
-            .then((confirmed) => {
-                if (confirmed) openPasswordStep();
-            });
+        confirmDialog.ask({
+            title: 'Delete your account?',
+            message: "This will permanently remove your account, achievements, and activity. This can't be undone.",
+            confirmLabel: 'Continue',
+            cancelLabel: 'Cancel',
+            destructive: true,
+        }).then((confirmed) => {
+            if (confirmed) openPasswordStep();
+        });
     });
 
     function openPasswordStep() {

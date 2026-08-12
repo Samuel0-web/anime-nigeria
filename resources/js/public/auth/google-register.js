@@ -1,5 +1,5 @@
 import { api, handleApiError } from "../../modules/api.js";
-import { setLoading, clearLoading } from "./loading-state.js";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 
 export function initGoogleRegister(form) {
     if (document.body.dataset.page !== "google-register") return;

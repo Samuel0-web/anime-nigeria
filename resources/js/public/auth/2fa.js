@@ -2,7 +2,7 @@
 // TWO-FACTOR AUTHENTICATION
 // ======================================================================
 import { api } from "../../modules/api.js";
-import { setLoading, clearLoading } from "./loading-state.js";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 import { setError, clearError, showFormMessage, clearFormMessage } from "./helpers.js";
 
 const COPY = {

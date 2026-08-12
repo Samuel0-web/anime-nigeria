@@ -53,9 +53,12 @@ class Database {
 
         while ($attempt < $maxRetries) {
             try {
-                return new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
+                $pdo = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
                     self::getDefaultOptions()
                 );
+
+                $pdo->exec("SET time_zone = '+00:00'");
+                return $pdo;
             } catch (PDOException $e) {
                 $attempt++;
 

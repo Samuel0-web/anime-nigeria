@@ -5,35 +5,60 @@ use PDO;
 class RateLimit {
     public function __construct(private PDO $db) {}
 
-    public function clear(string $ip, string $action): bool {
-        return $this->deleteByIpAndAction($ip, $action);
+    public function clear(string $ip, ?int $userId, string $action): bool {
+        return $this->deleteByIpAndUserAndAction($ip, $userId, $action);
     }
 
-    public function find(string $ip, string $action): array|false {
-        $stmt = $this->db->prepare("SELECT * FROM rate_limits WHERE ip_address = :ip
-            AND action = :action LIMIT 1
-        ");
+    public function find(string $ip, ?int $userId, string $action): array|false {
+        if ($userId === null) {
+            $stmt = $this->db->prepare("SELECT * FROM rate_limits WHERE ip_address = :ip
+                AND user_id IS NULL AND action = :action LIMIT 1
+            ");
 
-        $stmt->execute([
-            'ip' => $ip,
-            'action' => $action,
-        ]);
+            $stmt->execute([
+                'ip' => $ip,
+                'action' => $action,
+            ]);
+        } else {
+            $stmt = $this->db->prepare("SELECT * FROM rate_limits WHERE ip_address = :ip
+                AND user_id = :user_id AND action = :action LIMIT 1
+            ");
+
+            $stmt->execute([
+                'ip' => $ip,
+                'user_id' => $userId,
+                'action' => $action,
+            ]);
+        }
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create(string $ip, string $action, int $attempts, string $windowStartedAt,
-        ?string $blockedUntil
+    public function create(string $ip, ?int $userId, string $action, int $attempts,
+        string $windowStartedAt, ?string $blockedUntil
     ): bool {
-
         $stmt = $this->db->prepare("INSERT INTO rate_limits
-            (ip_address, action, attempts, blocked_until, window_started_at) VALUES (:ip, :action,
-                :attempts, :blocked_until, :window_started_at
+            (
+                ip_address,
+                user_id,
+                action,
+                attempts,
+                blocked_until,
+                window_started_at
+            )
+            VALUES (
+                :ip,
+                :user_id,
+                :action,
+                :attempts,
+                :blocked_until,
+                :window_started_at
             )
         ");
 
         return $stmt->execute([
             'ip' => $ip,
+            'user_id' => $userId,
             'action' => $action,
             'attempts' => $attempts,
             'blocked_until' => $blockedUntil,
@@ -73,13 +98,25 @@ class RateLimit {
         ]);
     }
 
-    public function deleteByIpAndAction(string $ip, string $action): bool {
+    public function deleteByIpAndUserAndAction(string $ip, ?int $userId, string $action): bool {
+        if ($userId === null) {
+            $stmt = $this->db->prepare("DELETE FROM rate_limits WHERE ip_address = :ip
+                AND user_id IS NULL AND action = :action
+            ");
+
+            return $stmt->execute([
+                'ip' => $ip,
+                'action' => $action,
+            ]);
+        }
+
         $stmt = $this->db->prepare("DELETE FROM rate_limits WHERE ip_address = :ip
-            AND action = :action
+            AND user_id = :user_id AND action = :action
         ");
 
         return $stmt->execute([
             'ip' => $ip,
+            'user_id' => $userId,
             'action' => $action,
         ]);
     }

@@ -1,9 +1,9 @@
 import { clearError, setError, maskEmail, startCountdown, showFormMessage, clearFormMessage
 } from "./helpers.js";
 
-import { setLoading, clearLoading } from "./loading-state.js";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 import { api, handleApiError } from "../../modules/api.js";
-import { startCooldown } from "./utils/cooldown.js";
+import { startCooldown } from "../../modules/cooldown.js";
 
 export function initRegister(form, updateButtons) {
     if (document.body.dataset.page !== "register") return;

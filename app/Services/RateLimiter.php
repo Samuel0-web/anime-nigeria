@@ -9,54 +9,74 @@ class RateLimiter {
     private const LIMITS = [
         'login' => [
             'max' => 5,
-            'window' => 900,      // 15 minutes
-            'block' => 900,      // 15 minutes
+            'window' => 900,
+            'block' => 900,
         ],
 
         'register' => [
             'max' => 5,
-            'window' => 3600,     // 1 hour
-            'block' => 700,      // 1 hour
+            'window' => 3600,
+            'block' => 700,
         ],
 
         'google' => [
             'max' => 10,
-            'window' => 3600,     // 1 hour
-            'block' => 1800,      // 30 minutes
+            'window' => 3600,
+            'block' => 1800,
         ],
 
         'forgot_password' => [
             'max' => 3,
-            'window' => 3600,     // 1 hour
-            'block' => 3600,      // 1 hour
+            'window' => 3600,
+            'block' => 3600,
         ],
 
         'username' => [
             'max' => 30,
-            'window' => 60,       // 1 minute
-            'block' => 300,       // 5 minutes
+            'window' => 60,
+            'block' => 300,
+        ],
+
+        'two_factor' => [
+            'max' => 5,
+            'window' => 900,
+            'block' => 900,
+        ],
+
+        'two_factor_recovery' => [
+            'max' => 5,
+            'window' => 900,
+            'block' => 900,
+        ],
+
+        'two_factor_disable' => [
+            'max' => 5,
+            'window' => 900, // 15 minutes
+            'block' => 900,  // 15 minutes
         ],
     ];
 
     private string $ip;
+    private ?int $userId;
 
-    public function __construct(PDO $db) {
+    public function __construct(PDO $db, ?int $userId = null) {
         $this->rateLimits = new RateLimit($db);
         $this->ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $this->userId = $userId;
     }
 
     /**
      * Check if the current IP is blocked for an action.
      */
     public function tooManyAttempts(string $action): bool {
-        $record = $this->rateLimits->find($this->ip, $action);
+        $record = $this->rateLimits->find($this->ip, $this->userId, $action);
 
         if ($record === false) {
             return false;
         }
 
         if ($record['blocked_until'] !== null && strtotime($record['blocked_until']) <= time()) {
-            $this->rateLimits->clear($this->ip, $action);
+            $this->rateLimits->clear($this->ip, $this->userId, $action);
             return false;
         }
 
@@ -74,11 +94,11 @@ class RateLimiter {
         $config = $this->config($action);
         $ip = $this->ip;
         $now = time();
-        $record = $this->rateLimits->find($ip, $action);
+        $record = $this->rateLimits->find($ip, $this->userId, $action);
 
         // No existing record → create one
         if ($record === false) {
-            $this->rateLimits->create($ip, $action, 1, date('Y-m-d H:i:s', $now), null);
+            $this->rateLimits->create($ip, $this->userId, $action, 1, gmdate('Y-m-d H:i:s', $now), null);
             return;
         }
 
@@ -90,14 +110,14 @@ class RateLimiter {
 
         // Window expired → reset attempts
         if (($now - $windowStarted) >= $config['window']) {
-            $this->rateLimits->update((int) $record['id'], 1, date('Y-m-d H:i:s', $now), null);
+            $this->rateLimits->update((int) $record['id'], 1, gmdate('Y-m-d H:i:s', $now), null);
             return;
         }
 
         // Increment within current window
         if ((int) $record['attempts'] + 1 >= $config['max']) {
             $this->rateLimits->update((int) $record['id'], (int) $record['attempts'] + 1,
-                $record['window_started_at'], date('Y-m-d H:i:s', $now + $config['block'])
+                $record['window_started_at'], gmdate('Y-m-d H:i:s', $now + $config['block'])
             );
 
             return;
@@ -110,14 +130,14 @@ class RateLimiter {
      * Clear rate-limit record after success.
      */
     public function clear(string $action): void {
-        $this->rateLimits->clear($this->ip, $action);
+        $this->rateLimits->clear($this->ip, $this->userId, $action);
     }
 
     /**
      * Seconds remaining until unblock.
      */
     public function remainingSeconds(string $action): int {
-        $record = $this->rateLimits->find($this->ip, $action);
+        $record = $this->rateLimits->find($this->ip, $this->userId, $action);
 
         if ($record === false || $record['blocked_until'] === null) {
             return 0;
@@ -161,7 +181,7 @@ class RateLimiter {
      * Get current attempt count.
      */
     public function attempts(string $action): int {
-        $record = $this->rateLimits->find($this->ip, $action);
+        $record = $this->rateLimits->find($this->ip, $this->userId, $action);
 
         if ($record === false) {
             return 0;

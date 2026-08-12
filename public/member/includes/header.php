@@ -36,9 +36,9 @@ $navGroups = [
     'Main' => [
         ['label' => 'Dashboard', 'icon' => 'fa-solid fa-house', 'url' => '/dashboard'],
         ['label' => 'Anime Awards', 'icon' => 'fa-solid fa-trophy', 'url' => '/member/awards'],
+        ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/member/announcements'],
     ],
     'Community' => [
-        ['label' => 'Voting', 'icon' => 'fa-solid fa-check-square', 'url' => '/member/voting'],
         ['label' => 'Trivia', 'icon' => 'fa-solid fa-brain', 'url' => '/member/trivia'],
         ['label' => 'Leaderboard', 'icon' => 'fa-solid fa-ranking-star', 'url' => '/member/leaderboard'],
         ['label' => 'Community', 'icon' => 'fa-solid fa-users', 'url' => '/member/community'],

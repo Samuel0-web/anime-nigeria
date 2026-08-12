@@ -94,6 +94,23 @@ class TwoFactorAuth {
     }
 
     /**
+     * Delete a user's 2FA setup only if it is still pending (not yet enabled).
+     *
+     * Used when a user abandons Step 2 of setup. This must never remove an
+     * already-enabled configuration — that's what delete()/2fa.disable is for.
+     * The WHERE clause is the actual guarantee here, not the PHP call site.
+     */
+    public function deletePendingSetup(int $userId): bool {
+        $stmt = $this->db->prepare("DELETE FROM two_factor_auth
+            WHERE user_id = :user_id AND enabled_at IS NULL
+        ");
+
+        return $stmt->execute([
+            ':user_id' => $userId,
+        ]);
+    }
+
+    /**
      * Get the stored TOTP secret.
      */
     public function getSecret(int $userId): string|false {
@@ -141,7 +158,9 @@ class TwoFactorAuth {
             return true;
         }
 
-        return strtotime($expiresAt) <= time();
+        $expiration = new \DateTimeImmutable($expiresAt, new \DateTimeZone('UTC'));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        return $expiration <= $now;
     }
 
     /**

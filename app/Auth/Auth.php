@@ -44,7 +44,7 @@ class Auth {
         $this->passwordResetTokens = new PasswordResetToken($db);
         $this->rateLimiter = new RateLimiter($db);
         $this->twoFactorAuth = new TwoFactorAuth($db);
-        $this->twoFactorService = new TwoFactorService($this->twoFactorAuth);
+        $this->twoFactorService = new TwoFactorService($this->twoFactorAuth, $this->rateLimiter);
     }
 
     // =========================================================================

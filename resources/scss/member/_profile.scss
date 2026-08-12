@@ -923,23 +923,32 @@
 }
 
 // ==========================================
-// CONFIRM DIALOG (delete avatar / discard changes)
+// CONFIRM DIALOG
 // ==========================================
+
 .akd-confirm-overlay {
     position: fixed;
     inset: 0;
     z-index: $z-confirm;
-    background: rgba(0, 0, 0, 0.75);
-    -webkit-backdrop-filter: blur(3px);
-    backdrop-filter: blur(3px);
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     padding: $space-md;
+
+    background: rgba(0, 0, 0, 0.58);
+
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+
+    transition:
+        opacity $transition-fast,
+        visibility $transition-fast;
 
     &.is-open {
         opacity: 1;
@@ -948,45 +957,185 @@
     }
 }
 
+
+// ==========================================
+// DIALOG
+// ==========================================
+
 .akd-confirm {
-    width: 100%;
-    max-width: 340px;
+    position: relative;
+
+    width: min(100%, 420px);
+
+    padding: $space-md;
+
+    display: flex;
+    flex-direction: column;
+
     background: $black-soft;
     border: 1px solid $black-line;
     border-radius: $radius-lg;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
-    padding: $space-lg;
-    display: flex;
-    flex-direction: column;
-    gap: $space-sm;
-    transform: translateY(12px) scale(0.97);
+
+    box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.42),
+        0 2px 8px rgba(0, 0, 0, 0.18);
+
+    transform: translateY(8px) scale(0.985);
     opacity: 0;
-    transition: transform 0.25s cubic-bezier(.22, 1, .36, 1), opacity 0.25s ease;
+
+    transition:
+        transform $transition-base,
+        opacity $transition-fast;
+
+    outline: none;
 
     .akd-confirm-overlay.is-open & {
         transform: translateY(0) scale(1);
         opacity: 1;
     }
-    
+
+
+    // ======================================
+    // CONTENT
+    // ======================================
+
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+    }
+
     &__title {
+        margin: 0;
+
+        color: $white;
+
+        font-family: $font-primary;
         font-size: $fs-md;
         font-weight: $fw-semibold;
-        color: $white;
+        line-height: $lh-snug;
+
+        letter-spacing: -0.015em;
     }
-    
+
     &__message {
-        font-size: $fs-sm;
+        max-width: 36rem;
+
+        margin: 0;
+
         color: $white-muted;
+
+        font-family: $font-primary;
+        font-size: $fs-sm;
+        font-weight: $fw-regular;
         line-height: $lh-normal;
     }
-    
+
+
+    // ======================================
+    // ACTIONS
+    // ======================================
+
     &__actions {
         display: flex;
+        align-items: center;
         justify-content: flex-end;
-        gap: $space-xs;
-        margin-top: $space-xs;
 
-        .akd-btn { flex: 0 0 auto; padding-left: $space-md; padding-right: $space-md; }
+        gap: $space-xs;
+
+        margin-top: $space-md;
+
+        .akd-btn {
+            flex: 0 0 auto;
+
+            min-height: 40px;
+
+            padding: 0 $space-sm;
+
+            border-radius: $radius-lg;
+
+            font-family: $font-primary;
+            font-size: $fs-sm;
+            font-weight: $fw-semibold;
+            line-height: 1;
+
+            cursor: pointer;
+
+            transition:
+                background-color $transition-fast,
+                border-color $transition-fast,
+                color $transition-fast,
+                transform $transition-fast,
+                opacity $transition-fast;
+
+            &:active {
+                transform: scale(0.97);
+            }
+
+            &:focus-visible {
+                outline: 2px solid $sakura;
+                outline-offset: 3px;
+            }
+        }
+    }
+}
+
+
+// ==========================================
+// BUTTONS
+// ==========================================
+
+.akd-btn {
+    border: 1px solid transparent;
+
+    &--secondary {
+        color: $white-muted;
+
+        background: rgba(255, 255, 255, 0.04);
+        border-color: $black-line;
+
+        &:hover {
+            color: $white;
+
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+    }
+
+    &--danger {
+        color: $white;
+        background: $accent-crimson;
+        border-color: $accent-crimson;
+
+        &:hover {
+            background: #c55b73;
+            border-color: #c55b73;
+        }
+    }
+}
+
+
+// ==========================================
+// MOBILE
+// ==========================================
+
+@media (max-width: $bp-sm) {
+    .akd-confirm-overlay {
+        padding: $space-sm;
+    }
+
+    .akd-confirm {
+        width: 100%;
+
+        padding: $space-md;
+
+        border-radius: $radius-lg;
+
+        transform: translateY(6px) scale(0.985);
+
+        .akd-confirm-overlay.is-open & {
+            transform: translateY(0) scale(1);
+        }
     }
 }
 

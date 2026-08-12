@@ -430,7 +430,10 @@
         color: $accent-teal;
         font-size: $fs-sm;
 
-        &--danger { background: $accent-crimson-dim; color: $accent-crimson; }
+        &--danger {
+            background: $accent-crimson-dim;
+            color: $accent-crimson
+        }
     }
 
     &__content {
@@ -457,6 +460,13 @@
     }
 }
 
+.akd-btn--danger {
+    &:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+}
+
 @media (max-width: $bp-md) {
     .akd-2fa-manage__row {
         flex-wrap: wrap;
@@ -464,10 +474,6 @@
 
     .akd-2fa-manage__content {
         flex-basis: 100%;
-    }
-
-    .akd-2fa-manage__action {
-        margin-left: 48px;
     }
 }
 
@@ -640,6 +646,41 @@
         margin: $space-xxs 0 0;
         color: $accent-crimson;
         font-size: $fs-xs;
+    }
+
+    &__cooldown {
+        display: flex;
+        align-items: flex-start;
+        gap: $space-xs;
+        margin-top: $space-xs;
+        padding: $space-xs $space-sm;
+        border: 1px solid rgba($accent-crimson, 0.28);
+        border-radius: $radius-sm;
+        background: $accent-crimson-dim;
+        color: $white-muted;
+        font-size: $fs-xs;
+        line-height: $lh-normal;
+
+        &[hidden] {
+            display: none;
+        }
+
+        > i {
+            flex: 0 0 auto;
+            margin-top: 2px;
+            color: $accent-crimson;
+        }
+
+        span {
+            min-width: 0;
+        }
+
+        strong {
+            color: $white;
+            font-family: $font-mono;
+            font-weight: $fw-semibold;
+            white-space: nowrap;
+        }
     }
 
     &--success {

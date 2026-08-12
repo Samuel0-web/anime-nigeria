@@ -1,6 +1,7 @@
 <?php
 use App\Database\Database;
 use App\Models\User;
+use App\Services\RateLimiter;
 use App\Models\TwoFactorAuth;
 use App\Services\TwoFactorService;
 use App\Core\Logger;
@@ -41,7 +42,8 @@ if ($currentUser === false) {
 }
 
 $twoFactorAuth = new TwoFactorAuth($db);
-$twoFactorService = new TwoFactorService($twoFactorAuth);
+$rateLimiter = new RateLimiter($db, $userId);
+$twoFactorService = new TwoFactorService($twoFactorAuth, $rateLimiter);
 
 /*
 |--------------------------------------------------------------------------
@@ -146,6 +148,51 @@ try {
                 break;
 
             // ------------------------------------------------------
+            // Cancel an unfinished (Step 2) setup — never touches an
+            // already-enabled configuration. That's 2fa.disable's job.
+            // ------------------------------------------------------
+            case '2fa.cancel-setup':
+                $pendingSetup = $twoFactorAuth->findByUserId($userId);
+
+                if ($pendingSetup === false) {
+                    http_response_code(422);
+
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'There is no pending two-factor authentication setup to cancel.',
+                    ]);
+                    exit;
+                }
+
+                if ($pendingSetup['enabled_at'] !== null) {
+                    http_response_code(422);
+
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Two-factor authentication is already enabled and cannot be cancelled this way.',
+                    ]);
+                    exit;
+                }
+
+                if (!$twoFactorAuth->deletePendingSetup($userId)) {
+                    http_response_code(500);
+
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Unable to cancel two-factor authentication setup.',
+                    ]);
+                    exit;
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'settings' => [
+                        '2fa' => $buildTwoFactorState(),
+                    ],
+                ]);
+                break;
+
+            // ------------------------------------------------------
             // Disable 2FA (requires password confirmation)
             // ------------------------------------------------------
             case '2fa.disable':
@@ -161,7 +208,19 @@ try {
                     exit;
                 }
 
+                if ($rateLimiter->tooManyAttempts('two_factor_disable')) {
+                    http_response_code(429);
+
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Too many incorrect attempts. Please try again later.',
+                        'retry_after' => $rateLimiter->remainingSeconds('two_factor_disable'),
+                    ]);
+                    exit;
+                }
+
                 if (!$auth->verifyPassword($password)) {
+                    $rateLimiter->hit('two_factor_disable');
                     http_response_code(422);
 
                     echo json_encode([
@@ -170,6 +229,8 @@ try {
                     ]);
                     exit;
                 }
+                
+                $rateLimiter->clear('two_factor_disable');
 
                 if (!$twoFactorAuth->isEnabled($userId)) {
                     http_response_code(422);

@@ -1,5 +1,5 @@
 import { clearError, setError, maskEmail, startCountdown } from "./helpers.js";
-import { setLoading, clearLoading } from "./loading-state.js";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 import { api, handleApiError } from "../../modules/api.js";
 
 export function initResetPassword(form) {

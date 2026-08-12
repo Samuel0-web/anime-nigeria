@@ -1,8 +1,8 @@
 import { api, handleApiError } from "../../modules/api.js";
-import { setLoading, clearLoading } from "./loading-state";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 import { setError, clearError, setValid, showFormMessage, clearFormMessage } from "./helpers";
 import { initEmailValidation } from "./email-validation";
-import { startCooldown } from "./utils/cooldown.js";
+import { startCooldown } from "../../modules/cooldown.js";
 
 export function initLogin(form, updateButtons) {
     if (document.body.dataset.page !== "login") return;
