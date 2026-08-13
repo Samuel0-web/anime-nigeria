@@ -6,6 +6,7 @@ import "@fontsource/jetbrains-mono/500.css";
 import { initPreloader } from "./modules/preloader";
 import { initLogout } from "./modules/logout";
 import { initSidebar } from './member/sidebar';
+import './member/dashboard';
 import { initProfileModal } from './member/profile-modal';
 import { initAchievementModal } from './member/achievements';
 import { initSettingsPage } from './member/settings';

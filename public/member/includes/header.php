@@ -1,8 +1,8 @@
 <?php
-$auth->requireAuth();
-
 require_once __DIR__ . '/../../../bootstrap.php';
 require __DIR__ . '/../../../includes/vite.php';
+
+$auth->requireAuth();
 
 use App\Security\Csrf;
 use App\Support\Avatar;

@@ -617,7 +617,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 // ==========================================
 .akd-content {
     flex: 1;
-    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md;
+    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md + $space-sm;
     margin-left: $sidebar-width + $content-margin + $space-xs;
     background-color: transparent;
     padding: 0;
@@ -626,6 +626,6 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 
     @media (max-width: $bp-lg) {
         margin-left: 0;
-        margin-top: $dashboard-pad + $header-height + $content-margin;
+        margin-top: $header-height + $space-sm;
     }
 }
