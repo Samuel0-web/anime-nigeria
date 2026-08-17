@@ -42,33 +42,43 @@
 // ==========================================
 // SHARED SECTION HEADER / CARD SHELL
 // ==========================================
-.akd-dash-section__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $space-sm;
-    margin-bottom: $space-sm;
-}
+.akd-dash-section {
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-sm;
+        margin-bottom: $space-sm;
 
-.akd-dash-section__title {
-    margin: 0;
-    font-size: $fs-lg;
-    font-weight: $fw-semibold;
-    color: $white;
-    line-height: $lh-tight;
-}
+        @media (max-width: $bp-md) {
+            margin-bottom: $space-md;
+        }
+    }
+    
+    &__title {
+        margin: 0;
+        font-size: $fs-lg;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: $lh-tight;
 
-.akd-dash-section__action {
-    font-size: $fs-sm;
-    font-weight: $fw-semibold;
-    color: $white-muted;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color $transition-fast;
+        @media (max-width: $bp-md) {
+            font-size: $fs-base;
+        }
+    }
+    
+    &__action {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white-muted;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color $transition-fast;
 
-    &:hover,
-    &:focus-visible {
-        color: $sakura;
+        &:hover,
+        &:focus-visible {
+            color: $sakura;
+        }
     }
 }
 
@@ -82,6 +92,10 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+    }
+
+    @media (max-width: $bp-md) {
+        padding: $space-sm;
     }
 }
 
@@ -399,7 +413,17 @@
         border-bottom: 1px solid $black-line;
 
         &:first-child { padding-top: 0; }
+
         &:last-child  { padding-bottom: 0; border-bottom: none; }
+
+        @media (max-width: $bp-md) {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            grid-template-areas: "icon body" "icon time";
+            column-gap: $space-sm;
+            row-gap: 2px;
+            padding: $space-sm 0;
+        }
     }
 
     &__icon {
@@ -412,9 +436,22 @@
         justify-content: center;
         font-size: $fs-sm;
 
-        &--gold   { color: $gold;         background: $gold-dim; }
-        &--sakura { color: $sakura;       background: $sakura-dim; }
-        &--teal   { color: $accent-teal;  background: $accent-teal-dim; }
+        @media (max-width: $bp-md) { grid-area: icon; }
+
+        &--gold {
+            color: $gold;
+            background: $gold-dim;
+        }
+
+        &--sakura {
+            color: $sakura;
+            background: $sakura-dim;
+        }
+
+        &--teal {
+            color: $accent-teal;
+            background: $accent-teal-dim;
+        }
     }
 
     &__body {
@@ -423,6 +460,8 @@
         display: flex;
         flex-direction: column;
         gap: 2px;
+
+        @media (max-width: $bp-md) { grid-area: body; }
     }
 
     &__title {
@@ -432,6 +471,8 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        @media (max-width: $bp-md) { line-height: $lh-tight; }
     }
 
     &__text {
@@ -441,6 +482,8 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        @media (max-width: $bp-md) { line-height: $lh-snug; }
     }
 
     &__time {
@@ -448,6 +491,12 @@
         font-size: $fs-xs;
         color: $white-faint;
         white-space: nowrap;
+
+        @media (max-width: $bp-md) {
+            grid-area: time;
+            font-size: $fs-xs;
+            margin-top: 1px;
+        }
     }
 
     &__item--unread &__title::after {
@@ -475,11 +524,13 @@
         gap: $space-sm;
 
         @media (min-width: $bp-sm) { grid-template-columns: repeat(4, 1fr); }
+
         @media (min-width: $bp-lg) {
             grid-template-columns: repeat(2, 1fr);
             flex: 1;
             align-content: center;
         }
+
         @media (min-width: $bp-xl) { grid-template-columns: repeat(4, 1fr); }
     }
 
@@ -493,14 +544,28 @@
         border-radius: $radius-md;
     }
 
-    &__icon  { color: $sakura; font-size: $fs-base; }
+    &__icon  {
+        color: $sakura;
+        font-size: $fs-base;
+    }
+
     &__value {
         font-size: $fs-lg;
         font-weight: $fw-bold;
         color: $white;
         line-height: $lh-tight;
     }
-    &__label { font-size: $fs-xs; color: $white-faint; }
+
+    &__label {
+        font-size: $fs-xs;
+        color: $white-faint;
+
+        @media (max-width: $bp-md) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
 }
 
 // ==========================================
@@ -787,4 +852,81 @@
     }
 
     &__chevron { flex-shrink: 0; font-size: $fs-xs; color: $white-faint; }
+}
+
+// ==========================================
+// MOBILE REFINEMENT
+// ==========================================
+@media (max-width: $bp-md) {
+    .akd-dash-notif {
+        &__title,
+        &__text {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
+    }
+
+    // --------------------------------------
+    // ACHIEVEMENTS
+    // --------------------------------------
+    .akd-dash-achieve {
+        &__item {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            grid-template-areas:
+                "icon body"
+                "icon time";
+            column-gap: $space-sm;
+            row-gap: 2px;
+            padding: $space-sm 0;
+        }
+
+        &__icon {
+            grid-area: icon;
+        }
+
+        &__body {
+            grid-area: body;
+        }
+
+        &__time {
+            grid-area: time;
+            font-size: $fs-xs;
+            margin-top: 1px;
+        }
+
+        &__text {
+            line-height: $lh-snug;
+        }
+    }
+
+    // --------------------------------------
+    // ANNOUNCEMENTS
+    // --------------------------------------
+    .akd-dash-announce {
+        &__item {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: $space-sm;
+            padding: $space-sm 0;
+        }
+
+        &__date {
+            width: auto;
+            min-width: 42px;
+            padding-top: 2px;
+        }
+
+        &__title,
+        &__text {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
+
+        &__text {
+            line-height: $lh-snug;
+        }
+    }
 }

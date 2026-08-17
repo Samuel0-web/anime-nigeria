@@ -569,6 +569,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 
     &__link:hover {
         background-color: rgba($white, 0.04);
+        border-radius: $radius-lg;
         color: $white;
     }
 
@@ -609,6 +610,84 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         height: 17px;
         background: $sakura;
         border-radius: 0 $radius-sm $radius-sm 0;
+    }
+
+    // Nested / multi-level navigation
+    &__row {
+        display: flex;
+        align-items: stretch;
+        gap: 2px;
+    }
+
+    &__link--parent {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__link--parent.akd-sidebar__expand-btn {
+        width: 100%;
+        background: transparent;
+        border: none;
+        font: inherit;
+        cursor: pointer;
+
+        .akd-sidebar__chevron {
+            margin-left: auto;
+        }
+    }
+
+    &__expand-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 36px;
+        background: transparent;
+        border: none;
+        color: $white-muted;
+        cursor: pointer;
+        border-radius: $radius-lg;
+        transition: background-color $transition-fast, color $transition-fast;
+
+        &:hover {
+            background-color: rgba($white, 0.06);
+            color: $white;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $sakura;
+            outline-offset: -2px;
+        }
+    }
+
+    &__chevron {
+        font-size: 11px;
+        transition: transform 0.22s $ease-standard;
+    }
+
+    &__expand-btn[aria-expanded="true"] &__chevron {
+        transform: rotate(90deg);
+    }
+
+    &__sublist {
+        list-style: none;
+        margin: 0;
+        padding-left: $space-sm; // indent is cumulative per nesting level automatically
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height $transition-base, opacity $transition-fast;
+
+        &.is-open {
+            max-height: 800px;
+            opacity: 1;
+        }
+    }
+
+    &__item--child {
+        .akd-sidebar__link {
+            min-height: 40px;
+        }
     }
 }
 

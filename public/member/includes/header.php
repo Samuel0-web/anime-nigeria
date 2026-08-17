@@ -35,13 +35,41 @@ $firstName = $nameParts[0] ?? 'there';
 $navGroups = [
     'Main' => [
         ['label' => 'Dashboard', 'icon' => 'fa-solid fa-house', 'url' => '/dashboard'],
-        ['label' => 'Anime Awards', 'icon' => 'fa-solid fa-trophy', 'url' => '/member/awards'],
+        [
+            'label' => 'Anime Awards',
+            'icon' => 'fa-solid fa-trophy',
+            'url' => null,
+            'children' => [
+                ['label' => 'Overview', 'url' => '/member/awards'],
+                ['label' => 'Nominations', 'url' => '/member/awards/nominations'],
+                ['label' => 'Voting', 'url' => '/member/awards/voting'],
+                ['label' => 'Winners', 'url' => '/member/awards/winners'],
+            ],
+        ],
         ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/member/announcements'],
     ],
     'Community' => [
         ['label' => 'Trivia', 'icon' => 'fa-solid fa-brain', 'url' => '/member/trivia'],
         ['label' => 'Leaderboard', 'icon' => 'fa-solid fa-ranking-star', 'url' => '/member/leaderboard'],
-        ['label' => 'Community', 'icon' => 'fa-solid fa-users', 'url' => '/member/community'],
+        [
+            'label' => 'Community',
+            'icon' => 'fa-solid fa-users',
+            'url' => null,
+            'children' => [
+                ['label' => 'Challenges', 'url' => '/member/community/challenges'],
+                [
+                    'label' => 'Community Awards',
+                    'url' => null,
+                    'children' => [
+                        ['label' => 'Overview', 'url' => '/member/community/awards'],
+                        ['label' => 'Nominations', 'url' => '/member/community/awards/nominations'],
+                        ['label' => 'Voting', 'url' => '/member/community/awards/voting'],
+                        ['label' => 'Winners', 'url' => '/member/community/awards/winners'],
+                    ],
+                ],
+                ['label' => 'Honoured Ones', 'url' => '/member/community/honoured-ones'],
+            ],
+        ],
         ['label' => 'Gallery', 'icon' => 'fa-solid fa-images', 'url' => '/member/gallery'],
         ['label' => 'Blogs', 'icon' => 'fa-solid fa-pen-fancy', 'url' => '/member/blogs'],
     ],
@@ -50,6 +78,120 @@ $navGroups = [
         ['label' => 'Help Center', 'icon' => 'fa-solid fa-question-circle', 'url' => '/member/help'],
     ],
 ];
+
+if (!function_exists('akd_nav_is_route_active')) {
+    function akd_nav_is_route_active(?string $url, string $currentPath): bool
+    {
+        if (!$url) {
+            return false;
+        }
+
+        return rtrim($currentPath, '/') === rtrim($url, '/');
+    }
+}
+
+if (!function_exists('akd_nav_branch_is_active')) {
+    function akd_nav_branch_is_active(array $item, string $currentPath): bool
+    {
+        // Exact match for this item's own URL.
+        if (akd_nav_is_route_active($item['url'] ?? null, $currentPath)) {
+            return true;
+        }
+
+        // Otherwise only consider descendants.
+        foreach ($item['children'] ?? [] as $child) {
+            if (akd_nav_branch_is_active($child, $currentPath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+/**
+ * Recursively renders <li> nav items at any depth. A parent (has 'children')
+ * gets its own independent expand/collapse state, driven by aria-expanded +
+ * an id on its <ul>. Only the branch containing the active route auto-opens.
+ */
+if (!function_exists('akd_render_nav_items')) {
+    function akd_render_nav_items(array $items, string $currentPath, int $depth = 0): void
+    {
+        static $submenuCounter = 0;
+
+        foreach ($items as $item) {
+            $hasChildren = !empty($item['children']);
+            $url = $item['url'] ?? null;
+            $isActive = akd_nav_is_route_active($url, $currentPath);
+            $branchActive = $hasChildren && akd_nav_branch_is_active($item, $currentPath);
+            $isExpanded = $branchActive;
+
+            $itemClass = 'akd-sidebar__item';
+            if ($depth > 0) {
+                $itemClass .= ' akd-sidebar__item--child';
+            }
+            if ($isActive) {
+                $itemClass .= ' akd-sidebar__item--active';
+            }
+
+            if (!$hasChildren) {
+                ?>
+                <li class="<?= $itemClass ?>">
+                    <a href="<?= htmlspecialchars($url ?? '#') ?>" class="akd-sidebar__link">
+                        <?php if (!empty($item['icon'])): ?>
+                            <i class="<?= htmlspecialchars($item['icon']) ?> akd-sidebar__icon"></i>
+                        <?php endif; ?>
+                        <span class="akd-sidebar__label"><?= htmlspecialchars($item['label']) ?></span>
+                    </a>
+                </li>
+                <?php
+                continue;
+            }
+
+            $submenuId = 'akd-submenu-' . (++$submenuCounter);
+            ?>
+            <li class="<?= $itemClass ?> akd-sidebar__item--parent">
+                <div class="akd-sidebar__row">
+                    <?php if ($url): ?>
+                        <a href="<?= htmlspecialchars($url) ?>" class="akd-sidebar__link akd-sidebar__link--parent">
+                            <?php if (!empty($item['icon'])): ?>
+                                <i class="<?= htmlspecialchars($item['icon']) ?> akd-sidebar__icon"></i>
+                            <?php endif; ?>
+                            <span class="akd-sidebar__label"><?= htmlspecialchars($item['label']) ?></span>
+                        </a>
+                        <button
+                            type="button"
+                            class="akd-sidebar__expand-btn"
+                            aria-expanded="<?= $isExpanded ? 'true' : 'false' ?>"
+                            aria-controls="<?= $submenuId ?>"
+                            aria-label="Toggle <?= htmlspecialchars($item['label']) ?> submenu"
+                        >
+                            <i class="fas fa-chevron-right akd-sidebar__chevron" aria-hidden="true"></i>
+                        </button>
+                    <?php else: ?>
+                        <button
+                            type="button"
+                            class="akd-sidebar__link akd-sidebar__link--parent akd-sidebar__expand-btn"
+                            aria-expanded="<?= $isExpanded ? 'true' : 'false' ?>"
+                            aria-controls="<?= $submenuId ?>"
+                        >
+                            <?php if (!empty($item['icon'])): ?>
+                                <i class="<?= htmlspecialchars($item['icon']) ?> akd-sidebar__icon"></i>
+                            <?php endif; ?>
+                            <span class="akd-sidebar__label"><?= htmlspecialchars($item['label']) ?></span>
+                            <i class="fas fa-chevron-right akd-sidebar__chevron" aria-hidden="true"></i>
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+                <ul class="akd-sidebar__sublist<?= $isExpanded ? ' is-open' : '' ?>" id="<?= $submenuId ?>">
+                    <?php akd_render_nav_items($item['children'], $currentPath, $depth + 1); ?>
+                </ul>
+            </li>
+            <?php
+        }
+    }
+}
 
 $avatarColor = Avatar::color($user['username'] !== '' ? $user['username'] : $user['fullname']);
 $hour = (int) date('G');
@@ -84,7 +226,6 @@ $todayDate = date('l, F j');
     <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
     <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="preload" href="/uploads/upscalemedia-transformed (3).png" as="image" fetchpriority="high">
 
     <?php vite('member'); ?>
 
@@ -101,14 +242,58 @@ $todayDate = date('l, F j');
 </head>
 <body>
 <div class="preloader" id="preloader">
-    <img src="/uploads/upscalemedia-transformed (3).png" alt="" class="preloader__wheel" draggable="false"
-        fetchpriority="high" decoding="async"
-    >
+    <svg class="preloader__wheel" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+            <!-- Gradient for the main golden body to simulate lighting -->
+            <linearGradient id="wheel-grad" x1="10%" y1="10%" x2="90%" y2="90%">
+                <stop offset="0%" stop-color="#937C49" />
+                <stop offset="50%" stop-color="#C5B173" />
+                <stop offset="100%" stop-color="#A59152" />
+            </linearGradient>
+            <!-- Gradient for the subtle dark rim/edge to simulate the 3D bevel -->
+            <linearGradient id="rim-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8A7B4B" />
+                <stop offset="100%" stop-color="#5C502A" />
+            </linearGradient>
+        </defs>
+
+        <!-- Base layer (Darker edge acting as a stroke/bevel) -->
+        <g stroke="url(#rim-grad)" fill="url(#rim-grad)" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Outer Ring -->
+            <circle cx="50" cy="50" r="28" fill="none" stroke-width="6.5" />
+            <!-- Spokes -->
+            <path d="M50 12 L50 88 M12 50 L88 50 M23.13 23.13 L76.87 76.87 M23.13 76.87 L76.87 23.13" stroke-width="5.5" />
+            <!-- Outer Knobs -->
+            <circle cx="50" cy="12" r="6" stroke="none" />
+            <circle cx="50" cy="88" r="6" stroke="none" />
+            <circle cx="12" cy="50" r="6" stroke="none" />
+            <circle cx="88" cy="50" r="6" stroke="none" />
+            <circle cx="23.13" cy="23.13" r="6" stroke="none" />
+            <circle cx="76.87" cy="76.87" r="6" stroke="none" />
+            <circle cx="23.13" cy="76.87" r="6" stroke="none" />
+            <circle cx="76.87" cy="23.13" r="6" stroke="none" />
+        </g>
+
+        <!-- Top layer (Golden highlight) -->
+        <g stroke="url(#wheel-grad)" fill="url(#wheel-grad)" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Outer Ring -->
+            <circle cx="50" cy="50" r="28" fill="none" stroke-width="4.5" />
+            <!-- Spokes -->
+            <path d="M50 12 L50 88 M12 50 L88 50 M23.13 23.13 L76.87 76.87 M23.13 76.87 L76.87 23.13" stroke-width="3.5" />
+            <!-- Outer Knobs -->
+            <circle cx="50" cy="12" r="5" stroke="none" />
+            <circle cx="50" cy="88" r="5" stroke="none" />
+            <circle cx="12" cy="50" r="5" stroke="none" />
+            <circle cx="88" cy="50" r="5" stroke="none" />
+            <circle cx="23.13" cy="23.13" r="5" stroke="none" />
+            <circle cx="76.87" cy="76.87" r="5" stroke="none" />
+            <circle cx="23.13" cy="76.87" r="5" stroke="none" />
+            <circle cx="76.87" cy="23.13" r="5" stroke="none" />
+        </g>
+    </svg>
 </div>
 
 <div class="akd-layout" id="akdLayout">
-
-    <!-- Header -->
     <header class="akd-header">
         <div class="akd-header__primary">
             <button class="akd-header__toggle" id="sidebarToggle" aria-label="Open menu" aria-expanded="false">
@@ -169,7 +354,7 @@ $todayDate = date('l, F j');
     <div class="akd-overlay" id="akdOverlay"></div>
 
     <!-- Sidebar -->
-    <nav class="akd-sidebar" id="akdSidebar" aria-label="Main Navigation">
+    <nav class="akd-sidebar" id="akdSidebar" data-user-id="<?= (int) $user['id'] ?>" aria-label="Main Navigation">
         <div class="akd-sidebar__header">
             <a href="/dashboard" class="akd-sidebar__brand">
                 <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria" class="akd-sidebar__logo">
@@ -180,8 +365,6 @@ $todayDate = date('l, F j');
         </div>
 
         <div class="akd-sidebar__scroll">
-
-            <!-- Profile Card with Dropdown -->
             <div class="akd-sidebar__profile-wrapper">
                 <button class="akd-sidebar__profile" id="profileDropdownTrigger" aria-expanded="false" aria-haspopup="true">
                     <div class="akd-sidebar__avatar-wrap" data-user-avatar-container>
@@ -232,17 +415,7 @@ $todayDate = date('l, F j');
                     <div class="akd-sidebar__group">
                         <div class="akd-sidebar__group-label"><?= htmlspecialchars($groupName) ?></div>
                         <ul class="akd-sidebar__list">
-                            <?php foreach ($items as $item):
-                                $isActive = str_starts_with($currentPath, $item['url']);
-                                $class = 'akd-sidebar__item' . ($isActive ? ' akd-sidebar__item--active' : '');
-                            ?>
-                                <li class="<?= $class ?>">
-                                    <a href="<?= htmlspecialchars($item['url']) ?>" class="akd-sidebar__link">
-                                        <i class="<?= htmlspecialchars($item['icon']) ?> akd-sidebar__icon"></i>
-                                        <span class="akd-sidebar__label"><?= htmlspecialchars($item['label']) ?></span>
-                                    </a>
-                                </li>
-                            <?php endforeach; ?>
+                            <?php akd_render_nav_items($items, $currentPath); ?>
                         </ul>
                     </div>
                 <?php endforeach; ?>

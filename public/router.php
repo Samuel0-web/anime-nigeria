@@ -102,6 +102,7 @@ if ($apiIndex !== false) {
 $routes = [
     '/'                                         => 'index.php',
     '/test'                                     => 'test.php',
+    '/phpinfo'                                     => 'phpinfo.php',
     '/privacy'                                  => 'privacy-policy.php',
     '/terms'                                    => 'terms-of-use.php',
 

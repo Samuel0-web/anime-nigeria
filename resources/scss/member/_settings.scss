@@ -306,6 +306,10 @@
         background: rgba($white, 0.03);
         color: $white-faint;
         font-size: 64px;
+
+        &[hidden] {
+            display: none;
+        }
     }
 
     &__key {
@@ -320,6 +324,10 @@
         border: 1px solid $black-line;
         border-radius: $radius-sm;
 
+        &[hidden] {
+            display: none;
+        }
+
         &-label {
             color: $white-faint;
             font-size: $fs-xs;
@@ -333,6 +341,65 @@
             font-size: $fs-sm;
             letter-spacing: 0.03em;
         }
+    }
+
+    &__link-toggle {
+        display: block;
+        margin: $space-xs auto 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $sakura;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        text-align: center;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            text-decoration: underline;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+            border-radius: $radius-sm;
+        }
+    }
+
+    &__key-copy {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: $radius-full;
+        background: transparent;
+        color: $white-faint;
+        font-size: $fs-sm;
+        cursor: pointer;
+        transition: background $transition-fast, color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.08);
+            color: $white;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+        }
+
+        &.is-copied {
+            color: $accent-teal;
+        }
+    }
+
+    &__heading--verify {
+        margin-top: $space-md;
     }
 
     &__field { margin-top: $space-sm; }

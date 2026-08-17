@@ -1,0 +1,1113 @@
+@use "../tokens" as *;
+@use "sass:color";
+
+// ==========================================
+// LAYOUT
+// ==========================================
+.akd-trivia {
+    position: relative;
+    min-height: calc(100vh - 11rem);
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: $bp-lg) {
+        min-height: calc(100vh - 8rem);
+        padding: 0 $space-sm;
+    }
+}
+
+.akd-no-scroll { overflow: hidden; }
+
+// ==========================================
+// SHARED PRIMITIVES
+// ==========================================
+.akd-trivia-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xxs;
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: $radius-full;
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+
+    &__dot {
+        width: 6px;
+        height: 6px;
+        border-radius: $radius-full;
+        background: currentColor;
+        animation: akd-trivia-pulse 1.6s ease-in-out infinite;
+    }
+
+    &--live {
+        color: $accent-crimson;
+        background: rgba($accent-crimson, 0.14);
+    }
+
+    &--soon {
+        color: $gold;
+        background: rgba($gold, 0.14);
+    }
+}
+
+@keyframes akd-trivia-pulse {
+    0%, 100% { opacity: 1; }
+
+    50% { opacity: 0.35; }
+}
+
+.akd-trivia-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: 0.85rem 1.5rem;
+    border-radius: $radius-md;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: $font-primary;
+
+    &--primary {
+        background: $sakura;
+        color: $black;
+
+        &:hover { background: color.adjust(#e8a3b3, $lightness: 6%); }
+    }
+
+    &--secondary {
+        background: rgba($white, 0.06);
+        color: $white;
+        border-color: $black-line;
+
+        &:hover { background: rgba($white, 0.1); }
+    }
+
+    &--set {
+        background: rgba($accent-teal, 0.14);
+        color: $accent-teal;
+        cursor: default;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: .4;
+    }
+}
+
+.akd-trivia-number-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 56px;
+    padding: 0 $space-sm;
+    border-radius: $radius-full;
+    background: rgba($sakura, 0.12);
+    border: 1px solid rgba($sakura, 0.3);
+    color: $sakura;
+    font-family: $font-mono;
+    font-size: $fs-md;
+    font-weight: $fw-bold;
+}
+
+.akd-trivia-capsule {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 26px;
+    padding: 0 $space-xs;
+    border-radius: $radius-full;
+    background: rgba($white, 0.08);
+    border: 1px solid $black-line;
+    color: $white-muted;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: $fw-semibold;
+}
+
+// ==========================================
+// HERO BANNER
+// ==========================================
+.akd-trivia-banner {
+    position: relative;
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid $black-line;
+    display: flex;
+    transition: filter $transition-slow;
+
+    &--ended { filter: grayscale(0.5) brightness(0.75); }
+
+    &__overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(10, 10, 12, 0.35) 0%,
+            rgba(10, 10, 12, 0.55) 45%, rgba(10, 10, 12, 0.96) 100%);
+    }
+
+    &--ended &__overlay {
+        background: linear-gradient(180deg, rgba(10, 10, 12, 0.55) 0%,
+            rgba(10, 10, 12, 0.75) 45%, rgba(10, 10, 12, 0.97) 100%);
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: $space-lg;
+
+        @media (max-width: $bp-md) { padding: $space-md; }
+    }
+
+    &__bottom {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xxs;
+        max-width: 40rem;
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $sakura;
+    }
+
+    &__title {
+        font-size: $fs-3xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0 0 $space-xs;
+
+        @media (max-width: $bp-md) { font-size: $fs-xl; }
+    }
+
+    &__meta {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        color: $white-muted;
+        font-size: $fs-sm;
+        margin-bottom: $space-md;
+        flex-wrap: wrap;
+    }
+
+    &__meta-dot { opacity: 0.4; }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-md;
+        flex-wrap: wrap;
+    }
+
+    &__countdown {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__countdown-label {
+        font-size: $fs-xs;
+        color: $white-faint;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    &__countdown-value {
+        font-family: $font-mono;
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: 1;
+    }
+}
+
+// ==========================================
+// WAITING ROOM
+// ==========================================
+.akd-trivia-waiting {
+    position: relative;
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 30%, rgba($sakura, 0.1), $black-soft 70%);
+
+    &__bg {
+        position: absolute;
+        inset: 0;
+        background-image: url("/uploads/noise.png");
+        background-size: 200px;
+        opacity: 0.05;
+        animation: akd-trivia-drift 12s linear infinite;
+    }
+
+    &__shape {
+        position: absolute;
+        border-radius: $radius-full;
+        background: radial-gradient(circle, rgba($sakura, 0.22), transparent 70%);
+        filter: blur(8px);
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: $space-xs;
+        padding: $space-lg;
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $sakura;
+        margin-top: $space-md;
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-sm;
+
+        @media (max-width: $bp-md) { font-size: $fs-xl; }
+    }
+
+    &__countdown {
+        font-family: $font-mono;
+        font-size: $fs-4xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: 1;
+        margin: $space-sm 0;
+
+        @media (max-width: $bp-md) { font-size: $fs-3xl; }
+    }
+
+    &__hint {
+        color: $white-muted;
+        font-size: $fs-sm;
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+    }
+
+    &__questions {
+        color: $white-faint;
+        font-size: $fs-xs;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: $space-sm;
+    }
+}
+
+@keyframes akd-trivia-drift {
+    0% { background-position: 0 0; }
+
+    100% { background-position: 200px 200px; }
+}
+
+// ==========================================
+// JOINING STATE
+// ==========================================
+.akd-trivia-joining {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: radial-gradient(circle at 50% 30%, rgba($sakura, 0.08), $black-soft 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-md;
+
+    &__spinner {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-full;
+        border: 3px solid rgba($white, 0.12);
+        border-top-color: $sakura;
+        animation: akd-trivia-spin 0.8s linear infinite;
+    }
+
+    &__text {
+        font-size: $fs-lg;
+        font-weight: $fw-semibold;
+        color: $white;
+        margin: 0;
+    }
+}
+
+@keyframes akd-trivia-spin {
+    to { transform: rotate(360deg); }
+}
+
+// ==========================================
+// QUESTION INTRO
+// ==========================================
+.akd-trivia-intro {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: $black-soft;
+    display: flex;
+    flex-direction: column;
+    padding: $space-lg;
+
+    &__badge { align-self: flex-start; }
+
+    &__question {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: $fs-2xl;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: $lh-snug;
+        padding: $space-lg 0;
+
+        @media (max-width: $bp-md) { font-size: $fs-xl; }
+    }
+
+    &--mobile {
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    &__card {
+        width: 100%;
+        margin-top: $space-md;
+        background: $white;
+        border-radius: $radius-lg;
+        padding: $space-lg $space-md;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 8rem;
+    }
+
+    &__card-text {
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $black;
+        text-align: center;
+        line-height: $lh-snug;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// ANSWER SCREEN (desktop)
+// ==========================================
+.akd-trivia-answer {
+    position: relative;
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: $black-soft;
+    display: flex;
+    flex-direction: column;
+    padding: $space-md;
+    overflow: hidden;
+
+    &__timerbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+        background: $sakura;
+        transform-origin: left;
+        animation: akd-trivia-shrink var(--duration, 5s) linear forwards;
+    }
+
+    &__top { margin-bottom: $space-md; }
+
+    &__image {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        max-width: 16rem;
+        margin: 0 auto $space-md;
+        border-radius: $radius-sm;
+        overflow: hidden;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    }
+
+    &__grid {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-sm;
+    }
+
+    &__option {
+        height: 3.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.03);
+        color: $white;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        font-family: $font-primary;
+        cursor: pointer;
+        transition: background-color $transition-fast, border-color $transition-fast;
+        padding: 0 $space-sm;
+        text-align: center;
+
+        &:hover:not(:disabled) {
+            background: rgba($sakura, 0.1);
+            border-color: rgba($sakura, 0.4);
+        }
+
+        &.is-selected {
+            background: $sakura-dim;
+            border-color: $sakura;
+            color: $sakura;
+        }
+
+        &:disabled { cursor: not-allowed; }
+    }
+
+    &__player {
+        margin-top: $space-md;
+        display: flex;
+    }
+}
+
+@keyframes akd-trivia-shrink {
+    from { transform: scaleX(1); }
+
+    to { transform: scaleX(0); }
+}
+
+.akd-trivia-player {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: $space-xs $space-sm;
+    background: rgba($white, 0.04);
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+
+    &__avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: $radius-full;
+        object-fit: cover;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+
+    &__name {
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__points {
+        font-size: 11px;
+        color: $sakura;
+        font-family: $font-mono;
+    }
+}
+
+// ==========================================
+// MOBILE ANSWER SCREEN
+// ==========================================
+.akd-trivia-mobile-answer {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    // Bleeds slightly past the panel's own $space-md padding on each side,
+    // netting a smaller $space-sm gutter so the answer grid gets more width
+    // without touching the button height.
+    margin: 0 - ($space-md - $space-sm);
+
+    &__timerbar {
+        position: absolute;
+        top: -$space-sm;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: $sakura;
+        transform-origin: left;
+        animation: akd-trivia-shrink var(--duration, 5s) linear forwards;
+    }
+
+    &__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $space-md;
+        flex-shrink: 0;
+    }
+
+    &__image {
+        flex-shrink: 1;
+        min-height: 0;
+        width: auto;
+        max-width: 13rem;
+        height: clamp(9rem, 40vh, 15rem);
+        aspect-ratio: 3 / 4;
+        margin: 0 auto $space-sm;
+        border-radius: $radius-md;
+        overflow: hidden;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    &__grid {
+        flex-shrink: 0;
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-sm;
+    }
+
+    &__option {
+        height: 3.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.04);
+        color: $white;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        font-family: $font-primary;
+        cursor: pointer;
+        padding: 0 $space-sm;
+        text-align: center;
+        transition: background-color $transition-fast, border-color $transition-fast;
+
+        &.is-selected {
+            background: $sakura-dim;
+            border-color: $sakura;
+            color: $sakura;
+        }
+
+        &:disabled { cursor: not-allowed; }
+    }
+
+    &__player {
+        flex-shrink: 0;
+        margin-top: $space-sm;
+        display: flex;
+    }
+}
+
+// ==========================================
+// DOUBLE POINTS
+// ==========================================
+.akd-trivia-double {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: radial-gradient(circle at 50% 30%, rgba($gold, 0.14), $black-soft 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-lg;
+
+    &__label {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+        text-transform: lowercase;
+
+        &::first-letter { text-transform: uppercase; }
+    }
+
+    &__visual {
+        position: relative;
+        width: 128px;
+        height: 128px;
+    }
+
+    &__ring {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+
+    &__ring-track {
+        fill: none;
+        stroke: rgba($white, 0.1);
+        stroke-width: 6;
+    }
+
+    &__ring-progress {
+        fill: none;
+        stroke: $gold;
+        stroke-width: 6;
+        stroke-linecap: round;
+    }
+
+    // A visible gap between the ring and the inner circle, per spec, they
+    // must never touch or merge into one border.
+    &__inner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 84px;
+        height: 84px;
+        border-radius: $radius-full;
+        background: $white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    &__ink {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 56px;
+        height: 56px;
+        margin: -28px 0 0 -28px;
+        border-radius: $radius-full;
+        background: $black;
+    }
+
+    &__char {
+        position: relative;
+        z-index: 1;
+        font-family: $font-mono;
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $black;
+    }
+}
+
+// ==========================================
+// RESULT SCREEN
+// ==========================================
+.akd-trivia-result {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: $space-lg;
+
+    &--correct {
+        background: radial-gradient(circle at 50% 20%, rgba($accent-teal, 0.16),
+            $black-soft 65%);
+    }
+
+    &--incorrect {
+        background: radial-gradient(circle at 50% 20%, rgba($accent-crimson, 0.16),
+            $black-soft 65%);
+    }
+
+    &__icon {
+        width: 72px;
+        height: 72px;
+        border-radius: $radius-full;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $fs-xl;
+        margin-bottom: $space-md;
+    }
+
+    &--correct &__icon {
+        background: rgba($accent-teal, 0.18);
+        color: $accent-teal;
+    }
+
+    &--incorrect &__icon {
+        background: rgba($accent-crimson, 0.18);
+        color: $accent-crimson;
+    }
+
+    &__headline {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+    }
+
+    &__points {
+        font-family: $font-mono;
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $accent-teal;
+        margin: 0 0 $space-md;
+    }
+
+    &__encouragement {
+        color: $white-muted;
+        font-size: $fs-sm;
+        margin: 0 0 $space-md;
+        max-width: 22rem;
+    }
+
+    &__rank {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__position {
+        color: $white;
+        font-weight: $fw-semibold;
+        margin: 0;
+    }
+
+    &__gap {
+        color: $white-faint;
+        font-size: $fs-sm;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// FINAL RESULT
+// ==========================================
+.akd-trivia-final {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: radial-gradient(circle at 50% 15%, rgba($sakura, 0.14),
+        $black-soft 65%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: $space-lg;
+    gap: 2px;
+    position: relative;
+    overflow: hidden;
+
+    &__avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: $radius-full;
+        object-fit: cover;
+        border: 3px solid $sakura;
+        margin-bottom: $space-md;
+    }
+
+    &__username {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+    }
+
+    &__rank {
+        color: $sakura;
+        font-weight: $fw-semibold;
+        margin: $space-xxs 0;
+    }
+
+    &__points {
+        font-family: $font-mono;
+        color: $white-muted;
+        margin: 0 0 $space-lg;
+    }
+}
+
+.akd-trivia-confetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+
+    &__piece {
+        position: absolute;
+        top: -10%;
+        width: 8px;
+        height: 14px;
+        opacity: 0;
+        animation-name: akd-confetti-fall;
+        animation-timing-function: ease-in;
+        animation-fill-mode: forwards;
+    }
+}
+
+@keyframes akd-confetti-fall {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(var(--rotate-from));
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), 340px)
+            rotate(calc(var(--rotate-from) + 360deg));
+    }
+}
+
+// ==========================================
+// FULL RESULTS
+// ==========================================
+.akd-trivia-full-results {
+    flex: 1;
+    min-height: 26rem;
+    max-height: calc(100vh - 12rem);
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: $black-soft;
+    display: flex;
+    flex-direction: column;
+    padding: $space-md;
+    overflow-y: auto;
+
+    &__summary {
+        display: flex;
+        gap: $space-sm;
+        margin-bottom: $space-md;
+    }
+
+    &__summary-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: $space-sm;
+        background: rgba($white, 0.03);
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+    }
+
+    &__summary-value {
+        font-family: $font-mono;
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__summary-label {
+        font-size: $fs-xs;
+        color: $white-faint;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__review {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__question-number {
+        font-family: $font-mono;
+        color: $sakura;
+        font-size: $fs-xs;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    &__question {
+        color: $white;
+        font-size: $fs-lg;
+        font-weight: $fw-semibold;
+        margin: $space-xxs 0 $space-md;
+    }
+
+    &__answers {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $space-sm;
+    }
+
+    &__answer {
+        padding: $space-sm;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.03);
+        color: $white-muted;
+        font-size: $fs-sm;
+        text-align: center;
+
+        &.is-correct {
+            border-color: $accent-teal;
+            background: rgba($accent-teal, 0.14);
+            color: $accent-teal;
+        }
+
+        &.is-incorrect {
+            border-color: $accent-crimson;
+            background: rgba($accent-crimson, 0.14);
+            color: $accent-crimson;
+        }
+    }
+
+    &__nav {
+        display: flex;
+        justify-content: space-between;
+        gap: $space-sm;
+        margin-top: $space-md;
+    }
+}
+
+// ==========================================
+// MOBILE FULL-SCREEN TRIVIA PANEL
+// ==========================================
+.akd-trivia-mobile-panel {
+    position: fixed;
+    inset: 0;
+    z-index: $z-modal;
+    background: $black;
+    display: flex;
+    flex-direction: column;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        padding: max($space-sm, env(safe-area-inset-top)) $space-md $space-sm;
+    }
+
+    &__icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-full;
+        background: rgba($white, 0.06);
+        border: 1px solid $black-line;
+        color: $white-muted;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.1);
+            color: $white;
+        }
+    }
+
+    &__content {
+        flex: 1;
+        min-height: 0;
+        padding: $space-md;
+        display: flex;
+        flex-direction: column;
+
+        > section {
+            flex: 1;
+            min-height: 0;
+            max-height: none;
+            border: none;
+            border-radius: $radius-lg;
+        }
+    }
+}
+
+// ==========================================
+// MOBILE RESULTS SUMMARY (base page, panel closed)
+// ==========================================
+.akd-trivia-mobile-summary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-md;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.03);
+
+    &__avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-full;
+        object-fit: cover;
+        border: 2px solid $sakura;
+        flex-shrink: 0;
+    }
+
+    &__info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__username {
+        color: $white;
+        font-weight: $fw-semibold;
+        margin: 0;
+    }
+
+    &__meta {
+        color: $white-faint;
+        font-size: $fs-sm;
+        margin: 2px 0 0;
+    }
+}

@@ -9,6 +9,32 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
     const profileBtn = document.getElementById(profileBtnId);
     const dropdown = document.getElementById(dropdownId);
     if (!layout || !sidebar) return;
+    const sidebarScroll = sidebar.querySelector('.akd-sidebar__scroll');
+
+    if (sidebarScroll) {
+        const userId = sidebar.dataset.userId;
+
+        if (userId) {
+            const SIDEBAR_SCROLL_KEY = `akd-sidebar-scroll:${userId}`;
+
+            // Restore this user's previous sidebar position.
+            const savedScroll = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+
+            if (savedScroll !== null) {
+                requestAnimationFrame(() => {
+                    sidebarScroll.scrollTop = parseInt(savedScroll, 10) || 0;
+                });
+            }
+
+            // Save this user's sidebar position.
+            sidebarScroll.addEventListener('scroll', () => {
+                sessionStorage.setItem(
+                    SIDEBAR_SCROLL_KEY,
+                    String(sidebarScroll.scrollTop)
+                );
+            }, { passive: true });
+        }
+    }
 
     const openSidebar = () => {
         sidebar.classList.add('is-open');
@@ -39,6 +65,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
     });
 
     // Profile dropdown
+    // Profile dropdown
     if (profileBtn && dropdown) {
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -53,6 +80,20 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
             }
         });
     }
+
+    // Nested navigation groups — each branch's expand/collapse is independent.
+    const expandButtons = sidebar.querySelectorAll('.akd-sidebar__expand-btn');
+    expandButtons.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const submenu = document.getElementById(btn.getAttribute('aria-controls'));
+            if (!submenu) return;
+
+            const isOpen = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', String(!isOpen));
+            submenu.classList.toggle('is-open', !isOpen);
+        });
+    });
 
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;

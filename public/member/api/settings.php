@@ -155,11 +155,11 @@ try {
                 $pendingSetup = $twoFactorAuth->findByUserId($userId);
 
                 if ($pendingSetup === false) {
-                    http_response_code(422);
-
                     echo json_encode([
-                        'success' => false,
-                        'message' => 'There is no pending two-factor authentication setup to cancel.',
+                        'success' => true,
+                        'settings' => [
+                            '2fa' => $buildTwoFactorState(),
+                        ],
                     ]);
                     exit;
                 }

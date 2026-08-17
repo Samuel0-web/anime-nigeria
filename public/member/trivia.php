@@ -1,6 +1,6 @@
 <?php
 $page_title       = "Trivia";
-$page_description = "Check your activities.";
+$page_description = "Participate in trivia.";
 
 $breadcrumbs = [
     ['label' => 'Dashboard', 'url' => '/dashboard'],
@@ -10,8 +10,6 @@ $breadcrumbs = [
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<main class="akd-content">
-    <!-- Page specific content goes here -->
-</main>
+<div id="react-root" data-page="trivia"></div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

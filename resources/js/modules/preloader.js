@@ -52,15 +52,7 @@ export function initPreloader() {
     // ------------------------------------------------------------------
     const preloaderImage = preloader.querySelector(".preloader__wheel");
 
-    window.addEventListener("load", async () => {
-        if (preloaderImage) {
-            try {
-                await preloaderImage.decode();
-            } catch {
-                // Ignore decode errors.
-            }
-        }
-
+    window.addEventListener("load", () => {
         hidePreloader();
     });
 

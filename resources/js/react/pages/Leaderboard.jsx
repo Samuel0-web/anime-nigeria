@@ -18,14 +18,15 @@ export default function Leaderboard() {
         () => (currentUser ? getUserAbove(leaderboard, currentUser) : null),
         [currentUser]
     );
-    const xpToPassAbove = currentUser ? getXpToPassAbove(currentUser, userAbove) : null;
 
+    const xpToPassAbove = currentUser ? getXpToPassAbove(currentUser, userAbove) : null;
     const podiumRef = useRef(null);
     const currentRowRef = useRef(null);
 
     // Watch whichever surface actually holds the current user — the podium
     // itself if they're top 3, otherwise their specific row in the list.
     const stickyTargetRef = currentUserInPodium ? podiumRef : currentRowRef;
+    
     const { isTargetVisible, isPulsing } = useStickyVisibility(stickyTargetRef, {
         enabled: !!currentUser,
     });
@@ -35,13 +36,10 @@ export default function Leaderboard() {
     return (
         <main className="akd-content">
             <section className="akd-leaderboard">
-                <LeaderboardPodium
-                    ref={podiumRef}
-                    users={podiumUsers}
+                <LeaderboardPodium ref={podiumRef} users={podiumUsers}
                     currentUserId={currentUser?.id}
                     isPulsing={currentUserInPodium && isPulsing}
-                    xpToPassAbove={xpToPassAbove}
-                    rankAbove={userAbove?.rank ?? null}
+                    xpToPassAbove={xpToPassAbove} rankAbove={userAbove?.rank ?? null}
                 />
 
                 <ul className="akd-leaderboard__list">
@@ -49,10 +47,8 @@ export default function Leaderboard() {
                         const isCurrent = user.id === currentUser?.id;
 
                         return (
-                            <LeaderboardRow
-                                key={user.id}
-                                ref={isCurrent ? currentRowRef : null}
-                                user={user}
+                            <LeaderboardRow key={user.id}
+                                ref={isCurrent ? currentRowRef : null} user={user}
                                 isCurrentUser={isCurrent}
                                 isPulsing={isCurrent && isPulsing}
                                 xpToPassAbove={isCurrent ? xpToPassAbove : null}
@@ -63,11 +59,8 @@ export default function Leaderboard() {
                 </ul>
             </section>
 
-            <CurrentUserStickyCard
-                user={currentUser}
-                visible={showSticky}
-                xpToPassAbove={xpToPassAbove}
-                rankAbove={userAbove?.rank ?? null}
+            <CurrentUserStickyCard user={currentUser} visible={showSticky}
+                xpToPassAbove={xpToPassAbove} rankAbove={userAbove?.rank ?? null}
             />
         </main>
     );

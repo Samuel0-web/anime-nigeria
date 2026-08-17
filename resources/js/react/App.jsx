@@ -1,3 +1,4 @@
+import Trivia from "./pages/Trivia";
 import Leaderboard from "./pages/Leaderboard";
 import HelpCentre from "./pages/HelpCentre";
 
@@ -10,6 +11,8 @@ export default function App() {
             return <Leaderboard />;
         case "help-centre":
             return <HelpCentre />;
+        case "trivia":
+            return <Trivia />;
         default:
             return null;
     }
