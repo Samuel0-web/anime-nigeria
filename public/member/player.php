@@ -231,33 +231,6 @@ $playerUrl = '/member/player/' . rawurlencode($profile['username']);
             </div>
         </section>
 
-        <!-- Recent Activity — reuses the timeline component from the editable profile page -->
-        <section class="akd-timeline">
-            <div class="akd-section-heading">
-                <div class="akd-section-heading__text">
-                    <h2 class="akd-section-heading__title">Recent Activity</h2>
-                    <p class="akd-section-heading__subtitle"><?= htmlspecialchars($profile['fullname']) ?>'s recent activity on Anime Nigeria.</p>
-                </div>
-            </div>
-
-            <div class="akd-timeline__track">
-                <div class="akd-timeline__group">
-                    <ul class="akd-timeline__list">
-                        <?php foreach ($profile['recentActivity'] as $item): ?>
-                            <li class="akd-timeline__item">
-                                <span class="akd-timeline__node"><i class="<?= htmlspecialchars($item['icon']) ?>"></i></span>
-                                <div class="akd-timeline__card">
-                                    <span class="akd-timeline__title"><?= htmlspecialchars($item['title']) ?></span>
-                                    <span class="akd-timeline__desc"><?= htmlspecialchars($item['desc']) ?></span>
-                                    <span class="akd-timeline__time"><?= htmlspecialchars($item['time']) ?></span>
-                                </div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
     </div>
 </main>
 

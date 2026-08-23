@@ -9,40 +9,45 @@ class Headers {
         // Prevent clickjacking
         header('X-Frame-Options: DENY');
 
-        // XSS protection (older browsers)
-        header('X-XSS-Protection: 1; mode=block');
-
-        // Don't leak referrer unnecessarily
+        // Control referrer information
         header('Referrer-Policy: strict-origin-when-cross-origin');
 
-        // Permissions Policy
-        header(
-            'Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()'
+        // Restrict access to sensitive browser features
+        header('Permissions-Policy: ' . 'geolocation=(), ' . 'microphone=(), '
+            . 'camera=(), ' . 'payment=(), ' . 'usb=(), ' . 'browsing-topics=()'
         );
 
-        // Prevent FLoC / Topics API
-        header('Permissions-Policy: browsing-topics=()');
-
-        // HSTS (ONLY on HTTPS)
+        // Enforce HTTPS
+        // Only send this when the request is actually HTTPS.
         if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-            header(
-                'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload'
+            header('Strict-Transport-Security: ' . 'max-age=31536000; '
+                . 'includeSubDomains; ' . 'preload'
             );
         }
 
         // Content Security Policy
-        header(
-            "Content-Security-Policy: "
-            . "default-src 'self'; "
-            . "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; "
-            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            . "font-src 'self' https://fonts.gstatic.com data:; "
-            . "img-src 'self' data: blob: https:; "
-            . "connect-src 'self'; "
-            . "frame-src https://accounts.google.com; "
-            . "object-src 'none'; "
-            . "base-uri 'self'; "
-            . "form-action 'self';"
+        header('Content-Security-Policy: ' . "default-src 'self'; " . "base-uri 'self'; "
+            . "form-action 'self'; " . "object-src 'none'; " . "frame-ancestors 'none'; "
+
+            // JavaScript
+            . "script-src " . "'self' " . "'unsafe-inline' " . "http://127.0.0.1:5173 "
+            . "https://accounts.google.com " . "https://apis.google.com; "
+
+            // Styles
+            . "style-src " . "'self' " . "'unsafe-inline' " . "http://127.0.0.1:5173; "
+
+            // Fonts
+            . "font-src " . "'self' " . "data: " . "http://127.0.0.1:5173; "
+
+            // Images
+            . "img-src " . "'self' " . "data: " . "blob: " . "https:; "
+
+            // AJAX / Fetch / WebSocket
+            . "connect-src " . "'self' " . "http://127.0.0.1:5173 "
+            . "ws://127.0.0.1:5173; "
+
+            // Google OAuth / authentication frames
+            . "frame-src " . "https://accounts.google.com;"
         );
     }
 }

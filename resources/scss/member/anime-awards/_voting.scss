@@ -1,0 +1,825 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// TOPLINE
+// Replaces the old intro block. One row, minimal height, so the
+// category header is the first thing that reads as "the page".
+// ==========================================
+.akd-vote-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-md;
+    margin-bottom: $space-md;
+
+    &__label {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__dot {
+        color: $gold;
+        margin: 0 2px;
+    }
+
+    &__back {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $white-muted;
+        text-decoration: none;
+        transition: color $transition-fast;
+
+        &:hover { color: $gold; }
+    }
+}
+
+// ==========================================
+// WIDER VOTING CONTAINER
+// Only applied when voting is active (see voting.php). Overrides the
+// shared .akd-award-container max-width; Overview and Nominations are
+// unaffected since they don't carry this modifier class.
+// ==========================================
+.akd-award-container--voting {
+    max-width: 88rem;
+}
+
+// ==========================================
+// VOTE STEP HEADER
+// Prev / centered title+progress / Next. No card, no background —
+// a single divider is the only framing. Scrolls normally, never sticky.
+// ==========================================
+.akd-vote-step {
+    &__header {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: $space-md;
+        padding-bottom: $space-lg;
+        margin-bottom: $space-lg;
+        border-bottom: 1px solid $black-line;
+
+        @media (max-width: $bp-sm) {
+            grid-template-columns: auto 1fr auto;
+            gap: $space-xs;
+        }
+    }
+
+    &__center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-width: 0;
+    }
+
+    &__title-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $space-xs;
+        margin-bottom: $space-sm;
+    }
+
+    &__title {
+        font-size: clamp(1.375rem, 3.5vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+        will-change: transform, opacity;
+
+        &--exit-fwd {
+            animation: akd-vote-title-exit-left 100ms $ease-standard forwards;
+        }
+
+        &--exit-back {
+            animation: akd-vote-title-exit-right 100ms $ease-standard forwards;
+        }
+
+        &--enter-fwd {
+            animation: akd-vote-title-enter-right 180ms $ease-standard both;
+        }
+
+        &--enter-back {
+            animation: akd-vote-title-enter-left 180ms $ease-standard both;
+        }
+    }
+
+    &__info {
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.03);
+        color: $white-muted;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover,
+        &[aria-expanded="true"] {
+            border-color: rgba($gold, 0.4);
+            color: $gold;
+        }
+    }
+
+    &__nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        padding: 0.5rem 0.9rem;
+        border-radius: $radius-full;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.02);
+        color: $white-muted;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all $transition-fast;
+        align-self: center;
+
+        &:hover:not(:disabled) {
+            background: rgba($white, 0.06);
+            color: $white;
+        }
+
+        &:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        @media (max-width: $bp-sm) {
+            padding: 0.5rem;
+
+            .akd-vote-step__nav-label { display: none; }
+        }
+    }
+
+    &__hint {
+        font-size: $fs-xs;
+        color: $accent-crimson;
+        margin: -$space-sm 0 $space-md;
+        text-align: center;
+
+        &--shake { animation: akd-vote-shake 0.4s ease-in-out; }
+    }
+}
+
+@keyframes akd-vote-shake {
+    0%, 100% { transform: translateX(0); }
+
+    25% { transform: translateX(-4px); }
+
+    75% { transform: translateX(4px); }
+}
+
+.akd-vote-progress {
+    width: 100%;
+    max-width: 16rem;
+
+    &__bar {
+        height: 4px;
+        border-radius: $radius-full;
+        background: rgba($white, 0.06);
+        overflow: hidden;
+    }
+
+    &__fill {
+        height: 100%;
+        background: $gold;
+        border-radius: $radius-full;
+        transition: width $transition-base;
+    }
+
+    &__label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: $space-xxs 0 0;
+        text-align: center;
+    }
+}
+
+// ==========================================
+// TOOLTIP
+// Compact floating popover, not a card. Hover on desktop (handled in
+// JS via a hover-capability check), tap on mobile.
+// ==========================================
+.akd-vote-tooltip-anchor {
+    position: relative;
+    display: inline-flex;
+}
+
+.akd-vote-tooltip {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translate(-50%, -4px);
+    z-index: $z-dropdown;
+    width: max-content;
+    max-width: 14rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: $radius-sm;
+    border: 1px solid rgba($gold, 0.3);
+    background: $black-soft;
+    color: $white;
+    font-size: $fs-xs;
+    line-height: $lh-snug;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $transition-fast, transform $transition-fast;
+
+    &--visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    &--left {
+        left: auto;
+        right: -0.5rem;
+        transform: translate(0, -4px);
+
+        &.akd-vote-tooltip--visible { transform: translate(0, 0); }
+    }
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background: $black-soft;
+        border-left: 1px solid rgba($gold, 0.3);
+        border-top: 1px solid rgba($gold, 0.3);
+    }
+
+    &--left::before {
+        left: auto;
+        right: 12px;
+        transform: rotate(45deg);
+    }
+}
+
+// ==========================================
+// NOMINEES
+// Image always left, text always right, on every breakpoint. Slightly
+// larger artwork than before, still compact and fully visible.
+// ==========================================
+.akd-vote-nominees {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+
+    // Keeps the sliding content clipped cleanly at the edges.
+    overflow: hidden;
+    will-change: transform, opacity;
+
+    &--exit-fwd { animation: akd-vote-exit-left 120ms $ease-standard forwards; }
+
+    &--exit-back { animation: akd-vote-exit-right 120ms $ease-standard forwards; }
+
+    &--enter-fwd { animation: akd-vote-enter-from-right 220ms $ease-standard both; }
+
+    &--enter-back { animation: akd-vote-enter-from-left 220ms $ease-standard both; }
+}
+
+@keyframes akd-vote-exit-left {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate3d(-32px, 0, 0);
+    }
+}
+
+@keyframes akd-vote-exit-right {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate3d(32px, 0, 0);
+    }
+}
+
+@keyframes akd-vote-enter-from-right {
+    from {
+        opacity: 0;
+        transform: translate3d(32px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes akd-vote-enter-from-left {
+    from {
+        opacity: 0;
+        transform: translate3d(-32px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes akd-vote-title-exit-left {
+    to {
+        opacity: 0;
+        transform: translate3d(-12px, 0, 0);
+    }
+}
+
+@keyframes akd-vote-title-exit-right {
+    to {
+        opacity: 0;
+        transform: translate3d(12px, 0, 0);
+    }
+}
+
+@keyframes akd-vote-title-enter-right {
+    from {
+        opacity: 0;
+        transform: translate3d(12px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes akd-vote-title-enter-left {
+    from {
+        opacity: 0;
+        transform: translate3d(-12px, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.akd-vote-nominee {
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    width: 100%;
+    padding: $space-sm;
+    border-radius: $radius-md;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color $transition-fast, background $transition-fast;
+    position: relative;
+
+    &:hover {
+        border-color: rgba($gold, 0.3);
+        background: rgba($gold, 0.04);
+    }
+
+    &--selected,
+    &--selected:hover {
+        border-color: $gold;
+        background: rgba($gold, 0.08);
+    }
+
+    &--pop { animation: akd-vote-select-pop 0.32s $ease-standard; }
+
+    &__art {
+        flex-shrink: 0;
+        width: 5.25rem;
+        height: 7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: $black-soft;
+        border: 1px solid $black-line;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        &--fallback {
+            color: rgba($gold, 0.5);
+            font-size: $fs-lg;
+            background: linear-gradient(160deg, rgba($gold, 0.16), $black-soft);
+        }
+
+        @media (max-width: $bp-sm) {
+            width: 4rem;
+            height: 5.5rem;
+        }
+    }
+
+    &__name {
+        flex: 1;
+        min-width: 0;
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__check {
+        color: $gold;
+        font-size: $fs-md;
+        flex-shrink: 0;
+    }
+}
+
+@keyframes akd-vote-select-pop {
+    0% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(.985);
+        border-color: $gold;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.akd-vote-processing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 18rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity $transition-base, transform $transition-base;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &--visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &__spinner {
+        position: relative;
+        width: 3.25rem;
+        height: 3.25rem;
+        margin-bottom: $space-md;
+    }
+
+    &__spinner-track,
+    &__spinner-progress {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+    }
+
+    &__spinner-track { border: 3px solid rgba($white, 0.08); }
+
+    &__spinner-progress {
+        border: 3px solid transparent;
+        border-top-color: $gold;
+        border-right-color: $gold;
+        transform: rotate(calc(-90deg + var(--processing-progress, 0deg)));
+    }
+
+    &__label {
+        margin: 0;
+        font-size: $fs-sm;
+        color: $white-muted;
+    }
+}
+
+// ==========================================
+// REVIEW
+// Fixed: grid items now get min-width: 0, which is what was letting
+// the nowrap nominee name push each card past its 1fr column and
+// overflow the container. Grid children default to min-width: auto
+// (content-based), so long text ignored the column width entirely.
+// ==========================================
+.akd-vote-review {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity $transition-base, transform $transition-base;
+
+    &--enter {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: 0 0 $space-lg;
+        max-width: 34rem;
+    }
+
+    &__grid {
+        list-style: none;
+        margin: 0 0 $space-lg;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: $space-sm;
+        max-width: 100%;
+
+        @media (max-width: $bp-lg) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+        @media (max-width: $bp-sm) { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    &__item { min-width: 0; }
+
+    &__card {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        width: 100%;
+        min-width: 0;
+        padding: $space-sm;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.02);
+        cursor: pointer;
+        text-align: left;
+        transition: border-color $transition-fast;
+
+        &:hover { border-color: rgba($gold, 0.3); }
+    }
+
+    &__body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__category {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $gold;
+    }
+
+    &__nominee {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        overflow: hidden;
+    }
+
+    &__change {
+        flex-shrink: 0;
+        font-family: $font-mono;
+        font-size: 10px;
+        color: $white-faint;
+    }
+}
+
+// ==========================================
+// SUCCESS
+// ==========================================
+.akd-vote-success {
+    text-align: center;
+    padding: $space-xxl $space-md;
+
+    &__icon {
+        font-size: 2.5rem;
+        color: $gold;
+        margin-bottom: $space-md;
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        max-width: 26rem;
+        margin: 0 auto $space-lg;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: $space-sm;
+    }
+}
+
+// ==========================================
+// DOWNLOADABLE VOTE CARD
+// Off-screen, fixed width, captured by html2canvas. Landscape,
+// two-region composition: compact left-aligned portrait vote grid,
+// spacious gold ANAA identity on the right. The votes column carries
+// slightly less width than the brand column so the grid reads as
+// shifted left, with the freed space feeding the branding side.
+// ==========================================
+.akd-vote-card {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    width: 1200px;
+    padding: 64px;
+    background: $black-soft;
+    font-family: $font-primary;
+    overflow: hidden;
+
+    &__bg {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(55% 65% at 8% 100%, rgba($sakura, 0.24), transparent 60%),
+            radial-gradient(60% 65% at 100% 0%, rgba($gold, 0.3), transparent 55%),
+            radial-gradient(60% 70% at 85% 90%, rgba($accent-ember, 0.18), transparent 60%),
+            radial-gradient(70% 80% at 55% 100%, rgba($accent-violet, 0.18), transparent 65%),
+            linear-gradient(160deg, rgba(18, 16, 19, 0.82) 0%, rgba(10, 10, 12, 0.76) 50%, rgba(18, 16, 19, 0.85) 100%);
+    }
+
+    &__shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(3px);
+        opacity: 0.65;
+    }
+
+    &__shape--tr {
+        top: -90px;
+        right: -70px;
+        width: 380px;
+        height: 380px;
+        background: radial-gradient(circle, rgba($gold, 0.22), transparent 70%);
+    }
+
+    &__shape--bl {
+        bottom: -110px;
+        left: -90px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba($sakura, 0.16), transparent 70%);
+    }
+
+    // Soft backlight sitting behind the branding column so the gold
+    // logo reads as the visual anchor, per spec, without a hard edge.
+    &__shape--mid {
+        top: 50%;
+        right: 14%;
+        width: 480px;
+        height: 480px;
+        transform: translateY(-50%);
+        background: radial-gradient(circle, rgba($gold, 0.18), transparent 65%);
+        opacity: 0.85;
+    }
+
+    &__layout {
+        position: relative;
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        align-items: center;
+        gap: 40px;
+    }
+
+    &__votes { min-width: 0; }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(var(--vote-card-cols, 3), 1fr);
+        gap: 10px;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    // Small, portrait, and fixed regardless of column width, so the
+    // artwork reads as a compact award entry rather than a poster.
+    // Left-aligned within its (stretched) grid cell, so the text below
+    // shares the same left edge as the image above it.
+    &__item-img {
+        width: 132px;
+        height: 154px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid $black-line;
+        background: $black;
+
+        &--fallback {
+            background: linear-gradient(160deg, rgba($gold, 0.22), $black-soft);
+        }
+    }
+
+    &__item-category {
+        font-family: $font-mono;
+        font-size: 9px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__item-nominee {
+        font-size: 12px;
+        font-weight: $fw-semibold;
+        color: $white;
+        margin: 0;
+        line-height: 1.3;
+        max-width: 118px;
+    }
+
+    // Dominant, spacious identity panel: logo, year, "My Votes" only.
+    &__brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 14px;
+        padding: 20px 16px;
+    }
+
+    &__logo {
+        height: 104px;
+        width: auto;
+        margin-bottom: 4px;
+    }
+
+    &__brand-year {
+        font-family: $font-mono;
+        font-size: 16px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__brand-rule {
+        width: 36px;
+        height: 1px;
+        background: rgba($gold, 0.5);
+    }
+
+    &__brand-label {
+        font-size: 32px;
+        font-weight: $fw-bold;
+        font-style: italic;
+        color: $white;
+        margin: 0;
+    }
+}

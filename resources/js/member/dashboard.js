@@ -5,7 +5,7 @@
  */
 const DESKTOP_QUERY = '(min-width: 1024px)'; // keep in sync with $bp-lg in _tokens.scss
 const AUTOPLAY_MS = 5000;
-const DRAG_THRESHOLD = 3; // px of movement before a pointerdown counts as a drag, not a click
+const DRAG_THRESHOLD = 5; // px of movement before a pointerdown counts as a drag, not a click
 
 function initDashboardCarousel(wrap) {
     const track = wrap.querySelector('[data-dash-carousel-track]');
@@ -20,10 +20,12 @@ function initDashboardCarousel(wrap) {
     let slideStep = 0;
     let timer = null;
     let isHovering = false;
+    let pointerIsDown = false;
     let isDragging = false;
     let dragMoved = false;
     let dragStartX = 0;
     let dragStartOffset = 0;
+    let activePointerId = null;
     let resizeTimer = null;
 
     // Derives step size and the real max scrollable distance from the
@@ -92,47 +94,76 @@ function initDashboardCarousel(wrap) {
         }, 150);
     }
 
-    // ---- Drag-to-scroll ----
+        // ---- Drag-to-scroll ----
+    // Three distinct states:
+    //   pointerIsDown -> pressed, but this might still just be a click
+    //   isDragging    -> movement exceeded DRAG_THRESHOLD; a genuine drag is happening
+    //   dragMoved     -> one-shot flag: a genuine drag happened, suppress the next click
     function handlePointerDown(e) {
         if (e.button !== undefined && e.button !== 0) return; // left click / primary touch only
-        isDragging = true;
-        dragMoved = false;
+        pointerIsDown = true;
+        isDragging = false;
         dragStartX = e.clientX;
         dragStartOffset = offset;
-        stop();
-        measure();
-        track.style.transition = 'none';
-        wrap.classList.add('is-dragging');
-        track.setPointerCapture?.(e.pointerId);
+        activePointerId = e.pointerId;
+        // Nothing else happens here on purpose: no transform, no .is-dragging,
+        // no setPointerCapture, no autoplay stop. Until the threshold is
+        // crossed, this is indistinguishable from an ordinary click/press.
     }
 
     function handlePointerMove(e) {
-        if (!isDragging) return;
+        if (!pointerIsDown) return;
+
         const delta = e.clientX - dragStartX;
-        if (Math.abs(delta) > DRAG_THRESHOLD) dragMoved = true;
+
+        if (!isDragging) {
+            if (Math.abs(delta) <= DRAG_THRESHOLD) return; // still just a press
+
+            // Threshold crossed: this is now a genuine drag.
+            isDragging = true;
+            dragMoved = true;
+            stop(); // pause autoplay while actively dragging
+            measure();
+            track.style.transition = 'none';
+            wrap.classList.add('is-dragging');
+            track.setPointerCapture?.(e.pointerId);
+        }
+
         setOffset(dragStartOffset - delta, false);
     }
 
     function handlePointerUp(e) {
-        if (!isDragging) return;
+        if (!pointerIsDown) return;
+        pointerIsDown = false;
+
+        if (!isDragging) {
+            // Never crossed the threshold — an ordinary click/tap.
+            // Leave everything untouched; let the browser's native click fire.
+            activePointerId = null;
+            return;
+        }
+
         isDragging = false;
         wrap.classList.remove('is-dragging');
-        track.releasePointerCapture?.(e.pointerId);
+        if (activePointerId !== null && track.hasPointerCapture?.(activePointerId)) {
+            track.releasePointerCapture(activePointerId);
+        }
+        activePointerId = null;
 
         // Snap to the nearest slide boundary for a clean resting position.
         measure();
-
         const nearest = slideStep > 0
             ? Math.min(Math.round(offset / slideStep) * slideStep, maxOffset) : offset;
-
         setOffset(nearest, true);
         if (!isHovering) play();
     }
 
-    // Swallow the click that follows a drag so releasing the mouse
-    // over a card link doesn't trigger navigation.
+    // Swallow the click that follows a genuine drag so releasing the pointer
+    // over a card link doesn't trigger navigation. One-shot: only fires when
+    // a real drag happened, then resets itself immediately.
     function handleDragClick(e) {
         if (dragMoved) {
+            dragMoved = false;
             e.preventDefault();
             e.stopPropagation();
         }

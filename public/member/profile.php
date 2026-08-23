@@ -218,7 +218,7 @@ $activityGroups = [
             </div>
         </section>
 
-        <!-- AWARDS EARNED (copied from player view) -->
+        <!-- Awards Earned -->
         <section class="akd-player-awards">
             <div class="akd-section-heading">
                 <div class="akd-section-heading__text">
@@ -241,7 +241,83 @@ $activityGroups = [
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+        </section>
 
+        <section class="akd-profile-stats">
+            <div class="akd-section-heading">
+                <div class="akd-section-heading__text">
+                    <h2 class="akd-section-heading__title">Community Statistics</h2>
+                </div>
+            </div>
+
+            <div class="akd-stats-grid">
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-check-square akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['votes_cast'] ?? $stats[0]['value'])) ?></span>
+                        <span class="akd-stat-card__label">Votes Cast</span>
+                    </div>
+                </div>
+
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-comments akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['comments'] ?? 94)) ?></span>
+                        <span class="akd-stat-card__label">Comments</span>
+                    </div>
+                </div>
+
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-images akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['gallery_posts'] ?? 27)) ?></span>
+                        <span class="akd-stat-card__label">Gallery Posts</span>
+                    </div>
+                </div>
+
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-flag-checkered akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['challenges_joined'] ?? 18)) ?></span>
+                        <span class="akd-stat-card__label">Challenges Joined</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="akd-profile-stats">
+            <div class="akd-section-heading">
+                <div class="akd-section-heading__text">
+                    <h2 class="akd-section-heading__title">Trivia Statistics</h2>
+                </div>
+            </div>
+
+            <div class="akd-stats-grid">
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-brain akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['trivia_completed'] ?? 34)) ?></span>
+                        <span class="akd-stat-card__label">Trivia Completed</span>
+                    </div>
+                </div>
+
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-crown akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['trivia_wins'] ?? 21)) ?></span>
+                        <span class="akd-stat-card__label">Trivia Wins</span>
+                    </div>
+                </div>
+
+                <div class="akd-stat-card">
+                    <i class="fa-solid fa-percent akd-stat-card__icon" aria-hidden="true"></i>
+                    <div class="akd-stat-card__body">
+                        <span class="akd-stat-card__value"><?= htmlspecialchars((string) ($user['win_rate_percent'] ?? 92)) ?>%</span>
+                        <span class="akd-stat-card__label">Win Rate</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- SECTION 4 — Activity Timeline -->
         <section class="akd-timeline" style="margin-top: 2.5rem;">

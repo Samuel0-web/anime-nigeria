@@ -284,7 +284,8 @@
     &__overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba($black, 0) 30%, rgba($black, 0.55) 70%, rgba($black, 0.92) 100%);
+        background: linear-gradient(180deg, rgba($black, 0) 30%, rgba($black, 0.55) 70%,
+            rgba($black, 0.92) 100%);
     }
 
     &:hover &__image,
@@ -372,7 +373,9 @@
 
 @keyframes akd-dash-pulse {
     0%   { box-shadow: 0 0 0 0 rgba($accent-crimson, .6); }
+
     70%  { box-shadow: 0 0 0 6px rgba($accent-crimson, 0); }
+    
     100% { box-shadow: 0 0 0 0 rgba($accent-crimson, 0); }
 }
 

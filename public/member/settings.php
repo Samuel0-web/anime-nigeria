@@ -41,26 +41,39 @@ require_once __DIR__ . '/includes/header.php';
         <section class="akd-settings__section" aria-labelledby="settings-preferences-heading">
             <h2 class="akd-settings__section-title" id="settings-preferences-heading">Preferences</h2>
             <div class="akd-settings-group">
-                <div class="akd-settings-row">
-                    <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
+                <div class="akd-settings-row" data-settings-row="language">
+                    <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-language"></i></div>
                     <div class="akd-settings-row__content">
-                        <span class="akd-settings-row__label" id="motif-label">Achievement motif</span>
-                        <p class="akd-settings-row__desc">Show subtle animated effects when you unlock achievements.</p>
+                        <div class="akd-settings-row__top">
+                            <span class="akd-settings-row__label">Language</span>
+                            <span class="akd-settings-row__value" data-language-status-text>English</span>
+                        </div>
+                        <p class="akd-settings-row__desc">Choose the language used throughout Anime Nigeria.</p>
                     </div>
-                    <button type="button" class="akd-switch" role="switch" aria-checked="true" aria-labelledby="motif-label" data-switch="motif">
-                        <span class="akd-switch__track"><span class="akd-switch__thumb"></span></span>
-                    </button>
+                    <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-language-trigger>Change</button>
                 </div>
 
-                <div class="akd-settings-row">
+                <div class="akd-settings-row" data-settings-row="timezone">
+                    <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></div>
+                    <div class="akd-settings-row__content">
+                        <div class="akd-settings-row__top">
+                            <span class="akd-settings-row__label">Time zone</span>
+                            <span class="akd-settings-row__value" data-timezone-status-text>
+                                Africa/Lagos (UTC+01:00)
+                            </span>
+                        </div>
+                        <p class="akd-settings-row__desc">Used for event times, reminders, and other scheduled activities.</p>
+                    </div>
+                    <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-timezone-trigger>Change</button>
+                </div>
+
+                <div class="akd-settings-row" data-settings-row="notifications">
                     <div class="akd-settings-row__icon" aria-hidden="true"><i class="fa-solid fa-bell"></i></div>
                     <div class="akd-settings-row__content">
-                        <span class="akd-settings-row__label" id="reminders-label">Quiz reminders</span>
-                        <p class="akd-settings-row__desc">Get a heads-up before quizzes and events you've joined begin.</p>
+                        <span class="akd-settings-row__label">Notification preferences</span>
+                        <p class="akd-settings-row__desc" data-notifications-summary>All notifications on.</p>
                     </div>
-                    <button type="button" class="akd-switch" role="switch" aria-checked="true" aria-labelledby="reminders-label" data-switch="quiz-reminders">
-                        <span class="akd-switch__track"><span class="akd-switch__thumb"></span></span>
-                    </button>
+                    <button type="button" class="akd-btn akd-btn--secondary akd-settings-row__action" data-notifications-trigger>Manage</button>
                 </div>
 
                 <div class="akd-settings-row" data-settings-row="email">

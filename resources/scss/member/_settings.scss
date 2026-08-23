@@ -67,11 +67,9 @@
     display: flex;
     align-items: center;
     gap: $space-sm;
-    padding: $space-md $space-lg;
+    padding: $space-md $space-md;
 
-    & + & {
-        border-top: 1px solid $black-line;
-    }
+    & + & { border-top: 1px solid $black-line; }
 
     &__icon {
         flex: 0 0 auto;
@@ -86,6 +84,7 @@
         font-size: $fs-base;
 
         &--security { background: $sakura-dim; color: $sakura; }
+
         &--danger   { background: $accent-crimson-dim; color: $accent-crimson; }
     }
 
@@ -105,6 +104,12 @@
     &__label {
         color: $white;
         font-size: $fs-base;
+        font-weight: $fw-semibold;
+    }
+
+    &__value {
+        color: $white-muted;
+        font-size: $fs-sm;
         font-weight: $fw-semibold;
     }
 
@@ -193,11 +198,13 @@
 
     &[aria-checked="true"] {
         .akd-switch__track { background: $sakura; border-color: transparent; }
+
         .akd-switch__thumb { transform: translateX(20px); background: $black-soft; }
     }
 
     &:focus-visible {
         outline: none;
+
         .akd-switch__track {
             box-shadow: 0 0 0 2px $black-soft, 0 0 0 4px rgba($sakura, 0.6);
         }
@@ -214,6 +221,7 @@
         transition: opacity $transition-fast, transform $transition-fast;
 
         &.is-leaving  { opacity: 0; transform: translateX(-8px); }
+
         &.is-entering { opacity: 0; transform: translateX(8px); }
     }
 }
@@ -638,6 +646,190 @@
         color: $white-faint;
         font-size: $fs-xs;
         white-space: nowrap;
+    }
+}
+
+// ============================================================
+// Language (inside modal)
+// ============================================================
+.akd-language-list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+
+    &__option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: $space-sm;
+        background: $input-bg;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        color: $white;
+        font-size: $fs-base;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color $transition-fast, background $transition-fast;
+
+        &:hover {
+            border-color: rgba($sakura, 0.4);
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+        }
+
+        &[aria-pressed="true"] {
+            border-color: $sakura;
+            background: $sakura-dim;
+
+            .akd-language-list__check { opacity: 1; }
+        }
+    }
+
+    &__check {
+        color: $sakura;
+        opacity: 0;
+        transition: opacity $transition-fast;
+    }
+}
+
+// ============================================================
+// Time zone picker (inside modal)
+// ============================================================
+.akd-timezone-picker {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+
+    &__search {
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        i {
+            position: absolute;
+            left: $space-sm;
+            color: $white-faint;
+            font-size: $fs-sm;
+            pointer-events: none;
+        }
+    }
+
+    &__search-input {
+        width: 100%;
+        padding: $space-xs $space-sm $space-xs 40px;
+        background: $input-bg;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        color: $white;
+        font-size: $fs-base;
+        transition: border-color $transition-fast, box-shadow $transition-fast;
+
+        &:focus {
+            outline: none;
+            border-color: $sakura;
+            box-shadow: 0 0 0 3px $sakura-dim;
+        }
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-height: 320px;
+        overflow-y: auto;
+        border: 1px solid $black-line;
+        border-radius: $radius-sm;
+        padding: $space-xxs;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: $black-line transparent;
+
+        // Chrome, Edge, Safari
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: $black-line;
+            border-radius: 999px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background: $white-faint;
+        }
+    }
+
+    &__option {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        width: 100%;
+        padding: $space-xs $space-sm;
+        background: transparent;
+        border: 0;
+        border-radius: $radius-sm;
+        color: $white-muted;
+        font-size: $fs-sm;
+        text-align: left;
+        cursor: pointer;
+        transition: background $transition-fast, color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.06);
+            color: $white;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: -2px;
+        }
+
+        &[hidden] { display: none; }
+
+        &[aria-selected="true"] {
+            background: $sakura-dim;
+            color: $white;
+
+            .akd-timezone-picker__option-check { opacity: 1; }
+        }
+    }
+
+    &__option-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__option-offset {
+        flex: 0 0 auto;
+        color: $white-faint;
+        font-size: $fs-xs;
+        font-family: $font-mono;
+    }
+
+    &__option-check {
+        flex: 0 0 auto;
+        width: 14px;
+        color: $sakura;
+        opacity: 0;
+    }
+
+    &__empty {
+        margin: 0;
+        padding: $space-md 0;
+        color: $white-faint;
+        font-size: $fs-sm;
+        text-align: center;
     }
 }
 

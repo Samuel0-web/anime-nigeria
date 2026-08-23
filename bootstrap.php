@@ -19,7 +19,7 @@ $db = App\Database\Database::connection();
 $mail = new App\Mail\Mail(new App\Mail\SmtpMailer(), $_ENV['APP_URL']);
 $auth = new App\Auth\Auth($db, $mail);
 $auth->boot();
-// Headers::send();
+Headers::send();
 
 define('ROOT_PATH', __DIR__);
 define('PUBLIC_PATH', ROOT_PATH . '/public');

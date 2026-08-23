@@ -122,26 +122,6 @@ function akdBuildPlayerProfile(array $player): array {
     // ---- Challenge participation ----
     $challengesJoined = 2 + akdSeedNumber($username . 'challenges', 10);
 
-    // ---- Recent activity — small deterministic sample, not a full log ----
-    $activityPool = [
-        ['icon' => 'fa-solid fa-check-square', 'title' => 'Voted in the Anime Awards', 'desc' => 'Cast a vote in an ongoing category.'],
-        ['icon' => 'fa-solid fa-brain',        'title' => 'Completed a trivia round',  'desc' => 'Finished a themed trivia set.'],
-        ['icon' => 'fa-solid fa-crown',        'title' => 'Won a trivia challenge',    'desc' => 'Placed first in a weekly trivia challenge.'],
-        ['icon' => 'fa-solid fa-medal',        'title' => 'Earned a new badge',        'desc' => 'Unlocked another achievement.'],
-        ['icon' => 'fa-solid fa-comments',     'title' => 'Joined a discussion',       'desc' => 'Commented in the community feed.'],
-        ['icon' => 'fa-solid fa-images',       'title' => 'Shared fan art',            'desc' => 'Posted to the community gallery.'],
-        ['icon' => 'fa-solid fa-bolt',         'title' => 'Leveled up',                'desc' => "Reached level {$level}."],
-    ];
-    $activityTimePool = ['2 hours ago', 'Yesterday', '3 days ago', '5 days ago', 'Last week'];
-
-    $recentActivity = [];
-    $activityCount = 3 + akdSeedNumber($username . 'activitycount', 2); // 3–4 items
-    for ($i = 0; $i < $activityCount; $i++) {
-        $item = $activityPool[akdSeedNumber($username . 'activity' . $i, count($activityPool))];
-        $item['time'] = $activityTimePool[min($i, count($activityTimePool) - 1)];
-        $recentActivity[] = $item;
-    }
-
     return array_merge($player, [
         'votesCast'       => $votesCast,
         'comments'        => $comments,
@@ -155,6 +135,5 @@ function akdBuildPlayerProfile(array $player): array {
         'highestRank'     => $highestRank,
         'lastActive'      => $lastActive,
         'challengesJoined' => $challengesJoined,
-        'recentActivity'  => $recentActivity,
     ]);
 }

@@ -1,0 +1,481 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// STATUS HEADER
+// Deliberately smaller than the Overview hero — no big artwork,
+// just a gold-tinted card. This is a functional season page.
+// ==========================================
+.akd-award-status {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    padding: $space-xl $space-lg;
+    background:
+        radial-gradient(80% 160% at 15% -10%, rgba($gold, 0.1), transparent 60%),
+        $black-soft;
+
+    @media (max-width: $bp-md) {
+        padding: $space-lg $space-md;
+    }
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        background-image: url('/uploads/noise.png');
+        background-size: 220px;
+        opacity: 0.04;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        max-width: 40rem;
+    }
+
+    &__top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-bottom: $space-md;
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__heading {
+        font-size: clamp(1.75rem, 4vw, $fs-xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0 0 $space-sm;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-lg;
+        max-width: 32rem;
+    }
+
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-lg;
+    }
+
+    &__meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: $space-sm;
+        border-left: 1px solid $black-line;
+
+        &:first-child {
+            padding-left: 0;
+            border-left: none;
+        }
+    }
+
+    &__meta-label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+    }
+
+    &__meta-value {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+    }
+}
+
+// ==========================================
+// ELIGIBILITY
+// ==========================================
+.akd-award-eligibility {
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: $space-md;
+
+        @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+
+        @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+    }
+
+    &__card {
+        padding: $space-md;
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+        background: rgba($white, 0.02);
+    }
+
+    &__label {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0 0 $space-sm;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+
+        li {
+            position: relative;
+            padding-left: $space-sm;
+            font-size: $fs-xs;
+            color: $white-muted;
+            line-height: $lh-snug;
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0.5em;
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: $white-faint;
+            }
+        }
+    }
+}
+
+// Compact category preview used on closed-state Nominations pages.
+// Reuses .akd-award-category from the Overview styles but drops the
+// featured 2-column span so every card reads equally in this context.
+.akd-award-categories--compact {
+    .akd-award-category {
+        min-height: 11rem;
+    }
+
+    .akd-award-category--featured {
+        grid-column: span 1;
+        min-height: 11rem;
+
+        &::before { display: none; }
+    }
+}
+
+// ==========================================
+// NOMINATION WORKSPACE
+// ==========================================
+.akd-nomination-grid {
+    display: grid;
+    grid-template-columns: 16rem 1fr;
+    gap: $space-lg;
+    align-items: start;
+
+    @media (max-width: $bp-lg) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.akd-nomination-categories {
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: $space-xxs;
+
+        @media (max-width: $bp-lg) {
+            flex-direction: row;
+            overflow-x: auto;
+            padding-bottom: $space-xs;
+            scrollbar-width: none;
+
+            &::-webkit-scrollbar { display: none; }
+
+            li { flex: 0 0 auto; }
+        }
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-xs;
+        width: 100%;
+        padding: $space-sm $space-md;
+        border-radius: $radius-md;
+        border: 1px solid transparent;
+        background: transparent;
+        color: $white-muted;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        text-align: left;
+        cursor: pointer;
+        transition: all $transition-fast;
+        white-space: nowrap;
+
+        &:hover {
+            background: rgba($white, 0.04);
+            color: $white;
+        }
+
+        &--active {
+            background: $gold-dim;
+            border-color: rgba($gold, 0.35);
+            color: $gold;
+        }
+
+        &--done {
+            color: $white;
+        }
+
+        i {
+            color: $gold;
+            font-size: $fs-xs;
+        }
+    }
+}
+
+.akd-nomination-panel {
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    background: rgba($white, 0.02);
+    padding: $space-lg;
+    min-height: 22rem;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+
+    @media (max-width: $bp-md) {
+        padding: $space-md;
+    }
+
+    &__search-label {
+        display: block;
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin-bottom: $space-xs;
+    }
+
+    &__search-field {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        padding: 0.75rem 1rem;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: $input-bg;
+
+        i { color: $white-faint; }
+    }
+
+    &__search-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: $white;
+        font-size: $fs-sm;
+        font-family: $font-primary;
+
+        &::placeholder { color: $white-faint; }
+    }
+}
+
+.akd-nomination-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+    max-height: 22rem;
+    overflow-y: auto;
+}
+
+.akd-nomination-result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: $space-sm $space-md;
+    border-radius: $radius-sm;
+    border: 1px solid transparent;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+        background: rgba($gold, 0.06);
+        border-color: rgba($gold, 0.2);
+    }
+
+    &__title {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__subtitle {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+}
+
+.akd-nomination-results__empty {
+    padding: $space-lg $space-sm;
+    text-align: center;
+    color: $white-faint;
+
+    p { margin: 0; }
+
+    &-hint {
+        font-size: $fs-xs;
+        margin-top: $space-xxs !important;
+    }
+}
+
+.akd-nomination-review {
+    &__card {
+        border: 1px solid rgba($gold, 0.3);
+        border-radius: $radius-md;
+        padding: $space-md;
+        background: rgba($gold, 0.04);
+
+        @media (max-width: $bp-md) {
+            position: sticky;
+            bottom: $space-sm;
+        }
+    }
+
+    &__label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 4px;
+    }
+
+    &__category {
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $gold;
+        margin: 0 0 $space-sm;
+    }
+
+    &__entry {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: $space-md;
+    }
+
+    &__entry-title {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__entry-subtitle {
+        font-size: $fs-xs;
+        color: $white-muted;
+    }
+
+    &__note {
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: 0 0 $space-md;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+    }
+}
+
+.akd-nomination-submitted {
+    border-top: 1px solid $black-line;
+    padding-top: $space-lg;
+
+    &__title {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-sm;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-sm;
+        padding: $space-sm $space-md;
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+        background: rgba($white, 0.02);
+    }
+
+    &__category {
+        display: block;
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $gold;
+    }
+
+    &__title {
+        display: block;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-size: $fs-xs;
+        color: $accent-teal;
+        white-space: nowrap;
+    }
+}

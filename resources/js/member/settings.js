@@ -15,6 +15,9 @@ export function initSettingsPage() {
     initToggleSwitches(root);
     init2fa(root, modal, confirmDialog);
     initEmailPreferences(root, modal);
+    initLanguage(root, modal);
+    initTimezone(root, modal);
+    initNotificationPreferences(root, modal);
     initDownloadData(root);
     initDeleteAccount(root, modal, confirmDialog);
 }
@@ -1083,6 +1086,346 @@ function initEmailPreferences(root, modal) {
             summary.textContent = 'Optional emails off. Account emails always on.';
         } else {
             summary.textContent = `${onCount} of ${total} optional email types on. Account emails always on.`;
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// Language
+// ------------------------------------------------------------
+function initLanguage(root, modal) {
+    const row = root.querySelector('[data-settings-row="language"]');
+    if (!row) return;
+    const trigger = row.querySelector('[data-language-trigger]');
+    const statusText = row.querySelector('[data-language-status-text]');
+
+    // Only English exists today. Add more entries here once additional
+    // languages are actually supported — no other code needs to change.
+    const LANGUAGES = [
+        { code: 'en', label: 'English' },
+    ];
+
+    let selectedLanguage = LANGUAGES[0].code;
+
+    trigger.addEventListener('click', () => {
+        modal.open({
+            title: 'Language',
+            subtitle: 'Choose the language used throughout Anime Nigeria.',
+            content: buildContent(),
+            footer: buildFooter(),
+            className: 'akd-modal--language',
+        });
+    });
+
+    function buildContent() {
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-language-list';
+
+        wrap.innerHTML = LANGUAGES.map((lang) => `
+            <button type="button" class="akd-language-list__option" data-language-option="${lang.code}"
+                role="option" aria-pressed="${lang.code === selectedLanguage}">
+                <span class="akd-language-list__label">${lang.label}</span>
+                <i class="fa-solid fa-check akd-language-list__check" aria-hidden="true"></i>
+            </button>
+        `).join('');
+
+        wrap.querySelectorAll('[data-language-option]').forEach((el) => {
+            el.addEventListener('click', () => {
+                selectedLanguage = el.dataset.languageOption;
+
+                wrap.querySelectorAll('[data-language-option]').forEach((opt) => {
+                    opt.setAttribute('aria-pressed', String(opt.dataset.languageOption === selectedLanguage));
+                });
+            });
+        });
+
+        return wrap;
+    }
+
+    function buildFooter() {
+        const fragment = document.createDocumentFragment();
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'akd-btn akd-btn--secondary';
+        cancel.textContent = 'Cancel';
+        cancel.addEventListener('click', () => modal.close());
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'akd-btn akd-btn--primary';
+        save.textContent = 'Save';
+        save.addEventListener('click', () => {
+            modal.close();
+            updateStatus();
+        });
+        fragment.append(cancel, save);
+        return fragment;
+    }
+
+    function updateStatus() {
+        const current = LANGUAGES.find((l) => l.code === selectedLanguage);
+        statusText.textContent = current ? current.label : selectedLanguage;
+    }
+
+    updateStatus();
+}
+
+// ------------------------------------------------------------
+// Time zone
+// ------------------------------------------------------------
+const FALLBACK_TIMEZONES = [
+    'Africa/Lagos', 'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Nairobi',
+    'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+    'America/Sao_Paulo', 'America/Mexico_City', 'America/Toronto',
+    'Asia/Dubai', 'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo', 'Asia/Singapore',
+    'Asia/Seoul', 'Asia/Jakarta',
+    'Australia/Sydney', 'Australia/Perth',
+    'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid',
+    'Europe/Moscow', 'Europe/Istanbul',
+    'Pacific/Auckland', 'Pacific/Honolulu',
+    'UTC',
+];
+
+// Real IANA identifiers, live UTC offsets. Falls back to a short curated
+// list on browsers without Intl.supportedValuesOf (e.g. older Safari).
+function getAllTimezones() {
+    if (typeof Intl.supportedValuesOf === 'function') {
+        try {
+            return Intl.supportedValuesOf('timeZone').slice().sort();
+        } catch {
+            // fall through
+        }
+    }
+
+    return FALLBACK_TIMEZONES.slice().sort();
+}
+
+function formatZoneLabel(zone) {
+    return zone.replace(/_/g, ' ');
+}
+
+function getTimezoneOffsetLabel(timeZone) {
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            timeZoneName: 'longOffset',
+        }).formatToParts(new Date());
+
+        const raw = parts.find((p) => p.type === 'timeZoneName')?.value ?? '';
+        return raw === 'GMT' ? 'UTC+00:00' : raw.replace('GMT', 'UTC');
+    } catch {
+        return '';
+    }
+}
+
+function initTimezone(root, modal) {
+    const row = root.querySelector('[data-settings-row="timezone"]');
+    if (!row) return;
+    const trigger = row.querySelector('[data-timezone-trigger]');
+    const statusText = row.querySelector('[data-timezone-status-text]');
+    const ALL_TIMEZONES = getAllTimezones();
+
+    // TODO: once wired to a real settings system, seed this from the
+    // user's stored timezone (or their detected browser timezone) instead.
+    let currentTimezone = 'Africa/Lagos';
+    let pendingTimezone = currentTimezone;
+
+    trigger.addEventListener('click', () => {
+        pendingTimezone = currentTimezone;
+
+        modal.open({
+            title: 'Time zone',
+            subtitle: 'Used for event times, reminders, and other scheduled activities.',
+            content: buildContent(),
+            footer: buildFooter(),
+            className: 'akd-modal--timezone',
+        });
+
+        wireEvents();
+    });
+
+    function buildOptionRow(zone) {
+        const selected = zone === pendingTimezone;
+
+        return `
+            <button type="button" class="akd-timezone-picker__option" role="option"
+                data-timezone-option="${zone}" aria-selected="${selected}">
+                <span class="akd-timezone-picker__option-name">${formatZoneLabel(zone)}</span>
+                <span class="akd-timezone-picker__option-offset">${getTimezoneOffsetLabel(zone)}</span>
+                <i class="fa-solid fa-check akd-timezone-picker__option-check" aria-hidden="true"></i>
+            </button>
+        `;
+    }
+
+    function getOrderedTimezones(timezones, selectedTimezone) {
+        return [
+            selectedTimezone,
+            ...timezones.filter((zone) => zone !== selectedTimezone),
+        ];
+    }
+
+    function buildContent() {
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-timezone-picker';
+
+        wrap.innerHTML = `
+            <div class="akd-timezone-picker__search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="text" class="akd-timezone-picker__search-input" placeholder="Search timezones…"
+                    data-timezone-search aria-label="Search timezones">
+            </div>
+            <div class="akd-timezone-picker__list" role="listbox" aria-label="Timezones" data-timezone-list>
+                ${getOrderedTimezones(ALL_TIMEZONES, pendingTimezone).map(buildOptionRow).join('')}
+            </div>
+            <p class="akd-timezone-picker__empty" data-timezone-empty hidden>No timezones match your search.</p>
+        `;
+
+        return wrap;
+    }
+
+    function buildFooter() {
+        const fragment = document.createDocumentFragment();
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'akd-btn akd-btn--secondary';
+        cancel.textContent = 'Cancel';
+        cancel.addEventListener('click', () => modal.close());
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'akd-btn akd-btn--primary';
+        save.textContent = 'Save';
+        save.addEventListener('click', () => {
+            currentTimezone = pendingTimezone;
+            modal.close();
+            updateStatus();
+        });
+        fragment.append(cancel, save);
+        return fragment;
+    }
+
+    function wireEvents() {
+        const body = modal.getBody();
+        const list = body.querySelector('[data-timezone-list]');
+        const search = body.querySelector('[data-timezone-search]');
+        const empty = body.querySelector('[data-timezone-empty]');
+
+        list.addEventListener('click', (e) => {
+            const option = e.target.closest('[data-timezone-option]');
+            if (!option) return;
+            pendingTimezone = option.dataset.timezoneOption;
+
+            list.querySelectorAll('[data-timezone-option]').forEach((el) => {
+                el.setAttribute('aria-selected',
+                    String(el.dataset.timezoneOption === pendingTimezone)
+                );
+            });
+        });
+
+        search.addEventListener('input', () => {
+            const query = search.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            list.querySelectorAll('[data-timezone-option]').forEach((el) => {
+                const matches = el.dataset.timezoneOption.toLowerCase().replace(/_/g, ' ').includes(query);
+                el.hidden = !matches;
+                if (matches) visibleCount += 1;
+            });
+
+            empty.hidden = visibleCount !== 0;
+        });
+    }
+
+    function updateStatus() {
+        statusText.textContent = `${formatZoneLabel(currentTimezone)} (${getTimezoneOffsetLabel(currentTimezone)})`;
+    }
+
+    updateStatus();
+}
+
+// ------------------------------------------------------------
+// In-app notification preferences
+// ------------------------------------------------------------
+function initNotificationPreferences(root, modal) {
+    const row = root.querySelector('[data-settings-row="notifications"]');
+    if (!row) return;
+    const trigger = row.querySelector('[data-notifications-trigger]');
+    const summary = row.querySelector('[data-notifications-summary]');
+
+    const prefs = {
+        achievements: true,
+        quizzes: true,
+        challenges: true,
+        communityAwards: true,
+        animeAwards: true,
+    };
+
+    const categories = [
+        { key: 'achievements', label: 'Achievements', desc: 'When you unlock an achievement or move up the leaderboard.' },
+        { key: 'quizzes', label: 'Quizzes', desc: 'Reminders and results for quizzes you have joined.' },
+        { key: 'challenges', label: 'Community Challenges', desc: 'Updates on community challenges you can take part in.' },
+        { key: 'communityAwards', label: 'Community Awards', desc: 'Nominations, voting, and results for community awards.' },
+        { key: 'animeAwards', label: 'Anime Awards', desc: 'Nominations, voting, and results for the anime awards.' },
+    ];
+
+    trigger.addEventListener('click', () => {
+        modal.open({
+            title: 'In-app notification preferences',
+            subtitle: "Choose which in-app notifications you'd like to receive",
+            content: buildContent(),
+            footer: buildFooter(),
+            className: 'akd-modal--notifications',
+        });
+    });
+
+    function buildContent() {
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-email-prefs'; // reuse email-prefs modal styling exactly
+
+        wrap.innerHTML = categories.map(({ key, label, desc }) => `
+            <div class="akd-email-prefs__row">
+                <div>
+                    <span class="akd-email-prefs__label" id="notif-${key}-label">${label}</span>
+                    <p class="akd-email-prefs__desc">${desc}</p>
+                </div>
+                <button type="button" class="akd-switch" role="switch" aria-checked="${prefs[key]}"
+                    aria-labelledby="notif-${key}-label" data-notif-switch="${key}">
+                    <span class="akd-switch__track"><span class="akd-switch__thumb"></span></span>
+                </button>
+            </div>
+        `).join('');
+
+        wrap.querySelectorAll('[data-notif-switch]').forEach((el) => {
+            el.addEventListener('click', () => {
+                const key = el.dataset.notifSwitch;
+                prefs[key] = !prefs[key];
+                el.setAttribute('aria-checked', String(prefs[key]));
+            });
+        });
+
+        return wrap;
+    }
+
+    function buildFooter() {
+        const done = document.createElement('button');
+        done.type = 'button';
+        done.className = 'akd-btn akd-btn--primary';
+        done.textContent = 'Done';
+        done.addEventListener('click', () => {
+            modal.close();
+            updateSummary();
+        });
+        return done;
+    }
+
+    function updateSummary() {
+        const total = categories.length;
+        const onCount = Object.values(prefs).filter(Boolean).length;
+
+        if (onCount === total) {
+            summary.textContent = 'All notifications on.';
+        } else if (onCount === 0) {
+            summary.textContent = 'All notifications off.';
+        } else {
+            summary.textContent = `${onCount} of ${total} notifications on.`;
         }
     }
 }

@@ -1,0 +1,892 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// ACCENT MAP
+// Reuses existing tokens only, no new colors.
+// Gold is the primary Awards identity color and is handled
+// separately below. This map is for per-category decorative variety.
+// ==========================================
+$anaa-accents: (
+    'sakura':  $sakura,
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'crimson': $accent-crimson,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+);
+
+@mixin anaa-art-fallback($color) {
+    background: radial-gradient(120% 140% at 85% 0%, rgba($color, 0.28), transparent 60%),
+        radial-gradient(90% 120% at 0% 100%, rgba($color, 0.14), transparent 55%),
+        $black-soft;
+}
+
+// ==========================================
+// PAGE CONTAINER
+// Reusable gutter system, not scoped to this page only
+// ==========================================
+.akd-award-container {
+    width: 100%;
+    max-width: 77rem;
+    margin-inline: auto;
+    padding-inline: $space-lg;
+
+    @media (max-width: $bp-lg) { padding-inline: $space-md; }
+
+    @media (max-width: $bp-sm) { padding-inline: $space-sm; }
+}
+
+.akd-anaa {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxl;
+    padding-block: $space-lg $space-xxl;
+}
+
+// ==========================================
+// SHARED SECTION HEADER
+// Title sits directly above its description on every breakpoint.
+// An optional link (Previous Winners) sits to the side of that
+// stacked block rather than beside the description itself.
+// ==========================================
+.akd-award-section {
+    &__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: $space-lg;
+        margin-bottom: $space-lg;
+
+        @media (max-width: $bp-md) {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: $space-sm;
+        }
+    }
+
+    &__heading-group {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+        max-width: 36rem;
+    }
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-faint;
+        line-height: $lh-relaxed;
+        margin: 0;
+        max-width: 34rem;
+    }
+
+    &__link {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $white-muted;
+        text-decoration: none;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        padding-top: 6px;
+        transition: color $transition-fast;
+
+        &:hover { color: $gold; }
+    }
+}
+
+// ==========================================
+// BUTTONS
+// Gold is the primary Awards color. Restrained, not neon: dark
+// shadow blended with a soft gold tone, no glowing borders.
+// ==========================================
+.akd-award-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-xs;
+    padding: 0.9rem 1.75rem;
+    border-radius: $radius-full;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform $transition-fast, box-shadow $transition-fast,
+        background $transition-fast, border-color $transition-fast;
+
+    &--primary {
+        color: $black;
+        background: linear-gradient(135deg, color.adjust($gold, $lightness: 10%), $gold);
+        box-shadow: 0 8px 20px rgba($gold, 0.18);
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba($gold, 0.24);
+        }
+    }
+
+    &--ghost {
+        color: $white;
+        background: rgba($white, 0.04);
+        border: 1px solid rgba($white, 0.16);
+
+        &:hover {
+            background: rgba($white, 0.08);
+            border-color: rgba($gold, 0.4);
+        }
+    }
+
+    &--lg {
+        padding: 1.1rem 2.25rem;
+        font-size: $fs-base;
+    }
+}
+
+// ==========================================
+// HERO
+// One unified composition: artwork blends into the background
+// rather than sitting as a separate card beside the text.
+// ==========================================
+.akd-award-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    min-height: 36rem;
+    display: flex;
+    align-items: flex-end;
+    background: $black-soft;
+
+    @media (max-width: $bp-lg) { min-height: 32rem; }
+
+    &__art {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+
+    &__art-img {
+        position: absolute;
+        top: 0;
+        right: -2%;
+        height: 100%;
+        width: 52%;
+        object-fit: cover;
+        object-position: top;
+        opacity: 0.85;
+
+        @media (max-width: $bp-lg) {
+            width: 100%;
+            right: 0;
+            opacity: 0.3;
+        }
+    }
+
+    &__art-fade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, $black-soft 0%, rgba($black-soft, 0.92) 32%,
+            rgba($black-soft, 0.35) 58%, transparent 82%),
+            linear-gradient(0deg, $black-soft 0%, rgba($black-soft, 0.15) 42%,
+                transparent 72%);
+
+        @media (max-width: $bp-lg) {
+            background: linear-gradient(0deg, $black-soft 12%, rgba($black-soft, 0.6) 55%,
+                rgba($black-soft, 0.8) 100%);
+        }
+    }
+
+    &__art-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(45% 55% at 46% 65%, rgba($gold, 0.14),
+            transparent 70%);
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        background-image: url('/uploads/noise.png');
+        background-size: 220px;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        padding: $space-xxl $space-xl;
+        max-width: 36rem;
+
+        @media (max-width: $bp-md) { padding: $space-lg $space-md; }
+    }
+
+    &__top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-bottom: $space-md;
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px 5px 10px;
+        border-radius: $radius-full;
+        border: 1px solid rgba($gold, 0.35);
+        background: rgba($gold, 0.08);
+        color: $gold;
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    &__badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $gold;
+    }
+
+    &__badge--voting &__badge-dot,
+    &__badge--nominations &__badge-dot {
+        animation: anaa-pulse-gold 2.2s ease-out infinite;
+    }
+
+    &__badge--coming_soon {
+        border-color: $black-line;
+        background: rgba($white, 0.03);
+        color: $white-muted;
+    }
+
+    &__badge--coming_soon &__badge-dot { background: $white-faint; }
+
+    &__headline {
+        font-size: clamp(2.75rem, 6vw, $fs-4xl);
+        font-weight: $fw-bold;
+        line-height: $lh-tight;
+        color: $white;
+        margin: 0 0 $space-sm;
+        letter-spacing: -0.01em;
+    }
+
+    &__desc {
+        font-size: $fs-base;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-lg;
+        max-width: 28rem;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-bottom: $space-lg;
+    }
+
+    &__stats {
+        display: flex;
+        gap: $space-lg;
+        margin: 0;
+
+        @media (max-width: $bp-sm) { gap: $space-md; }
+    }
+
+    &__stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: $space-sm;
+        border-left: 1px solid $black-line;
+
+        &:first-child {
+            padding-left: 0;
+            border-left: none;
+        }
+
+        dt {
+            font-family: $font-mono;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: $white-faint;
+        }
+
+        dd {
+            margin: 0;
+            font-size: $fs-lg;
+            font-weight: $fw-bold;
+            color: $white;
+        }
+    }
+}
+
+@keyframes anaa-pulse-gold {
+    0%   { box-shadow: 0 0 0 0 rgba($gold, 0.55); }
+
+    70%  { box-shadow: 0 0 0 7px rgba($gold, 0); }
+
+    100% { box-shadow: 0 0 0 0 rgba($gold, 0); }
+}
+
+// ==========================================
+// TIMELINE
+// ==========================================
+.akd-award-timeline {
+    &__list {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: $space-md $space-lg;
+        background: rgba($white, 0.02);
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+
+        @media (max-width: $bp-md) {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: $space-md;
+        }
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        flex: 1;
+        position: relative;
+
+        &:not(:last-child)::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: $black-line;
+            margin: 0 $space-md;
+
+            @media (max-width: $bp-md) { display: none; }
+        }
+    }
+
+    &__marker {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        font-size: 11px;
+    }
+
+    &__item--closed &__marker {
+        background: rgba($white, 0.06);
+        color: $white-muted;
+    }
+
+    &__item--open &__marker { background: $gold-dim; }
+
+    &__item--available &__marker {
+        background: $gold;
+        color: $black;
+    }
+
+    &__item--upcoming &__marker { border: 1px solid $black-line; }
+
+    &__pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: $gold;
+        animation: anaa-pulse-gold 2.2s ease-out infinite;
+    }
+
+    &__ring {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 1px solid $white-faint;
+    }
+
+    &__label {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__state {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin-left: $space-xxs;
+    }
+
+    &__item--open &__state,
+    &__item--available &__state {
+        color: $gold;
+    }
+}
+
+// ==========================================
+// CATEGORIES
+// ==========================================
+.akd-award-categories {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: $bp-md) { grid-template-columns: 1fr; }
+}
+
+.akd-award-category {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    min-height: 15rem;
+    text-decoration: none;
+    isolation: isolate;
+    transition: transform $transition-base, border-color $transition-fast;
+
+    &:hover {
+        transform: translateY(-4px);
+        border-color: rgba($white, 0.18);
+    }
+
+    &:hover &__img { transform: scale(1.05); }
+
+    &--featured {
+        grid-column: span 2;
+        min-height: 20rem;
+
+        @media (max-width: $bp-md) {
+            grid-column: span 1;
+            min-height: 16rem;
+        }
+
+        &::before {
+            content: 'Featured';
+            position: absolute;
+            top: $space-sm;
+            left: $space-sm;
+            z-index: 2;
+            font-family: $font-mono;
+            font-size: 10px;
+            font-weight: $fw-semibold;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: $black;
+            background: $gold;
+            padding: 4px 10px;
+            border-radius: $radius-full;
+        }
+    }
+
+    &--disabled {
+        cursor: default;
+        opacity: 0.55;
+
+        &:hover {
+            transform: none;
+            border-color: $black-line;
+        }
+
+        &:hover .akd-award-category__img { transform: none; }
+    }
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+        transition: transform 0.6s $ease-standard;
+    }
+
+    &__gradient {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+    }
+
+    &__body {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: $space-xxs;
+        padding: $space-md;
+        width: 100%;
+    }
+
+    &__count {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    &__name {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__blurb {
+        font-size: $fs-xs;
+        color: $white-muted;
+        max-width: 22rem;
+    }
+
+    &__link {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        margin-top: $space-xs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $white;
+        opacity: 0.8;
+        transition: gap $transition-fast, opacity $transition-fast;
+    }
+
+    &:hover &__link {
+        gap: 0.5rem;
+        opacity: 1;
+    }
+
+    @each $name, $color in $anaa-accents {
+        &--#{$name} {
+            .akd-award-category__gradient { @include anaa-art-fallback($color); }
+
+            .akd-award-category__count { color: $color; }
+        }
+
+        // When real art is present, keep the gradient as an overlay instead of a full
+        // fallback.
+        &--#{$name}:has(.akd-award-category__img) .akd-award-category__gradient {
+            background: linear-gradient(0deg, rgba($black-soft, 0.95) 10%,
+                rgba($black-soft, 0.2) 55%, rgba($black-soft, 0.55) 100%),
+                linear-gradient(90deg, rgba($black-soft, 0.5), transparent 50%);
+        }
+    }
+}
+
+// ==========================================
+// NOMINEE RAIL
+// ==========================================
+.akd-award-rail-wrap { position: relative; }
+
+.akd-award-rail {
+    display: flex;
+    gap: $space-md;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 $space-xs;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+}
+
+.akd-award-rail__item {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    width: 15.5rem;
+
+    @media (max-width: $bp-sm) { width: 13rem; }
+}
+
+// Nominee rails bleed to the edge on smaller screens for an
+// edge-to-edge feel, matching the container's own gutter steps.
+@media (max-width: $bp-lg) {
+    .akd-award-section--rail .akd-award-rail-wrap { margin-inline: -$space-md; }
+
+    .akd-award-rail { padding-inline: $space-md; }
+}
+
+@media (max-width: $bp-sm) {
+    .akd-award-section--rail .akd-award-rail-wrap { margin-inline: -$space-sm; }
+
+    .akd-award-rail { padding-inline: $space-sm; }
+}
+
+.akd-award-nominee {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    border-radius: $radius-md;
+    border: 1px solid $black-line;
+    height: 20rem;
+    text-decoration: none;
+    isolation: isolate;
+    transition: transform $transition-base, border-color $transition-fast;
+
+    // Not a link. Hover reads as "artwork responding", not "click here" —
+    // no lift, only the image itself moves.
+    &:hover {
+        border-color: rgba($white, 0.16);
+    }
+
+    &:hover &__img { transform: scale(1.06); }
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+        transition: transform 0.6s $ease-standard;
+    }
+
+    &__gradient {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+    }
+
+    &__category {
+        position: relative;
+        z-index: 1;
+        margin: $space-sm $space-sm 0;
+        align-self: flex-start;
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: $radius-full;
+        background: rgba($black, 0.5);
+        color: $white;
+    }
+
+    &__body {
+        position: relative;
+        z-index: 1;
+        padding: $space-sm;
+    }
+
+    &__title {
+        display: block;
+        font-size: $fs-base;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-snug;
+    }
+
+    &__subtitle {
+        display: block;
+        font-size: $fs-xs;
+        color: $white-muted;
+        margin-top: 2px;
+    }
+
+    @each $name, $color in $anaa-accents {
+        &--#{$name} .akd-award-nominee__gradient {
+            @include anaa-art-fallback($color);
+        }
+
+        &--#{$name}:has(.akd-award-nominee__img) .akd-award-nominee__gradient {
+            background: linear-gradient(0deg, rgba($black-soft, 0.95) 15%,
+                rgba($black-soft, 0.1) 60%);
+        }
+    }
+}
+
+.akd-award-rail-nav {
+    position: absolute;
+    top: 40%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba($black-soft, 0.85);
+    border: 1px solid $black-line;
+    color: $white-muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover { color: $white; border-color: rgba($gold, 0.35); }
+
+    &--prev { left: -12px; }
+
+    &--next { right: -12px; }
+
+    &[disabled] {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    @media (max-width: $bp-md) { display: none; }
+}
+
+// ==========================================
+// VOTING / PHASE CTA
+// ==========================================
+.akd-award-cta {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    padding: $space-xl $space-lg;
+    text-align: center;
+    background: radial-gradient(70% 140% at 50% -20%, rgba($gold, 0.16), transparent 60%),
+        radial-gradient(60% 120% at 100% 120%, rgba($gold, 0.08), transparent 55%),
+        $black-soft;
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        background-image: url('/uploads/noise.png');
+        background-size: 220px;
+        opacity: 0.04;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        max-width: 34rem;
+        margin: 0 auto;
+    }
+
+    &__heading {
+        font-size: clamp(1.75rem, 4vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-sm;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-lg;
+    }
+}
+
+// ==========================================
+// PREVIOUS WINNERS
+// ==========================================
+.akd-award-winners {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+}
+
+.akd-award-winner {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-md;
+    border: 1px solid $black-line;
+    min-height: 12rem;
+    padding: $space-sm;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    isolation: isolate;
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+    }
+
+    &__gradient {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+    }
+
+    &__icon {
+        position: absolute;
+        top: $space-sm;
+        right: $space-sm;
+        font-size: $fs-sm;
+        color: rgba($gold, 0.7);
+    }
+
+    &__category {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    &__title {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+        line-height: $lh-snug;
+    }
+
+    @each $name, $color in $anaa-accents {
+        &--#{$name} .akd-award-winner__gradient { @include anaa-art-fallback($color); }
+
+        &--#{$name}:has(.akd-award-winner__img) .akd-award-winner__gradient {
+            background: linear-gradient(0deg, rgba($black-soft, 0.9) 20%,
+                transparent 70%);
+        }
+
+        &--#{$name} .akd-award-winner__category { color: $color; }
+    }
+}

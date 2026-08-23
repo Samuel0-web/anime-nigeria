@@ -36,11 +36,11 @@ $navGroups = [
     'Main' => [
         ['label' => 'Dashboard', 'icon' => 'fa-solid fa-house', 'url' => '/dashboard'],
         [
-            'label' => 'Anime Awards',
+            'label' => 'Anime Awards (ANAA)',
             'icon' => 'fa-solid fa-trophy',
             'url' => null,
             'children' => [
-                ['label' => 'Overview', 'url' => '/member/awards'],
+                ['label' => 'Overview', 'url' => '/member/awards/overview'],
                 ['label' => 'Nominations', 'url' => '/member/awards/nominations'],
                 ['label' => 'Voting', 'url' => '/member/awards/voting'],
                 ['label' => 'Winners', 'url' => '/member/awards/winners'],
@@ -58,7 +58,7 @@ $navGroups = [
             'children' => [
                 ['label' => 'Challenges', 'url' => '/member/community/challenges'],
                 [
-                    'label' => 'Community Awards',
+                    'label' => 'Community Awards (ANCA)',
                     'url' => null,
                     'children' => [
                         ['label' => 'Overview', 'url' => '/member/community/awards'],

@@ -282,6 +282,10 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         pointer-events: auto;
     }
 
+    &.is-dragging {
+        transition: none !important;
+    }
+
     @media (min-width: $bp-lg) {
         display: none;
     }
@@ -316,8 +320,11 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         transform: translateX(-100%);
         transition: transform 0.35s cubic-bezier(.22, 1, .36, 1);
 
-        &.is-open {
-            transform: translateX(0);
+        &.is-open { transform: translateX(0); }
+
+        &.is-dragging {
+            transition: none !important;
+            will-change: transform;
         }
     }
 
@@ -627,6 +634,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     &__link--parent.akd-sidebar__expand-btn {
         width: 100%;
         background: transparent;
+        margin-bottom: $space-xxs;
         border: none;
         font: inherit;
         cursor: pointer;
@@ -696,7 +704,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 // ==========================================
 .akd-content {
     flex: 1;
-    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md + $space-sm;
+    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md;
     margin-left: $sidebar-width + $content-margin + $space-xs;
     background-color: transparent;
     padding: 0;
