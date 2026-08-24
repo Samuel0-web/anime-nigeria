@@ -37,13 +37,19 @@ class RateLimiter {
             'block' => 300,
         ],
 
-        'two_factor' => [
-            'max' => 5,
-            'window' => 900,
-            'block' => 900,
+        'resend_verification' => [
+            'max' => 3,
+            'window' => 3600,
+            'block' => 3600,
         ],
 
-        'two_factor_recovery' => [
+        'resend_password_reset' => [
+            'max' => 3,
+            'window' => 3600,
+            'block' => 3600,
+        ],
+
+        'two_factor' => [
             'max' => 5,
             'window' => 900,
             'block' => 900,

@@ -6,6 +6,9 @@ use App\Models\User;
 use App\Auth\RememberMe;
 use App\Models\PasswordResetToken;
 use App\Models\TwoFactorAuth;
+use App\Models\LoginSession;
+use App\Security\Device;
+use App\Security\DeviceIdentifier;
 use App\Services\RateLimiter;
 use App\Services\TwoFactorService;
 use PDO;
@@ -16,6 +19,7 @@ class Auth {
     // =========================================================================
     private const PASSWORD_RESET_RESEND_AFTER = 60;
     private const VERIFICATION_RESEND_AFTER = 60;
+    private const LOGIN_SESSION_TOUCH_INTERVAL = 300; // 5 minutes
 
     // =========================================================================
     // PROPERTIES
@@ -26,6 +30,7 @@ class Auth {
     private RememberMe $rememberMe;
     private PasswordResetToken $passwordResetTokens;
     private RateLimiter $rateLimiter;
+    private LoginSession $loginSessions;
     private TwoFactorAuth $twoFactorAuth;
     private TwoFactorService $twoFactorService;
     
@@ -43,6 +48,7 @@ class Auth {
         $this->rememberMe = new RememberMe($db);
         $this->passwordResetTokens = new PasswordResetToken($db);
         $this->rateLimiter = new RateLimiter($db);
+        $this->loginSessions = new LoginSession($db);
         $this->twoFactorAuth = new TwoFactorAuth($db);
         $this->twoFactorService = new TwoFactorService($this->twoFactorAuth, $this->rateLimiter);
     }
@@ -50,7 +56,6 @@ class Auth {
     // =========================================================================
     // PUBLIC API - State & Error Handling
     // =========================================================================
-    
     public function meta(): array {
         return $this->meta;
     }
@@ -74,13 +79,191 @@ class Auth {
     // =========================================================================
     // PUBLIC API - Authentication State
     // =========================================================================
-    
     public function boot(): void {
-        $this->rememberMe->loginFromCookie();
+        // Existing PHP session is already available.
+        if (isset($_SESSION['user_id'])) {
+            return;
+        }
+
+        $remembered = $this->rememberMe->loginFromCookie();
+
+        if ($remembered === null) {
+            return;
+        }
+
+        $user = $this->users->findById($remembered['user_id']);
+
+        if ($user === false) {
+            $this->rememberMe->forget();
+            return;
+        }
+
+        try {
+            $this->establishAuthenticatedSession($user);
+            $this->users->updateLastLogin((int) $user['id']);
+        } catch (\Throwable) {
+            $this->rememberMe->forget();
+            unset($_SESSION['user_id'], $_SESSION['role']);
+            throw new \RuntimeException('Unable to restore authenticated session.');
+        }
     }
 
     public function check(): bool {
-        return isset($_SESSION['user_id']);
+        if (!isset($_SESSION['user_id'])) {
+            return false;
+        }
+
+        $sessionId = session_id();
+
+        if ($sessionId === '') {
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        $sessionIdHash = hash('sha256', $sessionId);
+        $loginSession = $this->loginSessions->findBySessionHash($sessionIdHash);
+
+        /*
+        * The PHP session exists, but there is no corresponding
+        * persistent login-session record.
+        */
+        if ($loginSession === false) {
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        /*
+        * Make sure the persistent session belongs to the same user
+        * as the PHP authentication session.
+        */
+        if ((int) $loginSession['user_id'] !== (int) $_SESSION['user_id']) {
+            $this->loginSessions->revoke((int) $loginSession['id'],
+                (int) $_SESSION['user_id']
+            );
+
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        /*
+        * A session that has been explicitly revoked is no longer valid.
+        */
+        if ($loginSession['revoked_at'] !== null) {
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        /*
+        * Check the user's current authentication-session version.
+        *
+        * Incrementing auth_session_version invalidates all existing
+        * authenticated sessions whose stored version is older.
+        */
+        $user = $this->users->findById((int) $_SESSION['user_id']);
+
+        if ($user === false) {
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        $currentAuthSessionVersion = (int) ($user['auth_session_version'] ?? 1);
+        $loginSessionVersion = (int) ($loginSession['auth_session_version'] ?? 1);
+
+        if ($loginSessionVersion !== $currentAuthSessionVersion) {
+            $this->loginSessions->revoke((int) $loginSession['id'],
+                (int) $_SESSION['user_id']
+            );
+
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        /*
+        * The session is valid.
+        *
+        * Do not write activity information to the database on every
+        * authenticated request. Only touch the persistent session
+        * when the previous activity update is old enough.
+        */
+        $lastActivityAt = $loginSession['last_activity_at'] ?? null;
+
+        $shouldTouch = $lastActivityAt === null
+            || strtotime($lastActivityAt) <= time() - self::LOGIN_SESSION_TOUCH_INTERVAL;
+
+        if ($shouldTouch) {
+            $this->loginSessions->touch((int) $loginSession['id']);
+        }
+
+        return true;
+    }
+
+    /**
+     * Remove the authenticated state from the current PHP session.
+     *
+     * This does NOT destroy the PHP session itself.
+     *
+     * Other session data, such as registration, verification,
+     * password-reset, or pending authentication state, remains intact.
+     */
+    private function clearAuthenticatedState(): void {
+        unset($_SESSION['user_id'], $_SESSION['role']);
+    }
+
+    /**
+     * Create the authenticated PHP session and its persistent
+     * login-session record.
+     */
+    private function establishAuthenticatedSession(array $user): void {
+        /*
+        * Always create a fresh PHP session identifier after
+        * authentication succeeds.
+        */
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int) $user['id'];
+        $_SESSION['role'] = $user['role'];
+
+        /*
+    * Detect the device/browser from the current request.
+    */
+    $device = Device::detect();
+
+    /*
+    * Get the stable device identifier stored in the browser cookie.
+    *
+    * The raw identifier never goes into the database.
+    */
+    $deviceIdentifier = DeviceIdentifier::get();
+    $deviceIdentifierHash = DeviceIdentifier::hash($deviceIdentifier);
+
+    /*
+    * Never store the raw PHP session ID.
+    */
+    $sessionIdHash = hash('sha256', session_id());
+
+        /*
+        * Create the persistent login-session record.
+        */
+        $loginSessionId = $this->loginSessions->create([
+            'user_id'                => (int) $user['id'],
+            'session_id_hash'        => $sessionIdHash,
+            'device_identifier_hash' => $deviceIdentifierHash,
+            'auth_session_version'   => (int) ($user['auth_session_version'] ?? 1),
+            'device_type'            => $device['device_type'] ?? null,
+            'brand'                  => $device['brand'] ?? null,
+            'model'                  => $device['model'] ?? null,
+            'os'                     => $device['os'] ?? null,
+            'os_version'             => $device['os_version'] ?? null,
+            'browser'                => $device['browser'] ?? null,
+            'browser_version'        => $device['browser_version'] ?? null,
+            'is_bot'                 => !empty($device['is_bot']),
+            'ip_address'             => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent'             => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        if ($loginSessionId === false) {
+            unset($_SESSION['user_id'], $_SESSION['role']);
+            throw new \RuntimeException('Unable to create authenticated login session.');
+        }
     }
 
     public function guest(): bool {
@@ -99,6 +282,25 @@ class Auth {
         }
         
         return $this->users->findById($id) ?: null;
+    }
+
+    /**
+     * Get the persistent login-session record for the current PHP session.
+     */
+    public function currentLoginSession(): ?array {
+        if ($this->guest()) {
+            return null;
+        }
+
+        $sessionId = session_id();
+
+        if ($sessionId === '') {
+            return null;
+        }
+
+        $sessionIdHash = hash('sha256', $sessionId);
+        $session = $this->loginSessions->findBySessionHash($sessionIdHash);
+        return $session ?: null;
     }
 
     /**
@@ -221,8 +423,38 @@ class Auth {
         return true;
     }
 
-    public function completeRegistration(int $userId, string $username): bool {
+    public function completeRegistration(string $username): array|false {
+        $this->resetState();
+        $userId = $this->pendingUsernameUserId();
+
+        if ($userId === null) {
+            $this->errorType = 'auth';
+            $this->addError('general',
+                'Your registration session is invalid or has expired.'
+            );
+
+            return false;
+        }
+
         if (!$this->checkUsername($username)) {
+            return false;
+        }
+
+        $user = $this->users->findById($userId);
+
+        if ($user === false) {
+            unset($_SESSION['pending_username_user_id']);
+            $this->addError('general', 'Unable to complete your registration.');
+            return false;
+        }
+
+        if (!empty($user['username'])) {
+            unset($_SESSION['pending_username_user_id']);
+
+            $this->addError('general',
+                'Your registration has already been completed.'
+            );
+
             return false;
         }
 
@@ -231,16 +463,28 @@ class Auth {
             return false;
         }
 
+        $user = $this->users->findById($userId);
+
+        if ($user === false) {
+            $this->addError('general', 'Unable to complete your registration.');
+            return false;
+        }
+
         unset($_SESSION['pending_username_user_id']);
-        $_SESSION['user_id'] = $userId;
-        session_regenerate_id(true);
-        return true;
+        return $this->authenticateUser($user, true);
+    }
+
+    private function pendingUsernameUserId(): ?int {
+        if (!isset($_SESSION['pending_username_user_id'])) {
+            return null;
+        }
+
+        return (int) $_SESSION['pending_username_user_id'];
     }
 
     // =========================================================================
     // PUBLIC API - Email Verification
     // =========================================================================
-    
     public function verifyEmail(string $token): array|false {
         $this->errors = [];
         $this->errorType = 'auth';
@@ -350,7 +594,22 @@ class Auth {
         }
 
         // Check username completion
+        return $this->authenticateUser($user, $remember);
+    }
+
+    /**
+     * Begin authentication for an already-verified user.
+     *
+     * This is used by authentication providers such as Google after
+     * the provider has successfully authenticated the user.
+     *
+     * The user is not considered fully authenticated until:
+     * - username completion is finished, if required
+     * - 2FA is completed, if enabled
+     */
+    public function authenticateUser(array $user, bool $remember = false): array {
         if (empty($user['username'])) {
+            session_regenerate_id(true);
             $_SESSION['pending_username_user_id'] = (int) $user['id'];
 
             return [
@@ -358,29 +617,17 @@ class Auth {
             ];
         }
 
-        /*
-        * Password authentication has succeeded at this point.
-        *
-        * Do NOT create the authenticated session yet.
-        * If 2FA is enabled, the user must complete the second factor first.
-        */
         if ($this->twoFactorAuth->isEnabled((int) $user['id'])) {
+            session_regenerate_id(true);
             $_SESSION['pending_2fa_user_id'] = (int) $user['id'];
             $_SESSION['pending_2fa_remember'] = $remember;
-
-            /*
-            * Store only the fact that password authentication succeeded.
-            * Do not store the password itself.
-            */
             $_SESSION['pending_2fa_started_at'] = time();
-            $this->rateLimiter->clear('login');
 
             return [
                 'redirect' => '/auth/2fa',
             ];
         }
 
-        // No 2FA: complete login normally.
         return $this->completeLogin($user, $remember);
     }
 
@@ -409,6 +656,11 @@ class Auth {
     public function verifyTwoFactor(string $code): array|false {
         $this->resetState();
         $this->errorType = 'auth';
+
+        if ($this->isRateLimited('two_factor')) {
+            return false;
+        }
+
         $userId = $this->pendingTwoFactorUserId();
 
         if ($userId === null) {
@@ -458,10 +710,12 @@ class Auth {
         }
 
         if (!$this->twoFactorService->verifyCode($setup['secret'], $code)) {
+            $this->rateLimiter->hit('two_factor');
             $this->addError('code', 'Invalid authentication code.');
             return false;
         }
 
+        $this->rateLimiter->clear('two_factor');
         return $this->completePendingTwoFactorLogin();
     }
 
@@ -472,6 +726,11 @@ class Auth {
     public function verifyTwoFactorRecoveryCode(string $code): array|false {
         $this->resetState();
         $this->errorType = 'auth';
+
+        if ($this->isRateLimited('two_factor')) {
+            return false;
+        }
+
         $userId = $this->pendingTwoFactorUserId();
 
         if ($userId === null) {
@@ -510,6 +769,7 @@ class Auth {
         $remainingCodes = $this->twoFactorService->verifyRecoveryCode($code, $storedCodes);
 
         if ($remainingCodes === false) {
+            $this->rateLimiter->hit('two_factor');
             $this->addError('code', 'Invalid recovery code.');
             return false;
         }
@@ -521,10 +781,7 @@ class Auth {
             return false;
         }
 
-        /*
-        * A recovery code is single-use.
-        * Once successfully consumed, finish authentication normally.
-        */
+        $this->rateLimiter->clear('two_factor');
         return $this->completePendingTwoFactorLogin();
     }
 
@@ -560,12 +817,18 @@ class Auth {
         );
     }
 
-    public function logout(): void {
-        $this->rememberMe->forget();
+    /**
+     * Completely destroy the current PHP session.
+     *
+     * Unlike clearAuthenticatedState(), this removes all session
+     * data and destroys the server-side PHP session itself.
+     */
+    private function destroyPhpSession(): void {
         $_SESSION = [];
 
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
+
             setcookie(session_name(), '',
                 [
                     'expires' => time() - 3600,
@@ -579,6 +842,39 @@ class Auth {
         }
 
         session_destroy();
+    }
+
+    public function logout(): void {
+        /*
+        * Revoke the persistent login-session record first.
+        *
+        * This invalidates the current authenticated device/session
+        * at the application level.
+        */
+        $currentSession = $this->currentLoginSession();
+
+        if ($currentSession !== null) {
+            $userId = $this->id();
+
+            if ($userId !== null) {
+                $this->loginSessions->revoke((int) $currentSession['id'], $userId);
+            }
+        }
+
+        /*
+        * Remove the remember-me credential so this browser cannot
+        * automatically authenticate again from the remember-me cookie.
+        */
+        $this->rememberMe->forget();
+
+        /*
+        * Finally, completely destroy the PHP session.
+        *
+        * This is intentionally different from clearAuthenticatedState().
+        * Logout means we want to remove ALL session state, not merely
+        * the authenticated user identity.
+        */
+        $this->destroyPhpSession();
     }
 
     // =========================================================================
@@ -886,14 +1182,12 @@ class Auth {
     }
 
     private function completeLogin(array $user, bool $remember): array {
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
+        $this->establishAuthenticatedSession($user);
         $this->users->updateLastLogin((int) $user['id']);
         $this->rateLimiter->clear('login');
 
         if ($remember) {
-            $this->rememberMe->create((int)$user['id']);
+            $this->rememberMe->create((int) $user['id']);
         }
 
         return [
@@ -907,11 +1201,17 @@ class Auth {
     
     private function executePasswordReset(int $userId, int $recordId, string $password): bool {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        
         $this->db->beginTransaction();
+
         try {
             if (!$this->users->updatePassword($userId, $hash)) {
                 throw new \RuntimeException('Unable to update password.');
+            }
+
+            if (!$this->users->incrementAuthSessionVersion($userId)) {
+                throw new \RuntimeException(
+                    'Unable to invalidate existing authentication sessions.'
+                );
             }
 
             $this->passwordResetTokens->delete($recordId);
@@ -923,6 +1223,7 @@ class Auth {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
+
             throw $e;
         }
     }
@@ -930,7 +1231,7 @@ class Auth {
     // =========================================================================
     // PRIVATE - Utilities
     // =========================================================================
-    
+
     private function getDashboardRedirect(array $user): string {
         return match ($user['role']) {
             'admin', 'moderator' => '/home',

@@ -47,7 +47,27 @@ class TwoFactorAuth {
      * verifies their authenticator code.
      */
     public function create(int $userId, string $secret, string $setupExpiresAt): bool {
-        $stmt = $this->db->prepare("INSERT INTO two_factor_auth (
+        $existing = $this->findByUserId($userId);
+
+        if ($existing !== false && $existing['enabled_at'] !== null) {
+            return false;
+        }
+
+        if ($existing !== false) {
+            $stmt = $this->db->prepare("UPDATE two_factor_auth SET secret = :secret,
+                setup_expires_at = :setup_expires_at, recovery_codes = NULL
+                WHERE user_id = :user_id AND enabled_at IS NULL
+            ");
+
+            return $stmt->execute([
+                ':user_id' => $userId,
+                ':secret' => $secret,
+                ':setup_expires_at' => $setupExpiresAt,
+            ]);
+        }
+
+        $stmt = $this->db->prepare("INSERT INTO two_factor_auth 
+            (
                 user_id,
                 secret,
                 setup_expires_at
@@ -57,9 +77,6 @@ class TwoFactorAuth {
                 :secret,
                 :setup_expires_at
             )
-            ON DUPLICATE KEY UPDATE secret = VALUES(secret),
-                setup_expires_at = VALUES(setup_expires_at), recovery_codes = NULL,
-                enabled_at = NULL
         ");
 
         return $stmt->execute([
@@ -73,8 +90,9 @@ class TwoFactorAuth {
      * Enable 2FA after successful verification.
      */
     public function enable(int $userId): bool {
-        $stmt = $this->db->prepare("UPDATE two_factor_auth SET enabled_at = CURRENT_TIMESTAMP,
-            setup_expires_at = NULL WHERE user_id = :user_id
+        $stmt = $this->db->prepare("UPDATE two_factor_auth SET 
+            enabled_at = CURRENT_TIMESTAMP, setup_expires_at = NULL WHERE 
+            user_id = :user_id
         ");
 
         return $stmt->execute([
@@ -182,8 +200,26 @@ class TwoFactorAuth {
      * Store hashed recovery codes.
      */
     public function updateRecoveryCodes(int $userId, string $recoveryCodes): bool {
-        $stmt = $this->db->prepare("UPDATE two_factor_auth SET recovery_codes = :recovery_codes
-            WHERE user_id = :user_id
+        $stmt = $this->db->prepare("UPDATE two_factor_auth SET 
+            recovery_codes = :recovery_codes WHERE user_id = :user_id
+        ");
+
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':recovery_codes' => $recoveryCodes,
+        ]);
+    }
+
+    /**
+     * Complete 2FA setup atomically.
+     *
+     * Stores the hashed recovery codes and enables 2FA as one
+     * database operation.
+     */
+    public function completeSetup(int $userId, string $recoveryCodes): bool {
+        $stmt = $this->db->prepare("UPDATE two_factor_auth SET
+            recovery_codes = :recovery_codes, enabled_at = CURRENT_TIMESTAMP,
+            setup_expires_at = NULL WHERE user_id = :user_id AND enabled_at IS NULL
         ");
 
         return $stmt->execute([

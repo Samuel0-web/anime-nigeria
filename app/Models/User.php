@@ -79,8 +79,8 @@ class User {
      * Find user by username
      */
     public function findByUsername(string $username): array|false {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE LOWER(username) = LOWER(:username)
-            LIMIT 1
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE 
+            LOWER(username) = LOWER(:username) LIMIT 1
         ");
 
         $stmt->execute([
@@ -120,8 +120,8 @@ class User {
     public function findByVerificationToken(string $token): array|false {
         $hash = hash('sha256', $token);
 
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email_verification_token = :token
-            LIMIT 1
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE 
+            email_verification_token = :token LIMIT 1
         ");
 
         $stmt->execute([
@@ -132,9 +132,10 @@ class User {
     }
 
     public function markEmailVerified(int $id): bool {
-        $stmt = $this->db->prepare("UPDATE users SET email_verified_at = CURRENT_TIMESTAMP,
-            email_verification_token = NULL, email_verification_expires_at = NULL WHERE id = :id
-            AND email_verified_at IS NULL
+        $stmt = $this->db->prepare("UPDATE users SET 
+            email_verified_at = CURRENT_TIMESTAMP,
+            email_verification_token = NULL, email_verification_expires_at = NULL 
+            WHERE id = :id AND email_verified_at IS NULL
         ");
 
         return $stmt->execute([
@@ -163,10 +164,12 @@ class User {
         ]);
     }
 
-    public function updateVerificationToken(int $id, string $token, string $expiresAt): bool {
+    public function updateVerificationToken(int $id, string $token, 
+        string $expiresAt
+    ): bool {
         $stmt = $this->db->prepare("UPDATE users SET email_verification_token = :token,
-            email_verification_expires_at = :expires, email_verification_sent_at = CURRENT_TIMESTAMP
-            WHERE id = :id
+            email_verification_expires_at = :expires, 
+            email_verification_sent_at = CURRENT_TIMESTAMP WHERE id = :id
         ");
 
         return $stmt->execute([
@@ -193,7 +196,10 @@ class User {
     }
 
     public function updatePassword(int $userId, string $passwordHash): bool {
-        $stmt = $this->db->prepare("UPDATE users SET password = :password WHERE id = :id");
+        $stmt = $this->db->prepare("UPDATE users SET password = :password WHERE 
+            id = :id"
+        );
+
         return $stmt->execute([
             ':password' => $passwordHash,
             ':id' => $userId
@@ -201,7 +207,9 @@ class User {
     }
 
     public function findByGoogleId(string $googleId): array|false {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE google_id = :google_id LIMIT 1");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE google_id = :google_id
+            LIMIT 1"
+        );
 
         $stmt->execute([
             ':google_id' => $googleId,
@@ -210,16 +218,21 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function linkGoogleAccount(int $userId, string $googleId, ?string $avatar): bool {
-        $stmt = $this->db->prepare("UPDATE users SET google_id = :google_id, avatar = :avatar
-            WHERE id = :id
+    public function linkGoogleAccount(int $userId, string $googleId,
+        ?string $avatar
+    ): bool {
+        $stmt = $this->db->prepare("UPDATE users SET google_id = :google_id,
+            avatar = :avatar WHERE id = :user_id AND (google_id IS NULL OR 
+            google_id = :google_id)
         ");
 
-        return $stmt->execute([
-            ':id' => $userId,
+        $stmt->execute([
+            ':user_id' => $userId,
             ':google_id' => $googleId,
             ':avatar' => $avatar,
         ]);
+
+        return $stmt->rowCount() > 0;
     }
 
     public function updateAvatar(int $userId, ?string $avatar): bool {
@@ -249,8 +262,11 @@ class User {
         ]);
     }
 
-    public function updateProfileBasics(int $id, string $fullname, string $username): bool {
-        $stmt = $this->db->prepare("UPDATE users SET fullname = :fullname, username = :username,
+    public function updateProfileBasics(int $id, string $fullname,
+        string $username
+    ): bool {
+        $stmt = $this->db->prepare("UPDATE users SET fullname = :fullname,
+            username = :username,
             username_changed_at = CURRENT_TIMESTAMP WHERE id = :id
         ");
 
@@ -265,7 +281,8 @@ class User {
      * Update profile information.
      */
     public function updateProfile(int $id, string $fullname, string $username,
-        ?string $passwordHash = null, ?string $avatar = null, bool $removeAvatar = false): bool {
+        ?string $passwordHash = null, ?string $avatar = null, bool $removeAvatar = false
+    ): bool {
 
         $sql = "UPDATE users SET fullname=:fullname, username=:username";
         $current = $this->findById($id);
@@ -298,5 +315,14 @@ class User {
         $sql .= " WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($params);
+    }
+
+    public function incrementAuthSessionVersion(int $userId): bool {
+        $stmt = $this->db->prepare("UPDATE users
+            SET auth_session_version = auth_session_version + 1 WHERE id = ?"
+        );
+
+        $stmt->execute([$userId]);
+        return $stmt->rowCount() > 0;
     }
 }

@@ -3,13 +3,11 @@ require_once __DIR__ . '/../../../bootstrap.php';
 
 use App\Auth\GoogleAuth;
 use App\Auth\GoogleClient;
-use App\Database\Database;
 use App\Core\Logger;
 header('Content-Type: application/json');
 
 try {
-    $db = Database::connection();
-    $google = new GoogleAuth($db, new GoogleClient());
+    $google = new GoogleAuth($db, new GoogleClient(), $auth);
 
     $result = $google->completeRegistration([
         'terms' => $_POST['terms'] ?? '',

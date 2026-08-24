@@ -29,52 +29,73 @@ class RememberMe {
         $this->setCookie($token['selector'], $token['validator']);
     }
 
+    private function incrementAuthSessionVersion(int $userId): void {
+        $stmt = $this->db->prepare("UPDATE users
+            SET auth_session_version = auth_session_version + 1 WHERE id = ?"
+        );
+
+        $stmt->execute([$userId]);
+    }
+
     /**
-     * Attempt to log the user in via the remember me cookie.
+     * Attempt to authenticate the user via the remember me cookie.
+     *
+     * Returns authenticated user data on success, or null when the
+     * remember me cookie cannot be used.
      */
-    public function loginFromCookie(): bool {
+    public function loginFromCookie(): ?array {
         // Already logged in
         if (isset($_SESSION['user_id'])) {
-            return true;
+            return null;
         }
 
         // No cookie present
         if (!$this->hasCookie()) {
-            return false;
+            return null;
         }
 
         // Parse and validate cookie format
         $parts = $this->parseCookie();
+
         if ($parts === null) {
-            return false;
+            $this->clearCookie();
+            return null;
         }
 
         [$selector, $validator] = $parts;
 
         // Find the token in database
         $token = $this->findToken($selector);
+
         if (!$token) {
             $this->forget();
-            return false;
+            return null;
         }
 
         // Check if token has expired
         if ($this->isTokenExpired($token)) {
-            $this->deleteTokenById($token['id']);
-            $this->forget();
-            return false;
+            $this->deleteTokenById((int) $token['id']);
+            $this->clearCookie();
+            return null;
         }
 
-        // Verify the validator (constant-time comparison)
+        // Verify validator using constant-time comparison
         if (!$this->validateToken($token, $validator)) {
-            // Possible stolen cookie - invalidate all tokens for security
             $this->handleCompromisedToken($token);
-            return false;
+            return null;
         }
 
-        // Valid token - log user in and rotate token
+        /*
+        * The remember-me token has successfully authenticated
+        * the user.
+        *
+        * Rotate the token before returning control to Auth.
+        */
         $this->completeLogin($token);
-        return true;
+
+        return [
+            'user_id' => (int) $token['user_id'],
+        ];
     }
 
     /**
@@ -128,8 +149,8 @@ class RememberMe {
      * Find a token by its selector.
      */
     private function findToken(string $selector): ?array {
-        $stmt = $this->db->prepare("SELECT remember_tokens.*, users.role FROM remember_tokens
-            JOIN users ON users.id = remember_tokens.user_id WHERE selector = ? LIMIT 1"
+        $stmt = $this->db->prepare("SELECT remember_tokens.* FROM remember_tokens
+            WHERE selector = ? LIMIT 1"
         );
 
         $stmt->execute([$selector]);
@@ -180,10 +201,15 @@ class RememberMe {
      * Deletes the suspicious token and clears the cookie.
      */
     private function handleCompromisedToken(array $token): void {
-        // Delete the potentially stolen token
-        $this->deleteTokenById($token['id']);
-        
-        // Clear the cookie to prevent further attempts
+        $userId = (int) $token['user_id'];
+
+        // Invalidate every remember-me token.
+        $this->deleteAllForUser($userId);
+
+        // Invalidate every existing authenticated session.
+        $this->incrementAuthSessionVersion($userId);
+
+        // Clear the compromised cookie.
         $this->clearCookie();
     }
 
@@ -202,13 +228,26 @@ class RememberMe {
      * Parse the remember me cookie into selector and validator.
      */
     private function parseCookie(): ?array {
-        $parts = explode(self::COOKIE_SEPARATOR, $_COOKIE[self::COOKIE_NAME], 2);
-        
-        if (count($parts) !== 2 || empty($parts[0]) || empty($parts[1])) {
+        if (!$this->hasCookie()) {
             return null;
         }
 
-        return $parts;
+        $parts = explode(self::COOKIE_SEPARATOR, $_COOKIE[self::COOKIE_NAME], 2);
+
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        [$selector, $validator] = $parts;
+
+        if (
+            !preg_match('/^[a-f0-9]{' . (self::SELECTOR_BYTES * 2) . '}$/', $selector) ||
+            !preg_match('/^[a-f0-9]{' . (self::VALIDATOR_BYTES * 2) . '}$/', $validator)
+        ) {
+            return null;
+        }
+
+        return [$selector, $validator];
     }
 
     /**
@@ -223,7 +262,7 @@ class RememberMe {
             [
                 'expires' => time() + self::LIFETIME,
                 'path' => '/',
-                'secure' => !empty($_SERVER['HTTPS']),
+                'secure' => true,
                 'httponly' => true,
                 'samesite' => 'Strict',
             ]
@@ -234,13 +273,11 @@ class RememberMe {
      * Clear the remember me cookie.
      */
     private function clearCookie(): void {
-        setcookie(
-            self::COOKIE_NAME,
-            '',
+        setcookie(self::COOKIE_NAME, '',
             [
                 'expires' => time() - 3600,
                 'path' => '/',
-                'secure' => !empty($_SERVER['HTTPS']),
+                'secure' => true,
                 'httponly' => true,
                 'samesite' => 'Strict',
             ]
@@ -249,32 +286,18 @@ class RememberMe {
         unset($_COOKIE[self::COOKIE_NAME]);
     }
 
-    private function updateLastLogin(int $userId): void {
-        $stmt = $this->db->prepare("UPDATE users SET last_login_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ");
-
-        $stmt->execute([$userId]);
-    }
-
     // =========================================================================
     // PRIVATE - Login Completion
     // =========================================================================
     
     /**
-     * Complete the login process and rotate the token.
+     * Rotate a successfully used remember-me token.
      */
     private function completeLogin(array $token): void {
-        // Log the user in
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $token['user_id'];
-        $_SESSION['role'] = $token['role'];
-        $this->updateLastLogin((int)$token['user_id']);
-        
-        // Remove the used token (token rotation for security)
-        $this->deleteTokenById($token['id']);
+        // Remove the used token
+        $this->deleteTokenById((int) $token['id']);
 
-        // Issue a new token
-        $this->create((int)$token['user_id']);
+        // Issue a fresh token
+        $this->create((int) $token['user_id']);
     }
 }

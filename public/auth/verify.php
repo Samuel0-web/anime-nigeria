@@ -1,13 +1,6 @@
 <?php
 require_once __DIR__ . '/partials/meta.php';
 
-use App\Auth\Auth;
-use App\Database\Database;
-use App\Mail\Mail;
-use App\Mail\SmtpMailer;
-$db = Database::connection();
-$mail = new Mail(new SmtpMailer(), $_ENV['APP_URL']);
-$auth = new Auth($db, $mail);
 $result = $auth->verifyEmail($_GET['token'] ?? '');
 
 if (empty($_SESSION['pending_username_user_id'])) {

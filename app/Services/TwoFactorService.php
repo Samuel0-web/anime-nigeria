@@ -151,6 +151,13 @@ class TwoFactorService {
             throw new \RuntimeException('Too many verification attempts. Please try again later.');
         }
 
+        $code = trim($code);
+
+        if (!preg_match('/^\d{6}$/', $code)) {
+            $this->rateLimiter->hit('two_factor');
+            throw new \RuntimeException('Enter the 6-digit authentication code.');
+        }
+
         if (!$this->verifyCode($setup['secret'], $code)) {
             $this->rateLimiter->hit('two_factor');
             throw new \RuntimeException('Invalid authentication code.');
@@ -160,12 +167,10 @@ class TwoFactorService {
         $recoveryCodes = $this->generateRecoveryCodes();
         $hashedRecoveryCodes = $this->hashRecoveryCodes($recoveryCodes);
 
-        if (!$this->twoFactorAuth->updateRecoveryCodes($userId, $hashedRecoveryCodes)) {
-            throw new \RuntimeException('Unable to save recovery codes.');
-        }
-
-        if (!$this->twoFactorAuth->enable($userId)) {
-            throw new \RuntimeException('Unable to enable two-factor authentication.');
+        if (!$this->twoFactorAuth->completeSetup($userId, $hashedRecoveryCodes)) {
+            throw new \RuntimeException(
+                'Unable to complete two-factor authentication setup.'
+            );
         }
 
         return $recoveryCodes;
@@ -175,23 +180,25 @@ class TwoFactorService {
      * Verify a recovery code and consume it.
      */
     public function verifyRecoveryCode(string $code, string $storedCodes): array|false {
-        if ($this->rateLimiter->tooManyAttempts('two_factor_recovery')) {
-            throw new \RuntimeException('Too many recovery-code attempts. Please try again later.');
+        if ($this->rateLimiter->tooManyAttempts('two_factor')) {
+            throw new \RuntimeException(
+                'Too many recovery-code attempts. Please try again later.'
+            );
         }
 
         $hashedCodes = json_decode($storedCodes, true, 512, JSON_THROW_ON_ERROR);
 
         foreach ($hashedCodes as $index => $hash) {
-            if (!password_verify($code, $hash)) {
+            if (!is_string($hash) || !password_verify($code, $hash)) {
                 continue;
             }
 
             unset($hashedCodes[$index]);
-            $this->rateLimiter->clear('two_factor_recovery');
+            $this->rateLimiter->clear('two_factor');
             return array_values($hashedCodes);
         }
 
-        $this->rateLimiter->hit('two_factor_recovery');
+        $this->rateLimiter->hit('two_factor');
         return false;
     }
 }

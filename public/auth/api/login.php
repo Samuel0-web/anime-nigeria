@@ -1,18 +1,10 @@
 <?php
 require_once __DIR__ . '/../../../bootstrap.php';
 
-use App\Auth\Auth;
-use App\Database\Database;
-use App\Mail\Mail;
-use App\Mail\SmtpMailer;
 use App\Core\Logger;
 header('Content-Type: application/json');
 
 try {
-    $db = Database::connection();
-    $mail = new Mail(new SmtpMailer(), $_ENV['APP_URL']);
-    $auth = new Auth($db, $mail);
-
     $result = $auth->login([
         'email' => $_POST['email'] ?? '',
         'password' => $_POST['password'] ?? '',

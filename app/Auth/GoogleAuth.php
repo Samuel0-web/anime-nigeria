@@ -16,17 +16,17 @@ class GoogleAuth {
     private PDO $db;
     private User $users;
     private GoogleClient $google;
-    private RememberMe $rememberMe;
+    private Auth $auth;
     private array $errors = [];
 
     // =========================================================================
     // CONSTRUCTOR
     // =========================================================================
-    public function __construct(PDO $db, GoogleClient $google) {
+    public function __construct(PDO $db, GoogleClient $google, Auth $auth) {
         $this->db = $db;
         $this->users = new User($db);
         $this->google = $google;
-        $this->rememberMe = new RememberMe($db);
+        $this->auth = $auth;
     }
 
     // =========================================================================
@@ -193,7 +193,9 @@ class GoogleAuth {
     }
 
     private function validateGoogleUser(array $googleUser): bool {
-        if (empty($googleUser['sub']) || empty($googleUser['email']) || empty($googleUser['name'])) {
+        if (empty($googleUser['sub']) || empty($googleUser['email']) 
+            || empty($googleUser['name'])
+        ) {
             $this->addError('We could not retrieve your Google account information.');
             return false;
         }
@@ -204,18 +206,22 @@ class GoogleAuth {
     // PRIVATE - Account Handling
     // =========================================================================
     
-    private function handleExistingGoogleAccount(array $user, array $googleUser): array|false {
-        // Verify email matches
+    private function handleExistingGoogleAccount(array $user,
+        array $googleUser
+    ): array|false {
+        // Verify email matches.
         if (strtolower($user['email']) !== strtolower($googleUser['email'])) {
-            $this->addError('We could not verify your Google account. Please try again.');
+            $this->addError(
+                'We could not verify your Google account. Please try again.'
+            );
+
             return false;
         }
 
-        // Update avatar
-        $this->users->updateAvatar((int)$user['id'], $googleUser['picture'] ?? null);
+        // Update avatar.
+        $this->users->updateAvatar((int) $user['id'], $googleUser['picture'] ?? null);
         $user['avatar'] = $googleUser['picture'] ?? null;
-
-        return $this->login($user);
+        return $this->auth->authenticateUser($user, true);
     }
 
     private function handleEmailMatch(array $googleUser): array|false {
@@ -242,44 +248,58 @@ class GoogleAuth {
     // =========================================================================
     // PRIVATE - Account Linking
     // =========================================================================
-    
     private function linkAccount(array $user, array $googleUser): array|false {
-        // Email must be verified
+        // Email must be verified.
         if (empty($user['email_verified_at'])) {
             $this->addError('Please verify your email before signing in with Google.');
             return false;
         }
 
-        // Check if Google account already linked to another user
+        /*
+        * Never replace an existing Google identity with a different one.
+        */
+        $currentGoogleId = trim((string) ($user['google_id'] ?? ''));
+
+        if ($currentGoogleId !== '' &&
+            !hash_equals($currentGoogleId, $googleUser['sub'])
+        ) {
+            $this->addError(
+                'This account is already linked to a different Google account.'
+            );
+
+            return false;
+        }
+
+        // Check whether this Google identity belongs to another user.
         $existing = $this->users->findByGoogleId($googleUser['sub']);
-        if ($existing !== false && $existing['id'] != $user['id']) {
+
+        if ($existing !== false && (int) $existing['id'] !== (int) $user['id']) {
             $this->addError('This Google account is already linked to another user.');
             return false;
         }
 
-        // Perform linking
         $this->db->beginTransaction();
+
         try {
-            if (!$this->users->linkGoogleAccount(
-                (int)$user['id'], 
-                $googleUser['sub'],
+            if (!$this->users->linkGoogleAccount((int) $user['id'], $googleUser['sub'],
                 $googleUser['picture'] ?? null
             )) {
                 throw new \RuntimeException('Unable to link Google account.');
             }
 
             $this->db->commit();
-            
-            $user = $this->users->findById((int)$user['id']);
+            $user = $this->users->findById((int) $user['id']);
+
             if ($user === false) {
                 throw new \RuntimeException('Unable to reload linked account.');
             }
 
-            return $this->login($user);
+            return $this->auth->authenticateUser($user, true);
         } catch (\Throwable) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
+
             $this->addError('Unable to link your Google account.');
             return false;
         }
@@ -288,7 +308,6 @@ class GoogleAuth {
     // =========================================================================
     // PRIVATE - Account Creation
     // =========================================================================
-    
     private function createGoogleAccount(array $googleUser): array|false {
         $this->db->beginTransaction();
         try {
@@ -321,44 +340,5 @@ class GoogleAuth {
             $this->addError('Unable to create your account.');
             return false;
         }
-    }
-
-    // =========================================================================
-    // PRIVATE - Login
-    // =========================================================================
-    
-    private function login(array $user): array {
-        session_regenerate_id(true);
-
-        // Username not set - redirect to username selection
-        if (empty($user['username'])) {
-            $_SESSION['pending_username_user_id'] = $user['id'];
-            return [
-                'redirect' => '/auth/username',
-            ];
-        }
-
-        // Full login
-        unset($_SESSION['pending_username_user_id']);
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-        $this->users->updateLastLogin((int) $user['id']);
-        $this->rememberMe->create((int)$user['id']);
-
-        return [
-            'redirect' => $this->getDashboardRedirect($user),
-        ];
-    }
-
-    // =========================================================================
-    // PRIVATE - Utilities
-    // =========================================================================
-    
-    private function getDashboardRedirect(array $user): string {
-        return match ($user['role']) {
-            'admin', 'moderator' => '/home',
-            'member' => '/dashboard',
-            default => '/dashboard',
-        };
     }
 }
