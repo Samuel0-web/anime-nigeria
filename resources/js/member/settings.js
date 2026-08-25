@@ -6,6 +6,9 @@ import { startCooldown } from '../modules/cooldown.js';
 import { setLoading, clearLoading } from '../modules/loading-state.js';
 
 const SETTINGS_ENDPOINT = '/member/api/settings';
+const TWO_FACTOR_ENDPOINT = `${SETTINGS_ENDPOINT}/2fa`;
+const TWO_FACTOR_SETUP_ENDPOINT = `${TWO_FACTOR_ENDPOINT}/setup`;
+const SESSIONS_ENDPOINT = `${SETTINGS_ENDPOINT}/sessions`;
 
 export function initSettingsPage() {
     const root = document.querySelector('.akd-settings');
@@ -14,6 +17,7 @@ export function initSettingsPage() {
     const confirmDialog = useConfirmDialog();
     initToggleSwitches(root);
     init2fa(root, modal, confirmDialog);
+    initSessions(root, modal, confirmDialog);
     initEmailPreferences(root, modal);
     initLanguage(root, modal);
     initTimezone(root, modal);
@@ -39,6 +43,12 @@ function bindSwitch(el) {
 function focusFirst(container) {
     const target = container.querySelector('input, button, [tabindex]');
     if (target) target.focus();
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[ch]));
 }
 
 // ------------------------------------------------------------
@@ -386,7 +396,9 @@ function init2fa(root, modal, confirmDialog) {
     // ---------------- Server sync ----------------
     async function loadSettings() {
         try {
-            const response = await api(SETTINGS_ENDPOINT, { method: 'GET' });
+            const response = await api(SETTINGS_ENDPOINT, {
+                method: 'GET',
+            });
 
             if (!response.success) {
                 statusText.textContent = 'Unable to load';
@@ -394,22 +406,11 @@ function init2fa(root, modal, confirmDialog) {
                 return;
             }
 
-            applyTwoFactorState(response.settings['2fa']);
+            applyTwoFactorState(response.data['2fa']);
         } catch (err) {
             statusText.textContent = 'Unable to load';
             handleApiError(err, 'Unable to load your security settings.');
         }
-    }
-
-    async function postAction(action, fields = {}) {
-        const formData = new FormData();
-        formData.append('action', action);
-
-        Object.entries(fields).forEach(([key, value]) => {
-            formData.append(key, value);
-        });
-
-        return api(SETTINGS_ENDPOINT, { method: 'POST', body: formData });
     }
 
     // Renders whatever PHP says. Makes no security decisions of its own.
@@ -495,7 +496,9 @@ function init2fa(root, modal, confirmDialog) {
             setStepInteractive(false);
 
             try {
-                const response = await postAction('2fa.cancel-setup');
+                const response = await api(TWO_FACTOR_SETUP_ENDPOINT, {
+                    method: 'DELETE',
+                });
 
                 if (!response.success) {
                     errorToast(response.message || 'Unable to cancel setup. Please try again.');
@@ -504,7 +507,7 @@ function init2fa(root, modal, confirmDialog) {
 
                 setupData = null;
                 recoveryCodes = null;
-                applyTwoFactorState(response.settings['2fa']);
+                applyTwoFactorState(response.data['2fa']);
                 return true;
             } catch (err) {
                 handleApiError(err, 'Unable to cancel setup. Please try again.');
@@ -744,7 +747,9 @@ function init2fa(root, modal, confirmDialog) {
                 setLoading(primary, 'Preparing…');
 
                 try {
-                    const response = await postAction('2fa.setup');
+                    const response = await api(TWO_FACTOR_SETUP_ENDPOINT, {
+                        method: 'POST',
+                    });
 
                     if (!response.success) {
                         isBusy = false;
@@ -754,7 +759,7 @@ function init2fa(root, modal, confirmDialog) {
                         return;
                     }
 
-                    setupData = response.setup;
+                    setupData = response.data;
                     isBusy = false;
                     clearLoading(primary);
                     goToStep(2);
@@ -789,7 +794,10 @@ function init2fa(root, modal, confirmDialog) {
                 setLoading(primary, 'Verifying…');
 
                 try {
-                    const response = await postAction('2fa.verify', { code });
+                    const response = await api(TWO_FACTOR_SETUP_ENDPOINT, {
+                        method: 'PUT',
+                        body: JSON.stringify({ code }),
+                    });
 
                     if (!response.success) {
                         boxes.forEach((box) => box.setAttribute('aria-invalid', 'true'));
@@ -803,8 +811,8 @@ function init2fa(root, modal, confirmDialog) {
                     // reflect that now, not only if the user clicks Finish.
                     // If they Leave from here instead, the badge must still
                     // be correct behind the modal.
-                    recoveryCodes = response.recovery_codes;
-                    applyTwoFactorState(response.settings['2fa']);
+                    recoveryCodes = response.data.recovery_codes;
+                    applyTwoFactorState(response.data['2fa']);
                     goToStep(3);
                 } catch (err) {
                     handleApiError(err, 'Unable to verify your code.');
@@ -843,7 +851,10 @@ function init2fa(root, modal, confirmDialog) {
                 let response;
 
                 try {
-                    response = await postAction('2fa.disable', { password });
+                    response = await api(TWO_FACTOR_ENDPOINT, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ password }),
+                });
                 } catch (err) {
                     if (err.data?.retry_after > 0) {
                         const rateLimitError = new Error(err.data.message ||
@@ -859,14 +870,12 @@ function init2fa(root, modal, confirmDialog) {
                 }
 
                 if (!response.success) {
-                    throw new Error(
-                        response.errors?.password ||
-                        response.message ||
+                    throw new Error(response.errors?.password || response.message ||
                         'Incorrect password.'
                     );
                 }
 
-                applyTwoFactorState(response.settings['2fa']);
+                applyTwoFactorState(response.data['2fa']);
             },
         });
     }
@@ -986,6 +995,318 @@ function init2fa(root, modal, confirmDialog) {
             requestAnimationFrame(() => body.classList.remove('is-entering'));
             focusFirst(footer);
         }, 160);
+    }
+}
+
+// ------------------------------------------------------------
+// Active sessions
+// ------------------------------------------------------------
+const SESSION_BROWSER_ICONS = {
+    chrome: 'fa-brands fa-chrome',
+    firefox: 'fa-brands fa-firefox-browser',
+    safari: 'fa-brands fa-safari',
+    edge: 'fa-brands fa-edge',
+    opera: 'fa-brands fa-opera',
+};
+
+const SESSION_DEVICE_ICONS = {
+    desktop: 'fa-solid fa-desktop',
+    laptop: 'fa-solid fa-laptop',
+    tablet: 'fa-solid fa-tablet-screen-button',
+    smartphone: 'fa-solid fa-mobile-screen',
+    mobile: 'fa-solid fa-mobile-screen',
+    tv: 'fa-solid fa-tv',
+    wearable: 'fa-solid fa-clock',
+    console: 'fa-solid fa-gamepad',
+};
+
+function getSessionIcon(session) {
+    const browserKey = (session.browser?.name || '').toLowerCase();
+    if (SESSION_BROWSER_ICONS[browserKey]) return SESSION_BROWSER_ICONS[browserKey];
+    const deviceKey = (session.device?.type || '').toLowerCase();
+    if (SESSION_DEVICE_ICONS[deviceKey]) return SESSION_DEVICE_ICONS[deviceKey];
+    return 'fa-solid fa-globe';
+}
+
+// Assumes stored timestamps are UTC (matches CURRENT_TIMESTAMP in the
+// migrations). Adjust here if your DB session timezone differs.
+function formatRelativeTime(isoString) {
+    if (!isoString) return 'Unknown';
+    const iso = isoString.includes('T') ? isoString : isoString.replace(' ', 'T');
+    const then = new Date(iso.endsWith('Z') ? iso : `${iso}Z`);
+    if (Number.isNaN(then.getTime())) return 'Unknown';
+    const diffSeconds = Math.round((Date.now() - then.getTime()) / 1000);
+
+    if (diffSeconds < 30) return 'Just now';
+    if (diffSeconds < 60) return `${diffSeconds} seconds ago`;
+    const diffMinutes = Math.round(diffSeconds / 60);
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    const diffDays = Math.round(diffHours / 24);
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return then.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function describeSession(session) {
+    const browser = session.browser?.name
+        ? `${session.browser.name}${session.browser.version ? ' ' + session.browser.version : ''}`
+        : 'Unknown browser';
+
+    const os = session.os?.name
+        ? `${session.os.name}${session.os.version ? ' ' + session.os.version : ''}`
+        : 'Unknown OS';
+
+    const deviceLabel = session.device?.brand
+        ? `${session.device.brand}${session.device.model ? ' ' + session.device.model : ''}`
+        : null;
+
+    return { browser, os, deviceLabel };
+}
+
+function initSessions(root, modal, confirmDialog) {
+    const row = root.querySelector('[data-settings-row="sessions"]');
+    if (!row) return;
+    const trigger = row.querySelector('[data-sessions-trigger]');
+    const descEl = row.querySelector('[data-sessions-desc]');
+
+    // Server-authoritative. Every mutation re-fetches and replaces this
+    // wholesale rather than patching the DOM in place.
+    let sessions = [];
+
+    trigger.addEventListener('click', () => {
+        modal.open({
+            title: 'Active sessions',
+            subtitle: 'Manage the devices and browsers currently signed in to your account.',
+            content: buildLoadingView(),
+            footer: null,
+            className: 'akd-modal--sessions',
+            size: 'lg',
+        });
+
+        loadSessions();
+    });
+
+    // ---------------- Server sync ----------------
+    async function loadSessions() {
+        try {
+            const response = await api(SESSIONS_ENDPOINT, { method: 'GET' });
+
+            if (!response.success) {
+                renderError(response.message || 'Unable to load your active sessions.');
+                return;
+            }
+
+            sessions = response.data.sessions;
+            renderList();
+            updateRowSummary();
+        } catch (err) {
+            renderError(err.data?.message || 'Unable to load your active sessions.');
+        }
+    }
+
+    async function revokeSession(sessionId) {
+        const confirmed = await confirmDialog.ask({
+            title: 'Sign out this session?',
+            message: 'This will sign out your account on this device or browser.',
+            confirmLabel: 'Sign out',
+            cancelLabel: 'Cancel',
+            destructive: true,
+        });
+
+        if (!confirmed) return;
+        const rowEl = modal.getBody().querySelector(`[data-session-row="${sessionId}"]`);
+        const btn = rowEl?.querySelector('[data-session-signout]');
+        if (btn) setLoading(btn, 'Signing out…');
+
+        try {
+            const response = await api(`${SESSIONS_ENDPOINT}/${sessionId}`, { method: 'DELETE' });
+
+            if (!response.success) {
+                if (btn) clearLoading(btn);
+                errorToast(response.message || 'Unable to sign out that session.');
+                return;
+            }
+
+            sessions = response.data.sessions;
+            renderList();
+            updateRowSummary();
+        } catch (err) {
+            if (btn) clearLoading(btn);
+            handleApiError(err, 'Unable to sign out that session.');
+        }
+    }
+
+    async function revokeAllOthers() {
+        const confirmed = await confirmDialog.ask({
+            title: 'Sign out all other sessions?',
+            message: 'This will sign out your account on every other device and browser. Your current session will remain active.',
+            confirmLabel: 'Sign out all',
+            cancelLabel: 'Cancel',
+            destructive: true,
+        });
+
+        if (!confirmed) return;
+        const signOutAllBtn = modal.getFooter().querySelector('[data-sessions-signout-all]');
+        if (signOutAllBtn) setLoading(signOutAllBtn, 'Signing out…');
+
+        try {
+            const response = await api(`${SESSIONS_ENDPOINT}/revoke-others`, { method: 'POST' });
+
+            if (!response.success) {
+                if (signOutAllBtn) clearLoading(signOutAllBtn);
+                errorToast(response.message || 'Unable to sign out your other sessions.');
+                return;
+            }
+
+            sessions = response.data.sessions;
+            renderList();
+            updateRowSummary();
+        } catch (err) {
+            if (signOutAllBtn) clearLoading(signOutAllBtn);
+            handleApiError(err, 'Unable to sign out your other sessions.');
+        }
+    }
+
+    // ---------------- Rendering ----------------
+    function buildLoadingView() {
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-sessions';
+
+        wrap.innerHTML = `
+            <p class="akd-sessions__loading" role="status" aria-live="polite">
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Loading active sessions…
+            </p>
+        `;
+
+        return wrap;
+    }
+
+    function renderError(message) {
+        const body = modal.getBody();
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-sessions';
+
+        wrap.innerHTML = `
+            <p class="akd-sessions__error" role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                ${escapeHtml(message)}
+            </p>
+        `;
+
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'akd-btn akd-btn--secondary';
+        retry.textContent = 'Try again';
+        retry.addEventListener('click', () => {
+            body.replaceChildren(buildLoadingView());
+            loadSessions();
+        });
+
+        wrap.appendChild(retry);
+        body.replaceChildren(wrap);
+        modal.getFooter().replaceChildren();
+        modal.getFooter().hidden = true;
+    }
+
+    function renderList() {
+        const body = modal.getBody();
+        const wrap = document.createElement('div');
+        wrap.className = 'akd-sessions';
+        const otherCount = sessions.filter((s) => !s.is_current).length;
+
+        if (otherCount === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'akd-sessions__empty';
+            empty.textContent = "You're only signed in on this device.";
+            wrap.appendChild(empty);
+        }
+
+        const list = document.createElement('div');
+        list.className = 'akd-sessions__list';
+        sessions.forEach((session) => list.appendChild(buildSessionRow(session)));
+        wrap.appendChild(list);
+        body.replaceChildren(wrap);
+
+        const footer = modal.getFooter();
+
+        if (otherCount > 0) {
+            const signOutAll = document.createElement('button');
+            signOutAll.type = 'button';
+            signOutAll.className = 'akd-btn akd-btn--secondary';
+            signOutAll.setAttribute('data-sessions-signout-all', '');
+            signOutAll.textContent = 'Sign out all other sessions';
+            signOutAll.addEventListener('click', revokeAllOthers);
+            footer.replaceChildren(signOutAll);
+            footer.hidden = false;
+        } else {
+            footer.replaceChildren();
+            footer.hidden = true;
+        }
+    }
+
+    function buildSessionRow(session) {
+        const { browser, os, deviceLabel } = describeSession(session);
+        const el = document.createElement('div');
+        el.className = 'akd-settings-row akd-settings-row--session';
+        el.setAttribute('data-session-row', String(session.id));
+        const icon = document.createElement('div');
+        icon.className = 'akd-settings-row__icon akd-settings-row__icon--security';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = `<i class="${getSessionIcon(session)}"></i>`;
+        const content = document.createElement('div');
+        content.className = 'akd-settings-row__content';
+        const top = document.createElement('div');
+        top.className = 'akd-settings-row__top';
+        const label = document.createElement('span');
+        label.className = 'akd-settings-row__label';
+        label.textContent = browser;
+        top.appendChild(label);
+
+        if (session.is_current) {
+            const badge = document.createElement('span');
+            badge.className = 'akd-settings-row__session-current';
+            badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Current session';
+            top.appendChild(badge);
+        }
+
+        content.appendChild(top);
+        const meta = document.createElement('p');
+        meta.className = 'akd-settings-row__desc akd-settings-row__session-meta';
+        const metaParts = [os];
+        if (deviceLabel) metaParts.push(deviceLabel);
+        meta.textContent = metaParts.join(' · ');
+        content.appendChild(meta);
+        const activity = document.createElement('p');
+        activity.className = 'akd-settings-row__desc akd-settings-row__session-activity';
+        const activityParts = [];
+        if (session.ip_address) activityParts.push(session.ip_address);
+        activityParts.push(session.is_current ? 'Active now'
+            : `Last active ${formatRelativeTime(session.last_active_at)}`);
+        activity.textContent = activityParts.join(' · ');
+        content.appendChild(activity);
+        el.append(icon, content);
+
+        if (!session.is_current) {
+            const action = document.createElement('button');
+            action.type = 'button';
+            action.className = 'akd-btn akd-btn--secondary akd-settings-row__action';
+            action.setAttribute('data-session-signout', '');
+            action.textContent = 'Sign out';
+            action.addEventListener('click', () => revokeSession(session.id));
+            el.appendChild(action);
+        }
+
+        return el;
+    }
+
+    function updateRowSummary() {
+        if (!descEl) return;
+
+        descEl.textContent = sessions.length <= 1
+            ? "You're only signed in on this device."
+            : `Signed in on ${sessions.length} devices.`;
     }
 }
 

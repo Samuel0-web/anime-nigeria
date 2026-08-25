@@ -125,6 +125,31 @@ class LoginSession {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findActiveById(int $userId, int $sessionId): array|false {
+        $stmt = $this->db->prepare("SELECT * FROM login_sessions WHERE id = :id
+            AND user_id = :user_id AND revoked_at IS NULL LIMIT 1
+        ");
+
+        $stmt->execute([
+            ':id' => $sessionId,
+            ':user_id' => $userId,
+        ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findActiveByUserId(int $userId): array {
+        $stmt = $this->db->prepare("SELECT * FROM login_sessions WHERE user_id = :user_id
+            AND revoked_at IS NULL ORDER BY last_activity_at DESC
+        ");
+
+        $stmt->execute([
+            ':user_id' => $userId,
+        ]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     /**
      * Update the last activity timestamp when enough time has passed.
      *

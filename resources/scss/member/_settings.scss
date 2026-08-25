@@ -955,6 +955,67 @@
 }
 
 // ============================================================
+// Active sessions (rendered inside the shared modal body)
+// ============================================================
+.akd-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+
+    &__loading,
+    &__error,
+    &__empty {
+        margin: 0;
+        padding: $space-md 0;
+        color: $white-muted;
+        font-size: $fs-sm;
+        text-align: center;
+    }
+
+    &__error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-xs;
+        color: $accent-crimson;
+
+        .akd-btn { margin-top: $space-xxs; }
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+        overflow: hidden;
+    }
+}
+
+.akd-settings-row--session {
+    padding: $space-sm $space-md;
+
+    & + & { border-top: 1px solid $black-line; }
+}
+
+.akd-settings-row__session-current {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: $radius-full;
+    background: $accent-teal-dim;
+    color: $accent-teal;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    white-space: nowrap;
+}
+
+.akd-settings-row__session-meta,
+.akd-settings-row__session-activity {
+    font-size: $fs-xs;
+}
+
+// ============================================================
 // Responsive
 // ============================================================
 @media (max-width: $bp-md) {
@@ -982,4 +1043,9 @@
     .akd-2fa__qr { width: 140px; height: 140px; font-size: 52px; }
 
     .akd-2fa__codes { grid-template-columns: 1fr; }
+
+    .akd-settings-row--session {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

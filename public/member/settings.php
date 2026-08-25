@@ -34,6 +34,30 @@ require_once __DIR__ . '/includes/header.php';
                         <span data-2fa-action-label>Set up</span>
                     </button>
                 </div>
+
+                <div class="akd-settings-row" data-settings-row="sessions">
+                    <div class="akd-settings-row__icon akd-settings-row__icon--security" 
+                        aria-hidden="true"
+                    >
+                        <i class="fa-solid fa-laptop"></i>
+                    </div>
+
+                    <div class="akd-settings-row__content">
+                        <div class="akd-settings-row__top">
+                            <span class="akd-settings-row__label">Active Sessions</span>
+                        </div>
+
+                        <p class="akd-settings-row__desc" data-sessions-desc>
+                            Review the devices currently signed in to your account.
+                        </p>
+                    </div>
+
+                    <button type="button" class="akd-btn akd-btn--secondary 
+                        akd-settings-row__action" data-sessions-trigger
+                    >
+                        <span>Manage</span>
+                    </button>
+                </div>
             </div>
         </section>
 

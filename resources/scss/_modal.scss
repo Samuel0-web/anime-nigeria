@@ -131,9 +131,11 @@
         overscroll-behavior: contain;
         scrollbar-width: none;
 
-        &::-webkit-scrollbar {
-            display: none;
+        @media(max-width: $bp-md) {
+            padding: 0 $space-md $space-lg;
         }
+
+        &::-webkit-scrollbar { display: none; }
     }
     
     &__footer {

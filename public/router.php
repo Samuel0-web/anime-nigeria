@@ -25,8 +25,7 @@ if ($uri === '') {
 | API Routing
 |--------------------------------------------------------------------------
 */
-
-$pathSegments = array_values(array_filter(explode('/', trim($uri, '/')),
+$pathSegments = array_values(array_filter( explode('/', trim($uri, '/')),
     static fn(string $segment): bool => $segment !== ''
 ));
 
@@ -34,15 +33,47 @@ $apiIndex = array_search('api', $pathSegments, true);
 
 if ($apiIndex !== false) {
     $method = $_SERVER['REQUEST_METHOD'];
+    $allowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE',];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate HTTP method
+    |--------------------------------------------------------------------------
+    */
+
+    if (!in_array($method, $allowedMethods, true)) {
+        http_response_code(405);
+        header('Allow: GET, POST, PUT, PATCH, DELETE');
+        header('Content-Type: application/json');
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'Method not allowed.',
+        ]);
+
+        exit;
+    }
+
 
     if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
         VerifyCsrf::handle();
     }
 
-    $directory = array_slice($pathSegments, 0, $apiIndex);
-    $endpoint = array_slice($pathSegments, $apiIndex + 1);
+    /*
+    |--------------------------------------------------------------------------
+    | API path
+    |--------------------------------------------------------------------------
+    */
 
-    // Every API endpoint must have something after /api/
+    $directory = array_slice($pathSegments, 0, $apiIndex);
+    $endpoint  = array_slice($pathSegments, $apiIndex + 1);
+
+    /*
+    |--------------------------------------------------------------------------
+    | API endpoint is required
+    |--------------------------------------------------------------------------
+    */
+
     if (empty($endpoint)) {
         http_response_code(404);
         header('Content-Type: application/json');
@@ -55,7 +86,12 @@ if ($apiIndex !== false) {
         exit;
     }
 
-    // Only allow safe URL path segments.
+    /*
+    |--------------------------------------------------------------------------
+    | Validate URL segments
+    |--------------------------------------------------------------------------
+    */
+
     foreach (array_merge($directory, $endpoint) as $segment) {
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $segment)) {
             http_response_code(400);
@@ -70,17 +106,37 @@ if ($apiIndex !== false) {
         }
     }
 
-    $apiFile = __DIR__
-        . '/'
-        . implode('/', $directory)
-        . '/api/'
-        . implode('/', $endpoint)
+    /*
+    |--------------------------------------------------------------------------
+    | Resolve API resource
+    |
+    | The resource file handles its own sub-resource routing.
+    |--------------------------------------------------------------------------
+    */
+
+    $resource = $endpoint[0];
+
+    $apiFile = __DIR__ . '/' . implode('/', $directory) . '/api/' . $resource
         . '.php';
 
     if (is_file($apiFile)) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Make API path available to the resource
+        |--------------------------------------------------------------------------
+        */
+
+        $apiPath = array_slice($endpoint, 1);
         require $apiFile;
         exit;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | API endpoint not found
+    |--------------------------------------------------------------------------
+    */
 
     http_response_code(404);
     header('Content-Type: application/json');
