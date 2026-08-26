@@ -24,8 +24,8 @@ class RememberMe {
     /**
      * Create a new "remember me" token and set the cookie.
      */
-    public function create(int $userId): void {
-        $token = $this->generateToken($userId);
+    public function create(int $userId, int $loginSessionId): void {
+        $token = $this->generateToken($userId, $loginSessionId);
         $this->setCookie($token['selector'], $token['validator']);
     }
 
@@ -35,6 +35,19 @@ class RememberMe {
         );
 
         $stmt->execute([$userId]);
+    }
+
+    private function isLoginSessionActive(int $loginSessionId, int $userId): bool {
+        $stmt = $this->db->prepare("SELECT id FROM login_sessions WHERE id = :id
+            AND user_id = :user_id AND revoked_at IS NULL LIMIT 1
+        ");
+
+        $stmt->execute([
+            ':id' => $loginSessionId,
+            ':user_id' => $userId,
+        ]);
+
+        return $stmt->fetchColumn() !== false;
     }
 
     /**
@@ -72,6 +85,16 @@ class RememberMe {
             return null;
         }
 
+        // A remember-me credential is only valid while
+        // the login session it belongs to remains active.
+        if ($token['login_session_id'] === null || !$this->isLoginSessionActive(
+                (int) $token['login_session_id'], (int) $token['user_id'])
+        ) {
+            $this->deleteTokenById((int) $token['id']);
+            $this->clearCookie();
+            return null;
+        }
+
         // Check if token has expired
         if ($this->isTokenExpired($token)) {
             $this->deleteTokenById((int) $token['id']);
@@ -85,17 +108,14 @@ class RememberMe {
             return null;
         }
 
-        /*
-        * The remember-me token has successfully authenticated
-        * the user.
-        *
-        * Rotate the token before returning control to Auth.
-        */
-        $this->completeLogin($token);
-
         return [
             'user_id' => (int) $token['user_id'],
         ];
+    }
+
+    public function rotate(int $tokenId, int $userId, int $loginSessionId): void {
+        $this->deleteTokenById($tokenId);
+        $this->create($userId, $loginSessionId);
     }
 
     /**
@@ -127,17 +147,30 @@ class RememberMe {
     /**
      * Generate a new remember me token and store it in the database.
      */
-    private function generateToken(int $userId): array {
+    private function generateToken(int $userId, int $loginSessionId): array {
         $selector = bin2hex(random_bytes(self::SELECTOR_BYTES));
         $validator = bin2hex(random_bytes(self::VALIDATOR_BYTES));
         $validatorHash = hash('sha256', $validator);
         $expiresAt = date('Y-m-d H:i:s', time() + self::LIFETIME);
 
-        $stmt = $this->db->prepare(
-            "INSERT INTO remember_tokens (user_id, selector, validator_hash, expires_at) 
-             VALUES (?, ?, ?, ?)"
+        $stmt = $this->db->prepare("INSERT INTO remember_tokens
+                (
+                    user_id,
+                    login_session_id,
+                    selector,
+                    validator_hash,
+                    expires_at
+                )
+                VALUES (?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$userId, $selector, $validatorHash, $expiresAt]);
+
+        $stmt->execute([
+            $userId,
+            $loginSessionId,
+            $selector,
+            $validatorHash,
+            $expiresAt
+        ]);
 
         return [
             'selector' => $selector,
@@ -293,11 +326,8 @@ class RememberMe {
     /**
      * Rotate a successfully used remember-me token.
      */
-    private function completeLogin(array $token): void {
-        // Remove the used token
+    private function completeLogin(array $token, int $loginSessionId): void {
         $this->deleteTokenById((int) $token['id']);
-
-        // Issue a fresh token
-        $this->create((int) $token['user_id']);
+        $this->create((int) $token['user_id'], $loginSessionId);
     }
 }
