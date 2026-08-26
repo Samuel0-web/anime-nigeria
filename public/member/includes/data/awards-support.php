@@ -189,3 +189,55 @@ if (!function_exists('akd_award_voting_page_config')) {
         ];
     }
 }
+
+if (!function_exists('akd_award_winners_page_config')) {
+    /**
+     * Fetch the Winners-page-specific slice of the current phase's config.
+     *
+     * @param array<string, array<string, mixed>> $phases
+     * @param string $currentPhase
+     * @return array{statusLabel: string, heading: string, description: string, revealWinners: bool, ctaLabel: string|null, ctaLink: string|null}
+     */
+    function akd_award_winners_page_config(array $phases, string $currentPhase): array
+    {
+        $phase = akd_award_phase_config($phases, $currentPhase);
+
+        return $phase['winnersPage'] ?? [
+            'statusLabel'   => 'Unavailable',
+            'heading'       => 'Winners are currently unavailable.',
+            'description'   => '',
+            'revealWinners' => false,
+            'ctaLabel'      => 'ANAA Overview',
+            'ctaLink'       => '/member/awards',
+        ];
+    }
+}
+
+if (!function_exists('akd_award_winner_for_category')) {
+    /**
+     * Resolve a category's 2026 winner by looking up its 'winnerId'
+     * inside its own 'nominees' list, so the winner's name/image never
+     * has to be duplicated as separate data. Returns null if the
+     * category has no winnerId, or (defensively) if the id doesn't
+     * match anything in 'nominees'.
+     *
+     * @param array{winnerId?: string|null, nominees: list<array{id: string, name: string, image: string|null}>} $category
+     * @return array{id: string, name: string, image: string|null}|null
+     */
+    function akd_award_winner_for_category(array $category): ?array
+    {
+        $winnerId = $category['winnerId'] ?? null;
+
+        if ($winnerId === null) {
+            return null;
+        }
+
+        foreach ($category['nominees'] as $nominee) {
+            if ($nominee['id'] === $winnerId) {
+                return $nominee;
+            }
+        }
+
+        return null;
+    }
+}

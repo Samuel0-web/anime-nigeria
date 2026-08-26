@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 /**
  * Simulated ANAA 2026 data. No database, no API, just mock content for
- * the member Overview, Nominations and Voting UI.
+ * the member Overview, Nominations, Voting and Winners UI.
  *
  * 'phase' is the single source of truth for the current award state,
  * shared by every ANAA page. Everything else (hero copy, CTA labels and
  * links, timeline state, category actions, Community Picks blurb, and
- * the Nominations/Voting pages' own status/copy) is derived from it via
- * the matching entry in 'phases' and the helpers in awards-support.php.
+ * each page's own status/copy) is derived from it via the matching
+ * entry in 'phases' and the helpers in awards-support.php.
  * To simulate a different point in the season, change 'phase' below.
  * Nothing else needs to change.
  *
@@ -17,15 +17,15 @@ declare(strict_types=1);
  */
 return [
     'year'  => 2026,
-    'phase' => 'voting', // coming_soon | nominations | voting | winners
+    'phase' => 'winners', // coming_soon | nominations | voting | winners
 
     /*
      * Per-phase copy and calls to action, shared across ANAA pages.
-     * 'nominationsPage' and 'votingPage' nest copy specific to those
-     * pages so each stays driven by the same phase without duplicating
-     * a second state system. Each 'formActive' flag is what its page
-     * uses to decide whether to render the interactive experience or a
-     * closed-state message.
+     * 'nominationsPage', 'votingPage' and 'winnersPage' nest copy
+     * specific to those pages so each stays driven by the same phase
+     * without duplicating a second state system. Each 'formActive' /
+     * 'revealWinners' flag is what its page uses to decide whether to
+     * render the active experience or a closed/not-yet state.
      */
     'phases' => [
         'coming_soon' => [
@@ -58,6 +58,14 @@ return [
                 'ctaLabel'    => 'ANAA Overview',
                 'ctaLink'     => '/member/awards',
             ],
+            'winnersPage' => [
+                'statusLabel'   => 'Winners Coming Soon',
+                'heading'       => "The winners haven't been revealed yet.",
+                'description'   => 'The winners will be revealed once the awards season reaches its final stage.',
+                'revealWinners' => false,
+                'ctaLabel'      => null,
+                'ctaLink'       => null,
+            ],
         ],
         'nominations' => [
             'badge'                     => 'Nominations Open',
@@ -88,6 +96,14 @@ return [
                 'formActive'  => false,
                 'ctaLabel'    => 'View Nominations',
                 'ctaLink'     => '/member/awards/nominations',
+            ],
+            'winnersPage' => [
+                'statusLabel'   => 'Winners Not Yet Determined',
+                'heading'       => 'Nominations are open. Winners come later.',
+                'description'   => 'The community is still putting nominees forward. Winners are decided after nominations and voting close.',
+                'revealWinners' => false,
+                'ctaLabel'      => 'View Nominations',
+                'ctaLink'       => '/member/awards/nominations',
             ],
         ],
         'voting' => [
@@ -120,6 +136,14 @@ return [
                 'ctaLabel'    => null,
                 'ctaLink'     => null,
             ],
+            'winnersPage' => [
+                'statusLabel'   => 'Voting Underway',
+                'heading'       => 'The community is deciding the winners.',
+                'description'   => 'Voting is currently open. Winners will be revealed once voting closes.',
+                'revealWinners' => false,
+                'ctaLabel'      => 'Vote Now',
+                'ctaLink'       => '/member/awards/voting',
+            ],
         ],
         'winners' => [
             'badge'                     => 'Winners Live',
@@ -150,6 +174,14 @@ return [
                 'formActive'  => false,
                 'ctaLabel'    => 'View Winners',
                 'ctaLink'     => '/member/awards/winners',
+            ],
+            'winnersPage' => [
+                'statusLabel'   => 'Winners Revealed',
+                'heading'       => 'The winners have been revealed.',
+                'description'   => 'Celebrating the anime, characters and moments chosen by the Anime Nigeria community.',
+                'revealWinners' => true,
+                'ctaLabel'      => 'Back to ANAA',
+                'ctaLink'       => '/member/award/overview',
             ],
         ],
     ],
@@ -224,14 +256,14 @@ return [
     ],
 
     /*
-     * Every category the community can nominate into and vote on.
-     * 'entryType' + optional 'filter' select from 'eligibleEntries' for
-     * the Nominations search workspace. 'description' and 'nominees' are
-     * used only by the Voting page: 'description' is the tooltip copy,
-     * 'nominees' is the curated shortlist of finalists (a separate,
-     * smaller list from the full eligibleEntries pool, since voting
-     * happens on the finalists that came out of nominations, not the
-     * entire eligible field).
+     * Every category the community can nominate into, vote on, and see
+     * results for. 'entryType' + optional 'filter' select from
+     * 'eligibleEntries' for the Nominations search workspace.
+     * 'description' and 'nominees' are used by the Voting page:
+     * 'description' is the tooltip copy, 'nominees' is the curated
+     * shortlist of finalists. 'winnerId' is used by the Winners page: it
+     * points at one of this category's own 'nominees' entries, so the
+     * winner's name/image never has to be duplicated separately.
      */
     'categories' => [
         [
@@ -245,6 +277,7 @@ return [
             'featured'    => true,
             'entryType'   => 'anime',
             'filter'      => null,
+            'winnerId'    => 'anime-frieren',
             'nominees'    => [
                 ['id' => 'anime-frieren',    'name' => "Frieren: Beyond Journey's End", 'image' => '/uploads/frieren-poster.webp'],
                 ['id' => 'anime-solo',       'name' => 'Solo Leveling',                 'image' => null],
@@ -263,6 +296,7 @@ return [
             'image'       => null,
             'entryType'   => 'character',
             'filter'      => ['gender' => 'male'],
+            'winnerId'    => 'char-gojo',
             'nominees'    => [
                 ['id' => 'char-jinwoo', 'name' => 'Sung Jin-Woo', 'image' => null],
                 ['id' => 'char-gojo',   'name' => 'Gojo Satoru',  'image' => null],
@@ -281,6 +315,7 @@ return [
             'image'       => null,
             'entryType'   => 'character',
             'filter'      => ['gender' => 'female'],
+            'winnerId'    => 'char-maomao',
             'nominees'    => [
                 ['id' => 'char-frieren', 'name' => 'Frieren',       'image' => '/uploads/frieren-poster.webp'],
                 ['id' => 'char-maomao',  'name' => 'Maomao',        'image' => null],
@@ -299,6 +334,7 @@ return [
             'image'       => null,
             'entryType'   => 'character',
             'filter'      => ['role' => 'supporting'],
+            'winnerId'    => 'char-power-supp',
             'nominees'    => [
                 ['id' => 'char-power-supp',  'name' => 'Power',           'image' => null],
                 ['id' => 'char-nobara-supp', 'name' => 'Nobara Kugisaki', 'image' => null],
@@ -316,6 +352,7 @@ return [
             'image'       => null,
             'entryType'   => 'openingEnding',
             'filter'      => ['kind' => 'opening'],
+            'winnerId'    => 'oe-specialz',
             'nominees'    => [
                 ['id' => 'oe-idol',     'name' => '"Idol" — Oshi no Ko',            'image' => null],
                 ['id' => 'oe-kickback', 'name' => '"Kick Back" — Chainsaw Man',     'image' => null],
@@ -333,6 +370,7 @@ return [
             'image'       => null,
             'entryType'   => 'openingEnding',
             'filter'      => ['kind' => 'ending'],
+            'winnerId'    => 'oe-backlight',
             'nominees'    => [
                 ['id' => 'oe-kawaki',    'name' => '"Kawaki wo Ameku" — Chainsaw Man',              'image' => null],
                 ['id' => 'oe-lady',      'name' => '"LADY" — Jujutsu Kaisen',                       'image' => null],
@@ -350,6 +388,7 @@ return [
             'image'       => null,
             'entryType'   => 'fight',
             'filter'      => ['kind' => 'fight'],
+            'winnerId'    => 'fight-denji-katana',
             'nominees'    => [
                 ['id' => 'fight-gojo-sukuna',  'name' => 'Gojo vs. Sukuna',       'image' => null],
                 ['id' => 'fight-denji-katana', 'name' => 'Denji vs. Katana Man',  'image' => null],
@@ -367,6 +406,7 @@ return [
             'image'       => null,
             'entryType'   => 'fight',
             'filter'      => ['kind' => 'moment'],
+            'winnerId'    => 'moment-aqua',
             'nominees'    => [
                 ['id' => 'moment-frieren', 'name' => "Frieren's Farewell to Himmel",  'image' => '/uploads/frieren-poster.webp'],
                 ['id' => 'moment-maomao',  'name' => 'Maomao Solves the Poison Case', 'image' => null],
@@ -384,6 +424,7 @@ return [
             'image'       => null,
             'entryType'   => 'anime',
             'filter'      => ['isNew' => true],
+            'winnerId'    => 'anime-dandadan',
             'nominees'    => [
                 ['id' => 'anime-dandadan',  'name' => 'Dandadan',           'image' => null],
                 ['id' => 'anime-kaiju8',    'name' => 'Kaiju No. 8',        'image' => null],

@@ -1,2 +1,146 @@
 @use '../../tokens' as *;
 @use 'sass:color';
+
+// ==========================================
+// HERO
+// Reuses .akd-award-hero from _overview.scss almost entirely. This
+// modifier only trims the height slightly, since the Winners hero
+// carries no stats row.
+// ==========================================
+.akd-award-hero--winners {
+    min-height: 30rem;
+
+    @media (max-width: $bp-lg) {
+        min-height: 26rem;
+    }
+}
+
+// ==========================================
+// WINNER TAG
+// Always gold, regardless of a card's accent color. "Winner" is an
+// award designation, not decorative category theming.
+// ==========================================
+.akd-winner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: $radius-full;
+    border: 1px solid rgba($gold, 0.4);
+    background: rgba($gold, 0.1);
+    color: $gold;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: $fw-semibold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: $space-xs;
+
+    i { font-size: 9px; }
+
+    &--lg {
+        padding: 5px 14px;
+        font-size: $fs-xs;
+        margin-bottom: $space-sm;
+
+        i { font-size: 11px; }
+    }
+}
+
+// ==========================================
+// FEATURED WINNER (Best Anime)
+// Same art-integration language as .akd-award-hero, kept as its own
+// block since the content shape (category label + winner name) is
+// different from the season hero above it.
+// ==========================================
+.akd-winner-feature {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    min-height: 22rem;
+    display: flex;
+    align-items: flex-end;
+    background: $black-soft;
+
+    @media (max-width: $bp-lg) {
+        min-height: 20rem;
+    }
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top;
+    }
+
+    &__gradient {
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(0deg, $black-soft 5%, rgba($black-soft, 0.55) 55%, rgba($black-soft, 0.15) 100%),
+            linear-gradient(90deg, rgba($black-soft, 0.75) 0%, transparent 55%);
+    }
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        background-image: url('/uploads/noise.png');
+        background-size: 220px;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        padding: $space-xl;
+        max-width: 34rem;
+
+        @media (max-width: $bp-md) {
+            padding: $space-lg $space-md;
+        }
+    }
+
+    &__category {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-muted;
+        margin: 0 0 $space-xxs;
+    }
+
+    &__name {
+        font-size: clamp(2rem, 5vw, $fs-3xl);
+        font-weight: $fw-bold;
+        line-height: $lh-tight;
+        color: $white;
+        margin: 0 0 $space-sm;
+    }
+
+    &__note {
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// QUIET CTA VARIANT
+// Same background treatment as .akd-award-cta, no button. Used for the
+// short community-identity strip near the bottom of the page.
+// ==========================================
+.akd-award-cta--quiet {
+    padding: $space-lg;
+
+    .akd-award-cta__desc {
+        margin-bottom: 0;
+    }
+}
