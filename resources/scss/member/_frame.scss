@@ -5,7 +5,10 @@
 // LAYOUT CONSTANTS
 // ==========================================
 $dashboard-pad: 1.375rem;
-$sidebar-width: 18.75rem;   // fixed, permanent width — no collapsed state
+$sidebar-width: 18.75rem;            // expanded desktop width — source of truth
+$sidebar-width-collapsed: 7.5rem;   // collapsed desktop width
+$sidebar-icon-box: 40px; // shared square size: brand logo, collapse toggle, collapsed nav
+                            //  icons
 $content-margin: 1.5rem;    // gap between panels
 $header-height: 7.25rem;    // reserved space for the taller two-line header
 
@@ -15,7 +18,8 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 .akd-header {
     position: fixed;
     top: $dashboard-pad;
-    left: $dashboard-pad + $sidebar-width + $content-margin;
+    left: calc(#{$dashboard-pad} + var(--sidebar-width, #{$sidebar-width}) +
+        #{$content-margin});
     right: $dashboard-pad;
     z-index: $z-header;
     min-height: 5.5rem;
@@ -299,7 +303,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     top: $dashboard-pad;
     bottom: $dashboard-pad;
     left: $dashboard-pad;
-    width: $sidebar-width;
+    width: var(--sidebar-width, #{$sidebar-width});
     background-color: rgba($black-soft, 0.8);
     border: 1px solid $black-line;
     border-radius: $radius-lg;
@@ -309,6 +313,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+    transition: width 0.35s cubic-bezier(.22, 1, .36, 1);
 
     @media (max-width: $bp-lg) {
         top: 0;
@@ -336,15 +341,71 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         flex-shrink: 0;
     }
 
-    &__brand {
+    &__brand-row {
+        position: relative;
         display: flex;
         align-items: center;
-        height: 40px;
+        gap: $space-sm;
+        flex: 1;
+        min-width: 0;
+        height: $sidebar-icon-box;
+        transition: gap 0.25s ease;
+    }
+
+    &__brand {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        transition: flex 0.25s ease, width 0.25s ease;
     }
 
     &__logo {
+        position: absolute;
+        top: 50%;
+        left: 0;
         height: 100%;
         width: auto;
+        transform: translateY(-50%);
+        transition: opacity 0.25s ease, left 0.25s ease, transform 0.25s ease;
+
+        &--icon {
+            opacity: 0;
+        }
+    }
+
+    &__collapse-toggle {
+        position: relative;
+        flex-shrink: 0;
+        width: $sidebar-icon-box;
+        height: $sidebar-icon-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 2px;
+        background: rgba($white, 0.03);
+        border: 1px solid $black-line;
+        border-radius: $radius-full;
+        color: $white-muted;
+        font-size: $fs-md;
+        cursor: pointer;
+        transition: background-color $transition-fast, color $transition-fast, 
+            opacity 0.2s ease;
+
+        &:hover {
+            background: rgba($white, 0.08);
+            color: $white;
+            border-color: rgba($white, 0.2);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $sakura;
+            outline-offset: -2px;
+        }
+
+        @media (max-width: $bp-lg) {
+            display: none;
+        }
     }
 
     &__close {
@@ -434,6 +495,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         flex-direction: column;
         gap: 1px;
         min-width: 0;
+        transition: opacity 0.2s ease, width 0.2s ease;
     }
 
     &__profile-name {
@@ -455,7 +517,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         color: $white-muted;
         font-size: $fs-xs;
         margin-left: auto;
-        transition: transform 0.22s ease;
+        transition: transform 0.22s ease, opacity 0.2s ease, width 0.2s ease;
     }
 
     &__profile[aria-expanded="true"] &__profile-chevron {
@@ -549,6 +611,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         text-transform: uppercase;
         margin-bottom: $space-sm;
         padding: 0 $space-xs;
+        transition: opacity 0.2s ease, height 0.2s ease, margin 0.2s ease;
     }
 
     &__list {
@@ -594,6 +657,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
         font-weight: $fw-regular;
         line-height: $lh-snug;
         white-space: nowrap;
+        transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
     }
 
     // Active state
@@ -700,19 +764,280 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 }
 
 // ==========================================
+// DESKTOP SIDEBAR COLLAPSE
+// ==========================================
+.akd-sidebar__flyout-heading {
+    display: none;
+    padding: $space-xs $space-sm;
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    color: rgba($white-faint, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid $black-line;
+    margin-bottom: $space-xs;
+}
+
+.akd-sidebar__item--branch-active {
+    > .akd-sidebar__row .akd-sidebar__icon,
+    > .akd-sidebar__row .akd-sidebar__label {
+        color: $sakura;
+    }
+}
+
+.akd-sidebar-tooltip {
+    position: fixed;
+    z-index: $z-mobile-nav + 20;
+    background-color: $black-soft;
+    border: 1px solid $black-line;
+    color: $white;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    padding: 6px 10px;
+    border-radius: $radius-sm;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+// A flyout panel is a `.akd-sidebar__sublist` (or the profile dropdown)
+// relocated to <body> as position:fixed while open — that's what lets it
+// escape .akd-sidebar__scroll's clipping and sit beside the sidebar at any
+// nesting depth. JS handles the top/left; this class only handles the look.
+.akd-sidebar__sublist.akd-flyout-portal,
+.akd-sidebar__profile-dropdown.akd-flyout-portal {
+    position: fixed;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 15rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: $space-xs;
+    margin: 0;
+    background-color: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: $z-mobile-nav + 10;
+
+    &.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
+    }
+}
+
+.akd-sidebar__profile-dropdown.akd-flyout-portal {
+    width: 13.75rem;
+}
+
+.akd-flyout-portal > .akd-sidebar__flyout-heading {
+    display: block;
+}
+
+@media (min-width: $bp-lg) {
+    // Declared on :root, not .akd-layout: .akd-content is rendered by each
+    // page's own template as a sibling of #akdLayout (header.php closes
+    // .akd-layout's tag before page content is echoed), not a descendant of
+    // it. A custom property only cascades to descendants of the element
+    // it's set on, so scoping it to .akd-layout meant .akd-content never
+    // saw the change and silently kept using the fallback value — it
+    // wasn't animating slowly, it just never moved. .akd-header sits
+    // inside #akdLayout, which is why it tracked correctly. :root is an
+    // ancestor of the whole page, so this covers both without a second
+    // copy of the value.
+    :root.akd-sidebar-collapsed {
+        --sidebar-width: #{$sidebar-width-collapsed};
+    }
+
+    .akd-layout.is-collapsed {
+        .akd-sidebar {
+            &__item {
+                margin-top: $space-sm;
+            }
+            .akd-sidebar__header {
+                padding-left: $space-sm;
+                padding-right: $space-sm;
+                transition: padding 0.25s ease;
+            }
+
+            .akd-sidebar__brand-row {
+                gap: 0;
+                justify-content: center;
+            }
+
+            .akd-sidebar__brand {
+                flex: 0 0 $sidebar-icon-box;
+                width: $sidebar-icon-box;
+            }
+
+            .akd-sidebar__logo {
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .akd-sidebar__logo--full { opacity: 0; }
+            .akd-sidebar__logo--icon { opacity: 1; }
+
+            .akd-sidebar__icon { font-size: $fs-lg; }
+
+            // The toggle sits exactly on top of the icon logo (same box, via
+            // inset:0 on the now-40px-wide brand-row) and only shows on hover —
+            // it visually replaces the logo rather than appearing beside it.
+            .akd-sidebar__collapse-toggle {
+                position: absolute;
+                inset: 0;
+                margin: auto;
+                background: transparent;
+                border-color: transparent;
+                opacity: 0;
+                pointer-events: none;
+                font-size: $fs-lg;
+            }
+
+            .akd-sidebar__brand-row:hover .akd-sidebar__collapse-toggle,
+            .akd-sidebar__brand-row:focus-within .akd-sidebar__collapse-toggle {
+                opacity: 1;
+                width: $sidebar-icon-box + 10px;
+                height: $sidebar-icon-box + 10px;
+                pointer-events: auto;
+                background: rgba($white, 0.03);
+                border: 1px solid $black-line;
+                border-radius: $radius-full;
+            }
+
+            .akd-sidebar__brand-row:hover .akd-sidebar__logo--icon,
+            .akd-sidebar__brand-row:focus-within .akd-sidebar__logo--icon {
+                opacity: 0;
+            }
+
+            .akd-sidebar__scroll {
+                padding-left: $space-xs;
+                padding-right: $space-xs;
+            }
+
+            .akd-sidebar__group-label {
+                display: none;
+            }
+
+            .akd-sidebar__profile {
+                width: 46px;
+                height: 46px;
+                padding: 0;
+                margin: 0 auto;
+                justify-content: center;
+                gap: 0;
+                border-radius: $radius-full;
+            }
+
+            .akd-sidebar__profile-info,
+            .akd-sidebar__profile-chevron {
+                opacity: 0;
+                width: 0;
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            // Icon-only rail. Only ever contains depth-0 items — anything with
+            // children opens as a flyout instead, so nested items never render
+            // here and never need this circular treatment.
+            .akd-sidebar__nav {
+                .akd-sidebar__link,
+                .akd-sidebar__link--parent.akd-sidebar__expand-btn {
+                    width: $sidebar-icon-box + 10px;
+                    height: $sidebar-icon-box + 10px;
+                    min-height: $sidebar-icon-box + 10px;
+                    // padding: 10px;
+                    margin: 0 auto;
+                    gap: 0;
+                    justify-content: center;
+                    border-radius: $radius-full;
+                }
+
+                // .akd-sidebar__link--parent carries `flex: 1` from the
+                // always-on base rule (needed in expanded mode so it can
+                // grow next to its chevron button). That rule's flex-basis
+                // of 0% overrides the width set above and stretches the
+                // trigger across the whole row — this is why parent icons
+                // drift left while plain icons, which don't carry that
+                // class, center correctly. Locking the basis back to the
+                // shared icon-box size is what lets the width apply.
+                .akd-sidebar__link--parent {
+                    flex: 0 0 $sidebar-icon-box + 10px;
+                }
+
+                .akd-sidebar__row {
+                    justify-content: center;
+                }
+
+                .akd-sidebar__label,
+                .akd-sidebar__chevron {
+                    display: none;
+                }
+
+                .akd-sidebar__expand-btn:not(.akd-sidebar__link--parent) {
+                    display: none;
+                }
+
+                .akd-sidebar__item--active::after {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-header,
+    .akd-sidebar,
+    .akd-content,
+    .akd-sidebar__logo,
+    .akd-sidebar__label,
+    .akd-sidebar__chevron,
+    .akd-sidebar__sublist,
+    .akd-sidebar__collapse-toggle,
+    .akd-sidebar-tooltip,
+    .akd-flyout-portal {
+        transition-duration: 0.001ms !important;
+    }
+}
+
+// ==========================================
 // CONTENT
 // ==========================================
 .akd-content {
     flex: 1;
     margin-top: $dashboard-pad + $header-height + $content-margin - $space-md;
-    margin-left: $sidebar-width + $content-margin + $space-xs;
+
+    margin-left: calc(
+        #{$dashboard-pad} +
+        var(--sidebar-width, #{$sidebar-width}) +
+        #{$content-margin}
+    );
+
+    margin-right: $dashboard-pad;
+
     background-color: transparent;
     padding: 0;
-    // min-height: calc(100vh - #{$dashboard-pad} * 2);
+
     transition: margin-left 0.35s cubic-bezier(.22, 1, .36, 1);
 
     @media (max-width: $bp-lg) {
         margin-left: 0;
+        margin-right: 0;
         margin-top: $header-height + $space-sm;
     }
 }

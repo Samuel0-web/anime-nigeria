@@ -126,12 +126,17 @@ if (!function_exists('akd_render_nav_items')) {
             $branchActive = $hasChildren && akd_nav_branch_is_active($item, $currentPath);
             $isExpanded = $branchActive;
 
-            $itemClass = 'akd-sidebar__item';
+                        $itemClass = 'akd-sidebar__item';
             if ($depth > 0) {
                 $itemClass .= ' akd-sidebar__item--child';
             }
+
             if ($isActive) {
                 $itemClass .= ' akd-sidebar__item--active';
+            }
+
+            if ($hasChildren && $branchActive && !$isActive) {
+                $itemClass .= ' akd-sidebar__item--branch-active';
             }
 
             if (!$hasChildren) {
@@ -185,6 +190,7 @@ if (!function_exists('akd_render_nav_items')) {
                 </div>
 
                 <ul class="akd-sidebar__sublist<?= $isExpanded ? ' is-open' : '' ?>" id="<?= $submenuId ?>">
+                    <li class="akd-sidebar__flyout-heading"><?= htmlspecialchars($item['label']) ?></li>
                     <?php akd_render_nav_items($item['children'], $currentPath, $depth + 1); ?>
                 </ul>
             </li>
@@ -294,6 +300,19 @@ $todayDate = date('l, F j');
 </div>
 
 <div class="akd-layout" id="akdLayout">
+    <script>
+        (function () {
+            try {
+                var uid = <?= (int) $user['id'] ?>;
+                var collapsed = localStorage.getItem('akd-sidebar-collapsed:' + uid) === '1';
+                if (collapsed && window.innerWidth >= 1024) {
+                    document.getElementById('akdLayout').classList.add('is-collapsed');
+                    document.documentElement.classList.add('akd-sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <header class="akd-header">
         <div class="akd-header__primary">
             <button class="akd-header__toggle" id="sidebarToggle" aria-label="Open menu" aria-expanded="false">
@@ -356,9 +375,20 @@ $todayDate = date('l, F j');
     <!-- Sidebar -->
     <nav class="akd-sidebar" id="akdSidebar" data-user-id="<?= (int) $user['id'] ?>" aria-label="Main Navigation">
         <div class="akd-sidebar__header">
-            <a href="/dashboard" class="akd-sidebar__brand">
-                <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria" class="akd-sidebar__logo">
-            </a>
+            <div class="akd-sidebar__brand-row">
+                <a href="/dashboard" class="akd-sidebar__brand" aria-label="Anime Nigeria — Dashboard">
+                    <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--full">
+                    <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--icon">
+                </a>
+
+                <button type="button" class="akd-sidebar__collapse-toggle"
+                    id="sidebarCollapseToggle" aria-expanded="true"
+                    aria-label="Collapse sidebar"
+                >
+                    <i class="bi bi-layout-sidebar-inset-reverse" aria-hidden="true"></i>
+                </button>
+            </div>
+
             <button class="akd-sidebar__close" id="sidebarClose" aria-label="Close menu">
                 <i class="fas fa-xmark"></i>
             </button>
