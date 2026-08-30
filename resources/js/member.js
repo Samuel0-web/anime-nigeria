@@ -13,6 +13,7 @@ import './member/awards-nominations.js';
 import './member/awards-voting.js';
 import { initProfileModal } from './member/profile-modal';
 import { initAchievementModal } from './member/achievements';
+import { initAnnouncementsFilter } from './member/announcements';
 import { initSettingsPage } from './member/settings';
 
 initPreloader();
@@ -26,5 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfileModal();
     initAchievementModal();
     initSettingsPage();
+    initAnnouncementsFilter();
     initLogout();
 });

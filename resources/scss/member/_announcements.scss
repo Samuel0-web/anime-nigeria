@@ -1,0 +1,358 @@
+@use '../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// PAGE SHELL
+// ==========================================
+.akd-announce {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: $space-lg $space-sm $space-xxl;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+@keyframes akd-announce-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+// ==========================================
+// FILTER
+// ==========================================
+.akd-announce-filter {
+    animation: akd-announce-fade-in $transition-slow $ease-standard both;
+}
+
+.akd-announce-filter__row {
+    display: flex;
+    align-items: center;
+    gap: $space-xxs;
+}
+
+.akd-announce-filter__scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    gap: $space-xxs;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.akd-announce-filter__pill {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    color: $white-muted;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+
+    &[aria-pressed="true"] {
+        background: $sakura-dim;
+        border-color: rgba($sakura, 0.4);
+        color: $white;
+    }
+
+    &--gold[aria-pressed="true"] {
+        background: $gold-dim;
+        border-color: rgba($gold, 0.45);
+        color: $gold;
+    }
+}
+
+// Desktop-only prev/next access for the filter row. Hidden below $bp-lg,
+// where the existing native touch scroll (same technique already used by
+// .akd-breadcrumbs and the dashboard event rail on mobile) stays the only
+// interaction, so this never competes with the sidebar swipe gesture.
+.akd-announce-filter__nav {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    background: rgba($white, 0.02);
+    color: $white-muted;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast, opacity $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.08);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    // Compound selector, so it reliably wins over the plain class above
+    // regardless of source order. See note below on .akd-announce-row
+    // for why the plain [hidden] attribute alone isn't enough here.
+    &[hidden] {
+        display: none;
+    }
+}
+
+@media (min-width: $bp-lg) {
+    .akd-announce-filter__nav:not([hidden]) {
+        display: inline-flex;
+    }
+}
+
+// ==========================================
+// ANNOUNCEMENT LIST
+// ==========================================
+// The parent now owns the surface (background, border, outer radius) —
+// this is the "one cohesive list" container. Rows sit inset from its
+// edges via padding, with a very small gap and their own tiny radius,
+// so they read as list items rather than separate floating cards.
+.akd-announce-group {
+    list-style: none;
+    margin: 0;
+    padding: $space-xs;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs - $space-xxs;
+    animation: akd-announce-fade-in $transition-slow $ease-standard both;
+    animation-delay: 60ms;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-announce-row {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+    padding: $space-md;
+    background: $black-soft;
+    border-radius: 5px;
+    transition: opacity 0.15s ease, background $transition-base;
+
+    &:hover {
+        background: rgba($white, 0.06);
+    }
+
+    // Applied by JS to whichever rows are actually visible after the
+    // current filter, not by DOM position. Non-matching rows stay in
+    // the markup as [hidden] rather than being removed, so :first-child
+    // and :last-child would keep pointing at the original dataset order
+    // instead of the filtered one.
+    &.is-first-visible {
+        border-top-left-radius: $radius-lg;
+        border-top-right-radius: $radius-lg;
+    }
+
+    &.is-last-visible {
+        border-bottom-left-radius: $radius-lg;
+        border-bottom-right-radius: $radius-lg;
+    }
+
+    // A row that just became visible fades in at its already-correct
+    // position. No transform is involved, so there's nothing to travel
+    // from: the row is placed in its final spot the instant the filter
+    // is applied, and only its opacity animates.
+    &.is-entering {
+        opacity: 0;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-announce-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    gap: $space-sm;
+}
+
+.akd-announce-row__category {
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &--gold    { color: $gold; }
+    &--teal    { color: $accent-teal; }
+    &--violet  { color: $accent-violet; }
+    &--ember   { color: $accent-ember; }
+    &--crimson { color: $accent-crimson; }
+}
+
+.akd-announce-row__date {
+    flex-shrink: 0;
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-announce-row__title {
+    margin: 0;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $white;
+    line-height: $lh-tight;
+}
+
+.akd-announce-row__excerpt {
+    margin: 0;
+    font-size: $fs-sm;
+    color: $white-faint;
+    line-height: $lh-normal;
+    max-width: 60ch;
+}
+
+.akd-announce-row__cta {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: $space-xxs;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white-muted;
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    i {
+        font-size: 10px;
+        transition: transform $transition-fast;
+    }
+
+    &:hover,
+    &:focus-visible {
+        color: $sakura;
+
+        i { transform: translateX(2px); }
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+        border-radius: $radius-sm;
+    }
+
+    &--gold {
+        color: $gold;
+
+        &:hover,
+        &:focus-visible {
+            color: color.adjust($gold, $lightness: 10%);
+        }
+    }
+}
+
+// ==========================================
+// EMPTY STATES
+// ==========================================
+.akd-announce-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-xs;
+    padding: $space-xl $space-md;
+    border: 1px dashed $black-line;
+    border-radius: $radius-lg;
+
+    // Same fix as .akd-announce-row: without this, the empty state's
+    // own `display: flex` overrode [hidden]'s default, so it rendered
+    // visible on every page load regardless of whether content existed.
+    &[hidden] {
+        display: none;
+    }
+
+    &__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-full;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $white-faint;
+        background: rgba($white, 0.03);
+        font-size: $fs-base;
+        margin-bottom: $space-xxs;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__text {
+        margin: 0;
+        font-size: $fs-sm;
+        color: $white-faint;
+        max-width: 32ch;
+    }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+@media (max-width: $bp-md) {
+    .akd-announce {
+        padding: $space-md $space-sm $space-xl;
+    }
+
+    .akd-announce-row {
+        padding: $space-sm $space-md;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-announce-filter,
+    .akd-announce-group {
+        animation: none !important;
+    }
+
+    .akd-announce-row {
+        transition: none !important;
+    }
+}

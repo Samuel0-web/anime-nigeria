@@ -205,6 +205,7 @@ $routes = [
     '/member/awards/nominations'                => 'member/awards/nominations.php',
     '/member/awards/voting'                     => 'member/awards/voting.php',
     '/member/awards/winners'                    => 'member/awards/winners.php',
+    '/member/announcements'                     => 'member/announcements.php',
     '/member/trivia'                            => 'member/trivia.php',
     '/member/leaderboard'                       => 'member/leaderboard.php',
     '/member/gallery'                           => 'member/gallery.php',
