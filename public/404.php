@@ -4,15 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/uploads/logos/upscalemedia-transformed (1).png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/logos/upscalemedia-transformed (1).png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/logos/upscalemedia-transformed (1).png">
     <title>404 - Page Not Found</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Unified typography using only Atkinson Hyperlegible -->
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         /* ==========================================================================

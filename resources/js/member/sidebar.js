@@ -263,7 +263,6 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         el.style.left = '';
         el.style.top = '';
         el.style.maxHeight = '';
-
         const parent = el.__akdOriginalParent;
         const next = el.__akdOriginalNext;
         if (parent) parent.insertBefore(el, next || null);
@@ -309,15 +308,16 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
     function computeDepth(item) {
         let depth = 0;
         let el = item.parentElement;
+
         while (el && el !== sidebar) {
             if (el.classList?.contains('akd-sidebar__sublist')) depth++;
             el = el.parentElement;
         }
+
         return depth;
     }
 
     allItems.forEach((item) => { item.dataset.flyoutLevel = String(computeDepth(item)); });
-
     const openLevels = []; // openLevels[level] = { item, panel } for whichever panel is open at that level
     let closeTimer = null;
 
@@ -329,6 +329,31 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         return item.querySelector(':scope > .akd-sidebar__row .akd-sidebar__expand-btn, :scope > .akd-sidebar__expand-btn');
     }
 
+    // Static accordion state (a sublist carrying is-open in its normal
+    // document position, plus the matching aria-expanded on its trigger)
+    // is only ever meaningful in expanded mode. In collapsed mode the
+    // flyout is the only place children appear, and the CSS in
+    // _frame.scss already hides any static is-open sublist while
+    // collapsed, this only keeps aria-expanded in sync with what is
+    // actually visible. The is-open class itself is left untouched:
+    // removing it would erase the active-branch accordion state that
+    // expanded mode needs to restore correctly if the sidebar is
+    // expanded again later.
+    function syncAccordionAriaForCollapseState() {
+        sidebar.querySelectorAll('.akd-sidebar__nav .akd-sidebar__item--parent').forEach((
+            item
+        ) => {
+            const sublist = getOwnSublist(item);
+            const btn = getExpandBtn(item);
+            if (!sublist || !btn) return;
+
+            const visuallyOpen = isCollapsed() && isDesktop() ? false
+                : sublist.classList.contains('is-open');
+
+            btn.setAttribute('aria-expanded', String(visuallyOpen));
+        });
+    }
+
     function closeFromLevel(level) {
         for (let l = openLevels.length - 1; l >= level; l--) {
             const entry = openLevels[l];
@@ -338,6 +363,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
             getExpandBtn(entry.item)?.setAttribute('aria-expanded', 'false');
             openLevels[l] = undefined;
         }
+
         openLevels.length = level;
     }
 
@@ -350,18 +376,14 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         if (!isCollapsed() || !isDesktop()) return;
         const level = Number(item.dataset.flyoutLevel || 0);
         if (openLevels[level] && openLevels[level].item === item) return;
-
         closeFromLevel(level);
-
         const sublist = getOwnSublist(item);
         if (!sublist) return;
-
         closeProfileDropdown();
-
         const anchorRect = item.getBoundingClientRect();
+
         const prevPanelRect = level > 0 && openLevels[level - 1]
-            ? openLevels[level - 1].panel.getBoundingClientRect()
-            : null;
+            ? openLevels[level - 1].panel.getBoundingClientRect() : null;
 
         portalElement(sublist, anchorRect, prevPanelRect);
         openLevels[level] = { item, panel: sublist };
@@ -396,11 +418,13 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         // Once this item's own sublist is showing as a flyout panel,
         // hovering the panel itself must keep this level open too.
         const sublist = getOwnSublist(item);
+
         if (sublist) {
             sublist.addEventListener('mouseenter', () => {
                 if (!isCollapsed() || !isDesktop()) return;
                 clearTimeout(closeTimer);
             });
+
             sublist.addEventListener('mouseleave', () => {
                 if (!isCollapsed() || !isDesktop()) return;
                 clearTimeout(closeTimer);
@@ -410,6 +434,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
     });
 
     const expandButtons = sidebar.querySelectorAll('.akd-sidebar__expand-btn');
+
     expandButtons.forEach((btn) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -420,6 +445,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
                 item.classList.contains('is-flyout-open')
                     ? closeFromLevel(Number(item.dataset.flyoutLevel))
                     : openFlyoutFor(item);
+
                 return;
             }
 
@@ -437,8 +463,10 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         }
 
         const insideOpenFlyout = openLevels.some(
-            (entry) => entry && (entry.item.contains(e.target) || entry.panel.contains(e.target))
+            (entry) => entry && (entry.item.contains(e.target) 
+            || entry.panel.contains(e.target))
         );
+
         if (!insideOpenFlyout) closeAllFlyouts();
     });
 
@@ -510,6 +538,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         layout.classList.toggle('is-collapsed', next);
         document.documentElement.classList.toggle('akd-sidebar-collapsed', next);
         applyCollapseButton(next);
+        syncAccordionAriaForCollapseState();
 
         try {
             localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
@@ -530,7 +559,9 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
             collapseToggle.blur();
         }
     });
+
     applyCollapseButton(isCollapsed());
+    syncAccordionAriaForCollapseState();
 
     // Collapse/expand tooltip — reuses the same tooltip element as the nav
     // icons. Direct hover/focus on the button covers the expanded state,

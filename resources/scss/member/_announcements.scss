@@ -151,7 +151,7 @@
     padding: $space-xs;
     display: flex;
     flex-direction: column;
-    gap: $space-xs - $space-xxs;
+    gap: $space-xxs;
     animation: akd-announce-fade-in $transition-slow $ease-standard both;
     animation-delay: 60ms;
 

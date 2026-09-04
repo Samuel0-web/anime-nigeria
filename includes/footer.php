@@ -31,7 +31,7 @@
 <footer class="an-footer">
     <div class="an-container an-footer__inner">
         <a href="/" class="an-footer__brand" aria-label="Anime Nigeria">
-            <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
+            <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
         </a>
 
         <ul class="an-footer__socials" aria-label="Anime Nigeria on social media">

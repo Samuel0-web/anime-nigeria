@@ -8,6 +8,7 @@ import { initPreloader } from "./modules/preloader";
 import { initLogout } from "./modules/logout";
 import { initSidebar } from './member/sidebar';
 import './member/dashboard';
+import './member/challenges.js';
 import './member/awards-overview.js';
 import './member/awards-nominations.js';
 import './member/awards-voting.js';

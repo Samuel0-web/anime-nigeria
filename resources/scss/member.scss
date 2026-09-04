@@ -6,13 +6,14 @@
 @use "member/frame";
 @use "member/dashboard";
 @use "member/profile";
+@use "member/player";
 @use "member/anime-awards/overview";
 @use "member/anime-awards/nominations";
 @use "member/anime-awards/voting";
 @use "member/anime-awards/winners";
 @use "member/announcements";
-@use "member/leaderboard";
-@use "member/player";
 @use "member/trivia";
+@use "member/leaderboard";
+@use "member/community/challenges";
 @use "member/help-centre";
 @use "member/settings";

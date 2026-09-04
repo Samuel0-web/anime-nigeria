@@ -31,7 +31,7 @@ $dashboardData = [
             'meta'        => 'Starts in 1h 24m',
             'action'      => 'View Challenge',
             'url'         => '/member/challenges',
-            'image'       => '/uploads/upscalemedia-transformed (1).png',
+            'image'       => '/uploads/logos/upscalemedia-transformed (1).png',
         ],
         [
             'id'          => 'community-awards',

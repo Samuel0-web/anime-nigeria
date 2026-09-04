@@ -51,11 +51,11 @@ export const currentPlayer = {
 // Other "live" participants. roundPoints[i] is what they score on question i+1.
 // Round 6 is the Double Points round, their scores reflect that.
 export const opponents = [
-    { id: "p1", username: "GokuSSJ", avatar: "/uploads/upscalemedia-transformed%20(1).png", roundPoints: [820, 750, 900, 680, 790, 1600] },
+    { id: "p1", username: "GokuSSJ", avatar: "/uploads/logos/upscalemedia-transformed%20(1).png", roundPoints: [820, 750, 900, 680, 790, 1600] },
     { id: "p2", username: "SakuraBloom", avatar: "/uploads/upscalemedia-transformed%20(2).png", roundPoints: [600, 820, 500, 900, 650, 900] },
     { id: "p3", username: "LuffyKing", avatar: "/uploads/upscalemedia-transformed%20(3).png", roundPoints: [750, 600, 820, 750, 900, 1200] },
     { id: "p4", username: "ZeroTwo_02", avatar: "/uploads/upscalemedia-transformed.png", roundPoints: [500, 700, 650, 800, 700, 800] },
-    { id: "p5", username: "TanjiroFlame", avatar: "/uploads/upscalemedia-transformed%20(1).png", roundPoints: [900, 500, 700, 600, 800, 1400] },
+    { id: "p5", username: "TanjiroFlame", avatar: "/uploads/logos/upscalemedia-transformed%20(1).png", roundPoints: [900, 500, 700, 600, 800, 1400] },
     { id: "p6", username: "MikasaAckerman", avatar: "/uploads/upscalemedia-transformed%20(2).png", roundPoints: [650, 900, 750, 500, 600, 1000] },
 ];
 

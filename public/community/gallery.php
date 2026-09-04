@@ -25,19 +25,19 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="an-gallery-thumb">
-                <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png" alt="">
+                <img src="/uploads/logos/Icon-Anime-Nigeria-Logo-768x752.png" alt="">
             </div>
 
             <div class="an-gallery-thumb">
-                <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="">
+                <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="">
             </div>
 
             <div class="an-gallery-thumb">
-                <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="">
+                <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="">
             </div>
 
             <div class="an-gallery-thumb">
-                <img src="/uploads/upscalemedia-transformed (1).png" alt="">
+                <img src="/uploads/logos/upscalemedia-transformed (1).png" alt="">
             </div>
         </div>
 
@@ -63,7 +63,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         Explore Gallery
                     </a>
 
-                    <a href="/community/challenges.php" class="an-btn an-btn--secondary">
+                    <a href="/community/challenges" class="an-btn an-btn--secondary">
                         View Challenges
                     </a>
                 </div>
@@ -164,7 +164,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </article>
 
                 <article class="an-gallery-item an-reveal" data-category="photo">
-                    <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png" alt="">
+                    <img src="/uploads/logos/Icon-Anime-Nigeria-Logo-768x752.png" alt="">
 
                     <div class="an-gallery-item__overlay">
                         <span>Photography</span>
@@ -173,7 +173,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </article>
 
                 <article class="an-gallery-item an-reveal" data-category="events">
-                    <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="">
+                    <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="">
 
                     <div class="an-gallery-item__overlay">
                         <span>Community</span>
@@ -182,7 +182,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </article>
 
                 <article class="an-gallery-item an-reveal" data-category="challenge">
-                    <img src="/uploads/upscalemedia-transformed (1).png" alt="">
+                    <img src="/uploads/logos/upscalemedia-transformed (1).png" alt="">
 
                     <div class="an-gallery-item__overlay">
                         <span>Challenge</span>

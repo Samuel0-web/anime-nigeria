@@ -1,0 +1,985 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// =============================================================================
+// PAGE
+// =============================================================================
+.akd-challenge-page {
+    display: flex;
+    flex-direction: column;
+    gap: $space-lg;
+    padding: ($space-lg * .5) 0 ($space-lg * 33);
+    height: 100vh;
+
+    // Every element below reads its identity colour from these custom
+    // properties instead of $gold directly. Values are set inline per
+    // challenge (see challenges.php) from that challenge's 'accent'
+    // field, so different challenge types get a genuinely different
+    // colour without a second styling system. The fallback keeps this
+    // file safe even if the inline style is ever missing.
+    --challenge-accent: #{$gold};
+    --challenge-accent-dim: #{$gold-dim};
+    --challenge-accent-border: rgba(223, 154, 27, 0.35);
+
+    // The success state and the file-selected state both rely on the
+    // `hidden` attribute, but several elements in this file set their
+    // own `display` (flex), which otherwise outranks the browser's
+    // built-in `[hidden] { display: none }` rule once any author rule
+    // of equal specificity exists. This keeps `hidden` authoritative
+    // for everything in the Challenges page regardless of how that
+    // element is otherwise displayed, and prevents this class of bug
+    // recurring for any future element added here.
+    [hidden] {
+        display: none !important;
+    }
+}
+
+// =============================================================================
+// SHARED BUTTON (scoped to the challenges feature, mirrors akd-award-btn)
+// =============================================================================
+.akd-challenge-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-xxs;
+    font-size: $fs-sm;
+    font-weight: $fw-bold;
+    padding: 0.85rem 1.6rem;
+    border-radius: $radius-full;
+    transition: transform $transition-fast, background $transition-fast,
+        opacity $transition-fast;
+
+    &:active { transform: scale(0.97); }
+
+    &--primary {
+        background: var(--challenge-accent);
+        color: $black;
+
+        &:hover { opacity: 0.88; }
+    }
+
+    &--ghost {
+        border: 1px solid $black-line;
+        color: $white;
+
+        &:hover { background: rgba($white, 0.06); }
+    }
+
+    &[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+// =============================================================================
+// HERO
+// =============================================================================
+.akd-challenge-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    min-height: 520px;
+    display: flex;
+    align-items: flex-end;
+    isolation: isolate;
+
+    @media (max-width: $bp-md) { min-height: 340px; }
+
+    &__art {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+
+        &-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 30%;
+        }
+
+        &-fade {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(0deg, rgba($black, 0.96) 8%, rgba($black, 0.55) 48%,
+                rgba($black, 0.15) 100%), linear-gradient(90deg, rgba($black, 0.75) 0%,
+                rgba($black, 0.15) 60%);
+        }
+
+        &-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(60% 50% at 20% 100%, var(--challenge-accent-dim),
+                transparent 70%);
+            mix-blend-mode: screen;
+        }
+    }
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: url('/uploads/noise.png') repeat;
+        opacity: 0.05;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 2;
+        padding: $space-lg;
+        max-width: 620px;
+
+        @media (max-width: $bp-md) { padding: $space-md; }
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-muted;
+        margin: 0 0 $space-sm;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 5px 12px;
+        border-radius: $radius-full;
+        border: 1px solid var(--challenge-accent-border);
+        color: var(--challenge-accent);
+        background: var(--challenge-accent-dim);
+        margin-bottom: $space-sm;
+
+        &--coming_soon {
+            color: $white-muted;
+            border-color: $black-line;
+            background: rgba($white, 0.04);
+        }
+
+        &--review {
+            color: $white-muted;
+            border-color: $black-line;
+            background: rgba($white, 0.04);
+        }
+
+        &-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: $radius-full;
+            background: currentColor;
+            animation: akd-challenge-pulse 1.8s ease-in-out infinite;
+        }
+    }
+
+    &__title {
+        color: $white;
+        font-size: $fs-2xl;
+        margin: 0 0 $space-xs;
+
+        @media (max-width: $bp-md) { font-size: $fs-xl; }
+    }
+
+    &__tagline {
+        color: $white-muted;
+        font-size: $fs-md;
+        margin: 0 0 $space-md;
+        max-width: 46ch;
+    }
+
+    &__actions { margin-bottom: $space-sm; }
+
+    &__note {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        color: $white-faint;
+        font-size: $fs-sm;
+        margin: 0;
+    }
+}
+
+// =============================================================================
+// TIMELINE
+// =============================================================================
+.akd-challenge-timeline {
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    padding: $space-md;
+    background: $black-soft;
+
+    &__list {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: $space-sm;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        @media (max-width: $bp-md) { grid-template-columns: repeat(2, 1fr); }
+
+        @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        padding: $space-xs $space-sm;
+        border-radius: $radius-sm;
+        border: 1px solid transparent;
+        transition: border-color $transition-fast, background $transition-fast;
+
+        &--closed {
+            .akd-challenge-timeline__marker {
+                background: rgba($white, 0.08);
+                border-color: $black-line;
+                color: $white-muted;
+            }
+        }
+
+        &--open {
+            border-color: var(--challenge-accent-border);
+            background: var(--challenge-accent-dim);
+
+            .akd-challenge-timeline__marker {
+                border-color: var(--challenge-accent-border);
+            }
+
+            .akd-challenge-timeline__state { color: var(--challenge-accent); }
+        }
+
+        &--available {
+            border-color: var(--challenge-accent-border);
+
+            .akd-challenge-timeline__marker {
+                background: var(--challenge-accent);
+                border-color: var(--challenge-accent);
+                color: $black;
+            }
+
+            .akd-challenge-timeline__state { color: var(--challenge-accent); }
+        }
+
+        &--upcoming { opacity: 0.6; }
+    }
+
+    &__marker {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: $radius-full;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        border: 1px solid $black-line;
+        color: $white-faint;
+    }
+
+    &__pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: $radius-full;
+        background: var(--challenge-accent);
+        animation: akd-challenge-pulse 1.8s ease-in-out infinite;
+    }
+
+    &__ring {
+        width: 10px;
+        height: 10px;
+        border-radius: $radius-full;
+        border: 2px solid $black-line;
+    }
+
+    &__label {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__state {
+        margin-left: auto;
+        font-size: $fs-xs;
+        color: $white-faint;
+        white-space: nowrap;
+    }
+}
+
+// =============================================================================
+// ROUNDS
+// =============================================================================
+.akd-challenge-rounds {
+    &__list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: $space-xs $space-sm;
+        border-radius: $radius-sm;
+        border: 1px solid $black-line;
+        min-width: 150px;
+
+        &--complete { opacity: 0.65; }
+
+        &--current {
+            border-color: var(--challenge-accent-border);
+            background: var(--challenge-accent-dim);
+        }
+
+        &--upcoming { opacity: 0.45; }
+    }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__count {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+}
+
+// =============================================================================
+// PANEL (shared shell for every phase-specific section)
+// =============================================================================
+.akd-challenge-panel {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--challenge-accent);
+        margin: 0;
+    }
+
+    &__heading {
+        color: $white;
+        font-size: $fs-xl;
+        margin: 0;
+
+        &--winner { text-align: center; }
+    }
+
+    &__desc {
+        color: $white-muted;
+        margin: 0 0 $space-sm;
+        max-width: 62ch;
+    }
+
+    &--winner {
+        .akd-challenge-panel__desc {
+            text-align: center;
+            max-width: none;
+        }
+    }
+
+    &__note {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        color: $white-faint;
+        font-size: $fs-sm;
+    }
+
+    &__sub-heading {
+        font-size: $fs-sm;
+        font-weight: $fw-bold;
+        color: $white-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: $space-sm 0 0;
+    }
+
+    &__vote-summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: 0 0 $space-sm;
+
+        strong {
+            color: var(--challenge-accent);
+            font-family: $font-mono;
+        }
+    }
+}
+
+// =============================================================================
+// SUBMISSIONS FORM (mock)
+// =============================================================================
+.akd-challenge-submit {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: $space-lg;
+    align-items: start;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    padding: $space-md;
+    background: $black-soft;
+
+    @media (max-width: $bp-md) { grid-template-columns: 1fr; }
+
+    &__instructions {
+        margin: 0;
+        padding-left: 1.1em;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: $lh-relaxed;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: $space-sm;
+    }
+
+    &__field {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xxs;
+
+        label {
+            font-size: $fs-sm;
+            font-weight: $fw-semibold;
+            color: $white;
+        }
+
+        input {
+            background: $input-bg;
+            border: 1px solid $black-line;
+            border-radius: $radius-sm;
+            padding: $space-xs $space-sm;
+            color: $white;
+            font-size: $fs-sm;
+            font-family: inherit;
+
+            &:focus-visible {
+                outline: 2px solid $sakura;
+                outline-offset: 2px;
+            }
+        }
+    }
+
+    &__hint {
+        margin: 0;
+        color: $white-faint;
+        font-size: $fs-xs;
+    }
+
+    &__panel {
+        display: flex;
+        flex-direction: column;
+        gap: $space-sm;
+    }
+
+    // Deliberately no border, background, border-radius, or padding
+    // box here. The success state must sit directly inside the
+    // existing .akd-challenge-submit card, not create its own nested
+    // surface.
+    &-success {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: $space-xs;
+        text-align: center;
+        padding: $space-lg 0;
+        animation: akd-challenge-reveal $transition-slow both;
+
+        &__icon {
+            color: var(--challenge-accent);
+            font-size: 1.8rem;
+        }
+
+        &__title {
+            margin: 0;
+            color: $white;
+            font-size: $fs-lg;
+        }
+
+        &__desc {
+            margin: 0;
+            color: $white-muted;
+        }
+    }
+}
+
+// =============================================================================
+// SUBMISSION GRID + CARD
+// =============================================================================
+.akd-challenge-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+
+    &--preview { opacity: 0.9; }
+
+    &--final {
+        grid-template-columns: repeat(2, 1fr);
+
+        @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+    }
+}
+
+.akd-challenge-submission {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    padding: $space-sm;
+    background: $black-soft;
+    transition: border-color $transition-fast, transform $transition-fast;
+    animation: akd-challenge-reveal $transition-slow both;
+
+    &.is-selected {
+        border-color: var(--challenge-accent-border);
+        box-shadow: 0 0 0 1px var(--challenge-accent-dim);
+    }
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__title {
+        color: $white;
+        font-size: $fs-base;
+        line-height: $lh-snug;
+        margin: 0;
+    }
+
+    &__by {
+        color: $white-faint;
+        font-size: $fs-xs;
+        margin: 0;
+    }
+
+    &__media {
+        &--audio { width: 100%; }
+
+        &--image {
+            border-radius: $radius-sm;
+            overflow: hidden;
+            aspect-ratio: 4 / 5;
+            background: $black;
+        }
+    }
+
+    &__audio {
+        width: 100%;
+        height: 40px;
+    }
+
+    &__image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
+.akd-challenge-vote-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xxs;
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    color: $white-muted;
+    transition: border-color $transition-fast, color $transition-fast,
+        background $transition-fast;
+
+    &:hover {
+        color: $white;
+        border-color: var(--challenge-accent-border);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+    }
+
+    &.is-selected {
+        color: $black;
+        background: var(--challenge-accent);
+        border-color: var(--challenge-accent);
+    }
+
+    &__icon {
+        font-size: 0.7rem;
+    }
+}
+
+// =============================================================================
+// WINNER REVEAL
+// =============================================================================
+.akd-challenge-winner-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: $space-md;
+    border-radius: $radius-lg;
+    border: 1px solid var(--challenge-accent-border);
+    background: linear-gradient(180deg, var(--challenge-accent-dim), transparent 60%), 
+        $black-soft;
+    text-align: center;
+    animation: akd-challenge-reveal $transition-slow both;
+
+    &__image {
+        width: 100%;
+        max-width: 260px;
+        border-radius: $radius-md;
+        object-fit: cover;
+    }
+
+    &__media--audio {
+        width: 100%;
+
+        audio { width: 100%; }
+    }
+
+    &__icon {
+        color: var(--challenge-accent);
+        font-size: 1.4rem;
+    }
+
+    &__title {
+        color: $white;
+        font-size: $fs-lg;
+        margin: 0;
+    }
+
+    &__by {
+        color: $white-muted;
+        margin: 0;
+    }
+
+    &__votes {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--challenge-accent);
+        margin: 0;
+    }
+}
+
+// =============================================================================
+// SUBMISSION CAPACITY
+// =============================================================================
+.akd-challenge-capacity {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+    margin-bottom: $space-sm;
+
+    &__bar {
+        height: 6px;
+        border-radius: $radius-full;
+        background: rgba($white, 0.08);
+        overflow: hidden;
+
+        &-fill {
+            height: 100%;
+            background: var(--challenge-accent);
+            border-radius: $radius-full;
+            transition: width $transition-slow;
+        }
+    }
+
+    &__text {
+        margin: 0;
+        color: $white-muted;
+        font-size: $fs-sm;
+    }
+
+    &--full {
+        .akd-challenge-capacity__bar-fill { background: $white-faint; }
+
+        .akd-challenge-capacity__text { color: $white; font-weight: $fw-semibold; }
+    }
+}
+
+// =============================================================================
+// FILE FIELD (redesigned upload)
+// =============================================================================
+.akd-challenge-file-field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+
+    &__label {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__rules {
+        margin: 0;
+        color: $white-faint;
+        font-size: $fs-xs;
+        line-height: $lh-relaxed;
+    }
+}
+
+.akd-challenge-dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-xxs;
+    text-align: center;
+    padding: $space-md;
+    border: 1px dashed $black-line;
+    border-radius: $radius-md;
+    background: $input-bg;
+    cursor: pointer;
+    transition: border-color $transition-fast, background $transition-fast;
+
+    &:hover,
+    &:focus-visible {
+        border-color: var(--challenge-accent-border);
+    }
+
+    &.is-dragover {
+        border-color: var(--challenge-accent);
+        background: var(--challenge-accent-dim);
+    }
+}
+
+.akd-challenge-dropzone__icon {
+    font-size: 1.4rem;
+    color: $white-faint;
+}
+
+.akd-challenge-dropzone__text {
+    color: $white-muted;
+    font-size: $fs-sm;
+    line-height: $lh-snug;
+}
+
+.akd-challenge-dropzone__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.akd-challenge-file-selected {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-xs $space-sm;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: $black-soft;
+
+    &__preview {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-sm;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+}
+
+.akd-challenge-file-selected__icon {
+    color: var(--challenge-accent);
+    font-size: 1.1rem;
+}
+
+.akd-challenge-file-selected__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.akd-challenge-file-selected__name {
+    margin: 0;
+    color: $white;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.akd-challenge-file-selected__meta {
+    margin: 0;
+    color: $white-faint;
+    font-size: $fs-xs;
+}
+
+.akd-challenge-file-selected__remove {
+    color: $white-faint;
+    transition: color $transition-fast;
+
+    &:hover { color: $white; }
+}
+
+.akd-challenge-field-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-xs;
+}
+
+.akd-challenge-char-count {
+    margin: 0;
+    color: $white-faint;
+    font-size: $fs-xs;
+    font-family: $font-mono;
+    white-space: nowrap;
+
+    &.is-near-limit { color: var(--challenge-accent); }
+    &.is-at-limit { color: $white; font-weight: $fw-semibold; }
+}
+
+// No dedicated error-red token exists in this file's confirmed tokens,
+// using a local accessible red here. Swap for a semantic token from
+// _tokens.scss if one is added later.
+.akd-challenge-field-error {
+    margin: 0;
+    color: #e5484d;
+    font-size: $fs-xs;
+}
+
+// =============================================================================
+// COMING SOON OVERVIEW
+// =============================================================================
+.akd-challenge-overview__steps {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    list-style: none;
+    margin: $space-md 0 0;
+    padding: 0;
+}
+
+.akd-challenge-overview__step {
+    display: flex;
+    gap: $space-sm;
+    padding: $space-sm;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: $black-soft;
+}
+
+.akd-challenge-overview__step-index {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-full;
+    border: 1px solid var(--challenge-accent-border);
+    color: var(--challenge-accent);
+    font-family: $font-mono;
+    font-size: $fs-sm;
+    font-weight: $fw-bold;
+}
+
+.akd-challenge-overview__step-title {
+    margin: 0 0 2px;
+    color: $white;
+    font-size: $fs-sm;
+    font-weight: $fw-bold;
+}
+
+.akd-challenge-overview__step-desc {
+    margin: 0;
+    color: $white-muted;
+    font-size: $fs-sm;
+    line-height: $lh-relaxed;
+}
+
+.akd-challenge-overview__rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-sm;
+    list-style: none;
+    margin: $space-sm 0 0;
+    padding: 0;
+}
+
+.akd-challenge-overview__rule {
+    display: flex;
+    align-items: center;
+    gap: $space-xxs;
+    padding: $space-xxs $space-sm;
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    color: $white-muted;
+    font-size: $fs-xs;
+
+    i { color: var(--challenge-accent); }
+}
+
+// =============================================================================
+// MOTION
+// =============================================================================
+@keyframes akd-challenge-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes akd-challenge-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-challenge-submission,
+    .akd-challenge-winner-card,
+    .akd-challenge-hero__badge-dot,
+    .akd-challenge-timeline__pulse {
+        animation: none;
+    }
+}

@@ -17,6 +17,8 @@ if ($user === null) {
 $page_title = $page_title ?? 'Member Dashboard';
 $page_description = $page_description ?? 'Anime Nigeria Member Dashboard';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$canonicalPath = rtrim($currentPath, '/') ?: '/';
+$canonicalUrl = rtrim((string) ($_ENV['APP_URL'] ?? 'https://animenigeria.ng'), '/') . $canonicalPath;
 
 $breadcrumbs ??= [
     [
@@ -46,10 +48,10 @@ $navGroups = [
                 ['label' => 'Winners', 'url' => '/member/awards/winners'],
             ],
         ],
-        ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/member/announcements'],
+        ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/member/announcements', 'badge' => '3', 'badge_label' => '3 new announcements'],
     ],
     'Community' => [
-        ['label' => 'Trivia', 'icon' => 'fa-solid fa-brain', 'url' => '/member/trivia'],
+        ['label' => 'Trivia', 'icon' => 'fa-solid fa-brain', 'url' => '/member/trivia', 'badge' => 'Live', 'badge_label' => 'Live'],
         ['label' => 'Leaderboard', 'icon' => 'fa-solid fa-ranking-star', 'url' => '/member/leaderboard'],
         [
             'label' => 'Community',
@@ -61,7 +63,7 @@ $navGroups = [
                     'label' => 'Community Awards (ANCA)',
                     'url' => null,
                     'children' => [
-                        ['label' => 'Overview', 'url' => '/member/community/awards'],
+                        ['label' => 'Overview', 'url' => '/member/community/awards/overview'],
                         ['label' => 'Nominations', 'url' => '/member/community/awards/nominations'],
                         ['label' => 'Voting', 'url' => '/member/community/awards/voting'],
                         ['label' => 'Winners', 'url' => '/member/community/awards/winners'],
@@ -109,6 +111,26 @@ if (!function_exists('akd_nav_branch_is_active')) {
     }
 }
 
+if (!function_exists('akd_render_nav_badge')) {
+    /**
+     * Renders a badge for a nav item if one is defined. Kept separate from
+     * akd_render_nav_items() so any item — leaf, parent-with-url, or
+     * parent-button — can opt into a badge without special-case markup.
+     */
+    function akd_render_nav_badge(array $item): void
+    {
+        if (empty($item['badge'])) {
+            return;
+        }
+        ?>
+        <span class="akd-sidebar__badge" aria-hidden="true"><?= htmlspecialchars((string) $item['badge']) ?></span>
+        <?php if (!empty($item['badge_label'])): ?>
+            <span class="visually-hidden"><?= htmlspecialchars($item['badge_label']) ?></span>
+        <?php endif; ?>
+        <?php
+    }
+}
+
 /**
  * Recursively renders <li> nav items at any depth. A parent (has 'children')
  * gets its own independent expand/collapse state, driven by aria-expanded +
@@ -147,6 +169,7 @@ if (!function_exists('akd_render_nav_items')) {
                             <i class="<?= htmlspecialchars($item['icon']) ?> akd-sidebar__icon"></i>
                         <?php endif; ?>
                         <span class="akd-sidebar__label"><?= htmlspecialchars($item['label']) ?></span>
+                        <?php akd_render_nav_badge($item); ?>
                     </a>
                 </li>
                 <?php
@@ -216,7 +239,7 @@ if ($hour < 12) {
     $greetingClass = 'akd-header__greeting-icon--evening';
 }
 
-$todayDate = date('l, F j');
+$todayDate = date('l, F jS');
 ?>
 
 <!DOCTYPE html>
@@ -226,12 +249,14 @@ $todayDate = date('l, F j');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($page_title) ?> | Anime Nigeria</title>
     <meta name="description" content="<?= htmlspecialchars($page_description) ?>">
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8') ?>">
     <meta name="theme-color" content="#000000">
     <meta name="csrf-token" content="<?= htmlspecialchars(Csrf::token()) ?>">
+    <meta name="robots" content="noindex, nofollow">
 
-    <link rel="icon" type="image/png" sizes="192x192" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/upscalemedia-transformed (1).png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/upscalemedia-transformed (1).png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/uploads/logos/upscalemedia-transformed (1).png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/logos/upscalemedia-transformed (1).png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/logos/upscalemedia-transformed (1).png">
 
     <?php vite('member'); ?>
 
@@ -377,8 +402,8 @@ $todayDate = date('l, F j');
         <div class="akd-sidebar__header">
             <div class="akd-sidebar__brand-row">
                 <a href="/dashboard" class="akd-sidebar__brand" aria-label="Anime Nigeria — Dashboard">
-                    <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--full">
-                    <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--icon">
+                    <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--full">
+                    <img src="/uploads/logos/Icon-Anime-Nigeria-Logo-768x752.png" alt="Anime Nigeria" class="akd-sidebar__logo akd-sidebar__logo--icon">
                 </a>
 
                 <button type="button" class="akd-sidebar__collapse-toggle"

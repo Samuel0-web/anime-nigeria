@@ -71,7 +71,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </svg>
 
                 <div class="an-community-hero__hub">
-                    <img src="/uploads/upscalemedia-transformed (1).png" alt="Anime Nigeria"
+                    <img src="/uploads/logos/upscalemedia-transformed (1).png" alt="Anime Nigeria"
                         class="an-community-hero__logo"
                     >
                 </div>
@@ -177,7 +177,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="an-community-story__visual an-reveal" style="--i:2">
                 <div class="an-community-story__visual-glow" aria-hidden="true"></div>
 
-                <img src="/uploads/Icon-Anime-Nigeria-Logo-768x752.png"
+                <img src="/uploads/logos/Icon-Anime-Nigeria-Logo-768x752.png"
                     alt="Anime fans gathering together through friendship, creativity and community."
                     class="an-community-story__image"
                 >

@@ -149,7 +149,7 @@ $voteData = ['categories' => $categories];
         </div>
 
         <div class="akd-vote-card__brand">
-            <img src="/uploads/Group-2.png" alt="" class="akd-vote-card__logo">
+            <img src="/uploads/logos/Group-2.png" alt="" class="akd-vote-card__logo">
             <p class="akd-vote-card__brand-year">ANAA 2026</p>
             <span class="akd-vote-card__brand-rule" aria-hidden="true"></span>
             <p class="akd-vote-card__brand-label">My Votes</p>
