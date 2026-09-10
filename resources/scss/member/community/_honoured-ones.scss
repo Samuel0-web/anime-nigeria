@@ -1,0 +1,434 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// Same six accents used across every ANCA page. Duplicated here rather
+// than shared via a forwarded map, same reasoning as every sibling
+// ANCA stylesheet: Sass module scope means the map isn't visible
+// without forwarding tokens.scss itself.
+$anca-accents: (
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'sakura':  $sakura,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+    'crimson': $accent-crimson,
+);
+
+// ==========================================
+// HERO
+// Deliberately plain, typography only, no image, no phase pill. The
+// active Awards pages use a photographic hero, this archive does not,
+// so the two never read as the same kind of page.
+// ==========================================
+.akd-honoured-hero {
+    padding: $space-xl 0 $space-lg;
+    text-align: center;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 $space-sm;
+    }
+
+    &__title {
+        font-size: clamp(2.25rem, 5vw, $fs-3xl);
+        font-weight: $fw-bold;
+        letter-spacing: -0.01em;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0 0 $space-sm;
+    }
+
+    &__desc {
+        max-width: 32rem;
+        margin: 0 auto;
+        font-size: $fs-base;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+    }
+}
+
+// ==========================================
+// RECORD INTRO
+// ==========================================
+.akd-honoured-record {
+    max-width: 36rem;
+    margin: 0 auto $space-xl;
+    text-align: center;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 $space-xs;
+    }
+
+    &__heading {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// EMPTY STATE
+// ==========================================
+.akd-honoured-empty {
+    max-width: 30rem;
+    margin: $space-xxl auto;
+    text-align: center;
+
+    &__heading {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// YEAR SELECTOR
+// A horizontal tab row, not a timeline. Scrolls on narrow viewports
+// instead of wrapping into a cramped grid.
+// ==========================================
+.akd-honoured-years {
+    display: flex;
+    gap: $space-xs;
+    overflow-x: auto;
+    padding-bottom: $space-xs;
+    margin-bottom: $space-lg;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    &__item {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        padding: $space-xs $space-md;
+        border-radius: $radius-full;
+        border: 1px solid $black-line;
+        background: transparent;
+        color: $white-faint;
+        font-family: $font-mono;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        transition: border-color $transition-fast, color $transition-fast, background $transition-fast;
+
+        &:hover {
+            color: $white;
+            border-color: rgba($white, 0.2);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $gold;
+            outline-offset: 2px;
+        }
+
+        &--active {
+            color: $white;
+            background: rgba($gold, 0.08);
+            border-color: rgba($gold, 0.4);
+        }
+    }
+
+    &__latest {
+        font-size: 9px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $gold;
+        border: 1px solid rgba($gold, 0.35);
+        border-radius: $radius-full;
+        padding: 2px 6px;
+    }
+}
+
+// ==========================================
+// EDITION HEADER
+// ==========================================
+.akd-honoured-archive__header {
+    text-align: center;
+    margin-bottom: $space-md;
+}
+
+.akd-honoured-archive__edition {
+    font-size: $fs-2xl;
+    font-weight: $fw-bold;
+    color: $white;
+    margin: 0 0 4px;
+}
+
+.akd-honoured-archive__note {
+    font-size: $fs-sm;
+    color: $white-muted;
+    margin: 0;
+}
+
+// ==========================================
+// CATEGORY FILTER
+// Secondary to the archive itself: compact pills, not a dashboard.
+// ==========================================
+.akd-honoured-filter {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-xs;
+    margin-bottom: $space-sm;
+
+    &__pill {
+        padding: 5px 14px;
+        border-radius: $radius-full;
+        border: 1px solid $black-line;
+        background: transparent;
+        color: $white-faint;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        transition: border-color $transition-fast, color $transition-fast, background $transition-fast;
+
+        &:hover {
+            color: $white;
+            border-color: rgba($white, 0.2);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $gold;
+            outline-offset: 2px;
+        }
+
+        &--active {
+            color: $black;
+            background: $white;
+            border-color: $white;
+        }
+    }
+}
+
+.akd-honoured-count {
+    text-align: center;
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    color: $white-faint;
+    margin: 0 0 $space-lg;
+}
+
+// ==========================================
+// RECOGNITION WALL
+// Structural, not data-driven: whichever card renders first or last
+// gets the wider treatment, same technique as the Overview category
+// grid. Since the wall re-renders on every filter change, this
+// recalculates correctly on its own, no JS involvement needed.
+// ==========================================
+.akd-honoured-wall {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $bp-sm) {
+        grid-template-columns: 1fr;
+    }
+
+    &__empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: $space-xl 0;
+        color: $white-faint;
+        font-size: $fs-sm;
+    }
+}
+
+.akd-honoured-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-xs;
+    padding: $space-lg $space-md;
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+    background: rgba($white, 0.015);
+    transition: border-color $transition-fast, background $transition-fast;
+
+    &:hover {
+        border-color: rgba($white, 0.16);
+        background: rgba($white, 0.03);
+    }
+
+    &:first-child,
+    &:last-child {
+        @media (min-width: calc(#{$bp-lg} + 1px)) {
+            grid-column: span 2;
+            padding: $space-xl $space-lg;
+        }
+    }
+
+    &:first-child &__portrait,
+    &:last-child &__portrait {
+        @media (min-width: calc(#{$bp-lg} + 1px)) {
+            width: 6.5rem;
+            height: 6.5rem;
+        }
+    }
+
+    &__category {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__portrait-link {
+        display: inline-flex;
+        border-radius: 50%;
+        transition: transform $transition-base;
+
+        &:hover,
+        &:focus-visible {
+            transform: scale(1.04);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $gold;
+            outline-offset: 3px;
+        }
+    }
+
+    &__portrait {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $black-line;
+        transition: width $transition-base, height $transition-base;
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: linear-gradient(160deg, rgba($color, 0.5), rgba($color, 0.14));
+            }
+        }
+    }
+
+    &__initials {
+        font-family: $font-mono;
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: rgba($black, 0.55);
+    }
+
+    &__name {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: $space-xs 0 0;
+
+        a {
+            color: inherit;
+            text-decoration: none;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+                text-underline-offset: 3px;
+            }
+        }
+    }
+
+    &__username {
+        font-size: $fs-xs;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__reason {
+        font-size: $fs-xs;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: $space-xxs 0 0;
+    }
+
+    &__edition {
+        margin-top: $space-xs;
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        color: $white-faint;
+    }
+}
+
+// ==========================================
+// CLOSING
+// ==========================================
+.akd-honoured-closing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-sm;
+    padding: $space-xxl $space-md;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__heading {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+    }
+
+    &__desc {
+        max-width: 26rem;
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-sm;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-honoured-card,
+    .akd-honoured-card__portrait-link,
+    .akd-honoured-card__portrait,
+    .akd-honoured-years__item,
+    .akd-honoured-filter__pill {
+        transition: none !important;
+    }
+}

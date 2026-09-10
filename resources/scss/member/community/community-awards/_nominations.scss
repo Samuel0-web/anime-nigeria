@@ -1,0 +1,525 @@
+@use '../../../tokens' as *;
+@use 'sass:color';
+
+// Same six accents as _overview.scss's $anca-accents. Sass module scope
+// means that map isn't visible here without forwarding tokens.scss
+// itself, so it's kept in sync manually, the same approach already used
+// for the PHP accent cycle in community-awards-support.php.
+$anca-accents: (
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'sakura':  $sakura,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+    'crimson': $accent-crimson,
+);
+
+// ==========================================
+// STATUS VIEW (not open / closed states)
+// Deliberately smaller than the open-state intro, a functional status
+// message rather than a moment in the award's identity.
+// ==========================================
+.akd-anca-nom-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+    max-width: 34rem;
+    padding: $space-xl 0;
+
+    &__heading {
+        font-size: clamp(1.75rem, 4vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// PAGE INTRO (open state)
+// ==========================================
+.akd-anca-nom-intro {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    padding-top: $space-md;
+
+    &__heading {
+        font-size: clamp(2.25rem, 5vw, $fs-3xl);
+        font-weight: $fw-bold;
+        letter-spacing: -0.01em;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// RULES STRIP
+// ==========================================
+.akd-anca-nom-rules {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-xs;
+    margin-top: $space-xs;
+    font-size: $fs-xs;
+    color: $white-faint;
+
+    &__item {
+        white-space: nowrap;
+    }
+
+    &__divider {
+        color: $black-line;
+    }
+}
+
+// ==========================================
+// YOUR NOMINATIONS SUMMARY
+// ==========================================
+.akd-anca-your-noms {
+    margin-top: $space-lg;
+    padding: $space-md $space-lg;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: rgba($white, 0.02);
+
+    &__label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 $space-sm;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-md $space-lg;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 10rem;
+    }
+
+    &__category {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+}
+
+// ==========================================
+// NOMINATION BOARD
+// Single-column editorial list rather than a card grid: large faint
+// index numbers on the left, content on the right, hairline dividers
+// between rows. Reads like a table of contents for the award.
+// ==========================================
+.akd-anca-board {
+    margin-top: $space-xl;
+    display: flex;
+    flex-direction: column;
+}
+
+.akd-anca-nom-row {
+    display: flex;
+    gap: $space-lg;
+    padding: $space-lg 0;
+    border-bottom: 1px solid $black-line;
+    transition: opacity $transition-base;
+
+    &:first-child {
+        padding-top: 0;
+    }
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &__index {
+        flex: 0 0 auto;
+        width: 3rem;
+        font-family: $font-mono;
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $black-line;
+        line-height: 1;
+        transition: color $transition-base;
+
+        @media (max-width: $bp-sm) {
+            width: 2rem;
+            font-size: $fs-lg;
+        }
+    }
+
+    &__main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__name {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 4px;
+    }
+
+    &__blurb {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-sm;
+        max-width: 32rem;
+    }
+
+    &__question {
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+        margin: 0 0 $space-md;
+    }
+
+    &__action {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $gold;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        cursor: pointer;
+        transition: gap $transition-fast;
+
+        &:hover {
+            gap: 0.6rem;
+        }
+
+        &--change {
+            color: $white-muted;
+            font-weight: $fw-regular;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+
+            &:hover {
+                color: $white;
+            }
+        }
+    }
+
+    &__nominated {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-size: $fs-sm;
+        color: $white;
+        margin: 0 0 $space-xs;
+
+        i {
+            color: $accent-teal;
+        }
+
+        span {
+            font-weight: $fw-semibold;
+        }
+    }
+
+    &__cancel-link {
+        margin-top: $space-sm;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $white-faint;
+        font-size: $fs-xs;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+
+        &:hover {
+            color: $white-muted;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+        margin-top: $space-md;
+    }
+}
+
+// Spotlight: dim every row except the one currently expanded.
+.akd-anca-board:has(.akd-anca-nom-row--expanded) .akd-anca-nom-row:not(.akd-anca-nom-row--expanded) {
+    opacity: 0.4;
+}
+
+.akd-anca-nom-row--expanded .akd-anca-nom-row__index {
+    color: $gold;
+}
+
+// ==========================================
+// SEARCH
+// ==========================================
+.akd-anca-nom-search {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: 0.75rem 1rem;
+    border-radius: $radius-md;
+    border: 1px solid $black-line;
+    background: $input-bg;
+    margin-bottom: $space-sm;
+
+    i {
+        color: $white-faint;
+    }
+
+    &__input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: $white;
+        font-size: $fs-sm;
+        font-family: $font-primary;
+
+        &::placeholder {
+            color: $white-faint;
+        }
+    }
+}
+
+.akd-anca-nom-results {
+    list-style: none;
+    margin: 0 0 $space-sm;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+.akd-anca-nom-result {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    width: 100%;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background $transition-fast, border-color $transition-fast;
+
+    &:hover {
+        background: rgba($gold, 0.06);
+        border-color: rgba($gold, 0.2);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($gold, 0.5);
+        outline-offset: 2px;
+    }
+}
+
+.akd-anca-nom-results__empty {
+    padding: $space-md $space-sm;
+    color: $white-faint;
+    font-size: $fs-sm;
+}
+
+// ==========================================
+// MEMBER CHIP
+// Name-focused, small initials monogram only. Reused for search
+// results, the selected state, and the review summary.
+// ==========================================
+.akd-anca-member-chip {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+
+    &__avatar {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-bold;
+        color: $black;
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: $color;
+            }
+        }
+    }
+
+    &__text {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+    }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__username {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+
+    &__change {
+        margin-left: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $white-faint;
+        font-size: $fs-xs;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+
+        &:hover {
+            color: $white;
+        }
+    }
+
+    &--lg {
+        padding: $space-sm;
+        border: 1px solid $black-line;
+        border-radius: $radius-md;
+        background: rgba($white, 0.02);
+        margin-bottom: $space-md;
+
+        .akd-anca-member-chip__avatar {
+            width: 36px;
+            height: 36px;
+            font-size: $fs-xs;
+        }
+    }
+}
+
+// ==========================================
+// REASON FIELD
+// ==========================================
+.akd-anca-nom-reason {
+    &__label {
+        display: block;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        color: $white-muted;
+        margin-bottom: $space-xs;
+    }
+
+    &__optional {
+        font-weight: $fw-regular;
+        color: $white-faint;
+    }
+
+    &__input {
+        width: 100%;
+        min-height: 5rem;
+        padding: 0.75rem 1rem;
+        border-radius: $radius-md;
+        border: 1px solid $black-line;
+        background: $input-bg;
+        color: $white;
+        font-size: $fs-sm;
+        font-family: $font-primary;
+        resize: vertical;
+
+        &::placeholder {
+            color: $white-faint;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($gold, 0.5);
+            outline-offset: 2px;
+        }
+    }
+
+    &__count {
+        margin: $space-xxs 0 0;
+        text-align: right;
+        font-family: $font-mono;
+        font-size: 10px;
+        color: $white-faint;
+    }
+}
+
+// ==========================================
+// REVIEW
+// ==========================================
+.akd-anca-nom-review {
+    &__label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 $space-sm;
+    }
+
+    &__reason {
+        font-size: $fs-sm;
+        color: $white-muted;
+        font-style: italic;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-md;
+    }
+}
+
+// ==========================================
+// SUCCESS
+// ==========================================
+.akd-anca-nom-success {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    color: $accent-teal;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    margin: 0;
+
+    i {
+        font-size: $fs-md;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-anca-nom-row {
+        transition: none;
+    }
+}

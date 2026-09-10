@@ -1,0 +1,389 @@
+@use '../../../tokens' as *;
+@use 'sass:color';
+
+// Same six accents used across every ANCA page. Sass module scope
+// means this map isn't visible here without redeclaring it, same
+// approach already used in every sibling ANCA stylesheet.
+$anca-accents: (
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'sakura':  $sakura,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+    'crimson': $accent-crimson,
+);
+
+// ==========================================
+// STATUS VIEW (not yet available)
+// ==========================================
+.akd-anca-winners-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+    max-width: 34rem;
+    padding: $space-xl 0;
+
+    &__heading {
+        font-size: clamp(1.75rem, 4vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// HERO
+// Trims the shared .akd-anca-hero (see _overview.scss) down for a page
+// with no phase actions to show.
+// ==========================================
+.akd-anca-hero--winners {
+    min-height: 26rem;
+
+    @media (max-width: $bp-lg) {
+        min-height: 22rem;
+    }
+}
+
+// ==========================================
+// FEATURED WINNER
+// The visual centrepiece: a large circular portrait, strong name
+// typography, and generous surrounding space rather than a card.
+// ==========================================
+.akd-anca-featured-winner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-xs;
+    padding: $space-xxl $space-md;
+    animation: akd-anca-winner-in 0.5s $ease-standard both;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 $space-sm;
+    }
+
+    &__portrait-link {
+        display: inline-flex;
+        border-radius: 50%;
+        transition: transform $transition-base;
+
+        &:hover,
+        &:focus-visible {
+            transform: scale(1.03);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $gold;
+            outline-offset: 4px;
+        }
+    }
+
+    &__portrait {
+        width: 11rem;
+        height: 11rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $black-line;
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: linear-gradient(160deg, rgba($color, 0.6), rgba($color, 0.18));
+            }
+        }
+
+        @media (max-width: $bp-sm) {
+            width: 8.5rem;
+            height: 8.5rem;
+        }
+    }
+
+    &__initials {
+        font-family: $font-mono;
+        font-size: $fs-3xl;
+        font-weight: $fw-bold;
+        color: rgba($black, 0.55);
+
+        @media (max-width: $bp-sm) {
+            font-size: $fs-2xl;
+        }
+    }
+
+    &__category {
+        margin: $space-lg 0 0;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $gold;
+    }
+
+    &__name {
+        margin: $space-xs 0 0;
+        font-size: clamp(1.75rem, 4.5vw, $fs-3xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+
+        a {
+            color: inherit;
+            text-decoration: none;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+                text-underline-offset: 4px;
+            }
+        }
+    }
+
+    &__username {
+        margin: 2px 0 0;
+        font-size: $fs-sm;
+        color: $white-faint;
+    }
+
+    &__reason {
+        max-width: 30rem;
+        margin: $space-md 0 0;
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+    }
+
+    &__badge {
+        margin-top: $space-md;
+        padding: 4px 14px;
+        border-radius: $radius-full;
+        border: 1px solid rgba($gold, 0.4);
+        background: rgba($gold, 0.1);
+        color: $gold;
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+}
+
+@keyframes akd-anca-winner-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ==========================================
+// WINNER WALL
+// An editorial sequence, not a card grid. A thin divider between rows
+// and alternating alignment create rhythm as the page scrolls.
+// ==========================================
+.akd-anca-winner-wall {
+    display: flex;
+    flex-direction: column;
+}
+
+.akd-anca-winner-row {
+    padding: $space-xl 0;
+    animation: akd-anca-winner-in 0.5s $ease-standard both;
+    animation-delay: var(--anca-row-delay, 0ms);
+
+    &__index {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.06em;
+        color: $white-faint;
+        margin: 0 0 $space-md;
+    }
+
+    &__content {
+        display: flex;
+        align-items: center;
+        gap: $space-xl;
+
+        @media (max-width: $bp-md) {
+            flex-direction: column;
+            text-align: center;
+            gap: $space-md;
+        }
+    }
+
+    &__portrait-link {
+        flex-shrink: 0;
+        display: inline-flex;
+        border-radius: 50%;
+        transition: transform $transition-base;
+
+        &:hover,
+        &:focus-visible {
+            transform: scale(1.04);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $gold;
+            outline-offset: 4px;
+        }
+    }
+
+    &__portrait {
+        width: 6.5rem;
+        height: 6.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $black-line;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: linear-gradient(160deg, rgba($color, 0.55), rgba($color, 0.16));
+            }
+        }
+    }
+
+    &__initials {
+        font-family: $font-mono;
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: rgba($black, 0.55);
+    }
+
+    &__info {
+        min-width: 0;
+    }
+
+    &__category {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0 0 4px;
+    }
+
+    &__name {
+        font-size: $fs-xl;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+
+        a {
+            color: inherit;
+            text-decoration: none;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+                text-underline-offset: 4px;
+            }
+        }
+    }
+
+    &__username {
+        font-size: $fs-sm;
+        color: $white-faint;
+        margin: 2px 0 0;
+    }
+
+    &__reason {
+        max-width: 26rem;
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: $space-sm 0 0;
+
+        @media (max-width: $bp-md) {
+            margin-inline: auto;
+        }
+    }
+
+    // Alternates layout direction only at desktop widths, mobile always
+    // reads portrait-then-text regardless of this modifier.
+    &--alt &__content {
+        @media (min-width: calc(#{$bp-md} + 1px)) {
+            flex-direction: row-reverse;
+            text-align: right;
+        }
+    }
+
+    &--alt &__reason {
+        @media (min-width: calc(#{$bp-md} + 1px)) {
+            margin-left: auto;
+        }
+    }
+
+    &__divider {
+        border: none;
+        border-top: 1px solid $black-line;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// CLOSING
+// ==========================================
+.akd-anca-winners-closing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-sm;
+    padding: $space-xxl $space-md;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__heading {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+    }
+
+    &__desc {
+        max-width: 28rem;
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-sm;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-anca-featured-winner,
+    .akd-anca-winner-row,
+    .akd-anca-featured-winner__portrait-link,
+    .akd-anca-winner-row__portrait-link {
+        animation: none !important;
+        transition: none !important;
+    }
+}

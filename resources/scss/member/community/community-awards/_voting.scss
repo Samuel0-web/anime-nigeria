@@ -1,0 +1,851 @@
+@use '../../../tokens' as *;
+@use 'sass:color';
+
+// Same six accents as _overview.scss's $anca-accents. Sass module scope
+// means that map isn't visible here without forwarding tokens.scss
+// itself, so it's kept in sync manually, same approach already used in
+// _nominations.scss.
+$anca-accents: (
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'sakura':  $sakura,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+    'crimson': $accent-crimson,
+);
+
+// ==========================================
+// STATUS VIEW (not open / closed states)
+// ==========================================
+.akd-anca-vote-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+    max-width: 34rem;
+    padding: $space-xl 0;
+
+    &__heading {
+        font-size: clamp(1.75rem, 4vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// TOPLINE
+// Two purposeful halves rather than a single plain bar: static ANCA
+// and section branding on the left, the member's live position in the
+// category sequence and the way back to Overview on the right. This
+// is the only place category position renders now, the stage header
+// below no longer repeats it.
+// ==========================================
+.akd-anca-vote-topline {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-md;
+    padding-bottom: $space-sm;
+    margin-bottom: $space-lg;
+    border-bottom: 1px solid $black-line;
+
+    &__brand {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__label {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+    }
+
+    &__context {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+    }
+
+    &__position {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.04em;
+        color: $gold;
+        margin: 0;
+    }
+
+    &__back {
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $white-muted;
+        text-decoration: none;
+        transition: color $transition-fast;
+
+        &:hover {
+            color: $gold;
+        }
+    }
+
+    @media (max-width: $bp-sm) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-xs;
+
+        &__context {
+            flex-direction: row-reverse;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+        }
+    }
+}
+
+// ==========================================
+// VOTE WRAPPER AND STAGE
+// A single centred column rather than a wide layout, since only one
+// category is ever shown at a time. Category-to-category navigation
+// uses a direction-aware slide (see the stage modifier classes below),
+// implemented separately from ANAA's own voting slide even though the
+// two now share the same visual idea.
+// ==========================================
+.akd-anca-vote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-lg;
+}
+
+// Elements toggled purely via the `hidden` attribute from JS. Any of
+// these that also carries a `display` value elsewhere in this file
+// needs this override, since an author rule setting `display` always
+// beats the browser's own `[hidden] { display: none }` rule, regardless
+// of selector specificity. This was the actual cause of the completion
+// state rendering before it should: the `hidden` attribute was present
+// and correct, but `.akd-anca-vote-complete`'s own `display: flex` (see
+// the old completion block, now `.akd-anca-vote-success-screen` below)
+// silently cancelled it. Kept as one shared rule so any state block
+// added later inherits the fix automatically.
+.akd-anca-vote-topline[hidden],
+.akd-anca-vote-stage[hidden],
+.akd-anca-vote-dots[hidden],
+.akd-anca-vote-preparing[hidden],
+.akd-anca-vote-review[hidden],
+.akd-anca-vote-success-screen[hidden],
+.akd-anca-vote-daily-note[hidden] {
+    display: none;
+}
+
+.akd-anca-vote-stage {
+    width: 100%;
+    max-width: 46rem;
+    margin-inline: auto;
+    overflow-x: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity $transition-base, transform $transition-base;
+
+    // Fallback for renders with no forward/backward direction (initial
+    // load, jumping back into a category from the review screen).
+    // Category-to-category navigation uses the directional slide below
+    // instead.
+    &--entering {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    // Directional slide. Only the content that actually changes
+    // (heading, question, nominees, the action row) moves, the stage
+    // shell and the prev/next buttons stay put so nothing else jumps.
+    &--exit-fwd {
+        .akd-anca-vote-stage__center,
+        .akd-anca-nominees,
+        .akd-anca-vote-action {
+            animation: akd-anca-stage-exit-left 150ms $ease-standard both;
+        }
+    }
+
+    &--exit-back {
+        .akd-anca-vote-stage__center,
+        .akd-anca-nominees,
+        .akd-anca-vote-action {
+            animation: akd-anca-stage-exit-right 150ms $ease-standard both;
+        }
+    }
+
+    &--enter-fwd {
+        .akd-anca-vote-stage__center,
+        .akd-anca-nominees,
+        .akd-anca-vote-action {
+            animation: akd-anca-stage-enter-from-right 200ms $ease-standard both;
+        }
+    }
+
+    &--enter-back {
+        .akd-anca-vote-stage__center,
+        .akd-anca-nominees,
+        .akd-anca-vote-action {
+            animation: akd-anca-stage-enter-from-left 200ms $ease-standard both;
+        }
+    }
+
+    &__header {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: $space-sm;
+        text-align: center;
+    }
+
+    &__center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    &__title {
+        font-size: clamp(1.75rem, 4.5vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__question {
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: $space-xxs 0 0;
+    }
+}
+
+@keyframes akd-anca-stage-exit-left {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+
+@keyframes akd-anca-stage-exit-right {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+@keyframes akd-anca-stage-enter-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes akd-anca-stage-enter-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.akd-anca-vote-nav-btn {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-top: $space-xxs;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    color: $white-muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+        background: rgba($white, 0.06);
+        color: $white;
+        border-color: rgba($gold, 0.35);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
+
+    @media (max-width: $bp-sm) {
+        width: 34px;
+        height: 34px;
+    }
+}
+
+// ==========================================
+// NOMINEES
+// Structural layouts keyed to how many nominee items actually render,
+// not to category metadata, so this keeps working unchanged as a
+// category's nominee count changes.
+// ==========================================
+.akd-anca-nominees {
+    list-style: none;
+    margin: $space-xl 0;
+    padding: 0;
+    display: grid;
+    gap: $space-md;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+
+    &:has(> :nth-child(1):last-child) {
+        grid-template-columns: minmax(0, 16rem);
+        justify-content: center;
+    }
+
+    &:has(> :nth-child(2):last-child) {
+        grid-template-columns: repeat(2, minmax(0, 14rem));
+        justify-content: center;
+    }
+
+    &:has(> :nth-child(3):last-child) {
+        grid-template-columns: repeat(3, minmax(0, 13rem));
+        justify-content: center;
+
+        @media (max-width: $bp-sm) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: $bp-sm) {
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    }
+}
+
+.akd-anca-nominee-item {
+    display: flex;
+}
+
+.akd-anca-nominee {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+    width: 100%;
+    padding: $space-sm;
+    border: 0;
+    border-radius: $radius-lg;
+    background: transparent;
+    cursor: pointer;
+    text-align: center;
+    transition: transform $transition-base, opacity $transition-base;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-3px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($gold, 0.6);
+        outline-offset: 3px;
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+
+    &__portrait {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        border-radius: $radius-lg;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid $black-line;
+        transition: box-shadow $transition-base, transform $transition-base;
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: linear-gradient(160deg, rgba($color, 0.55), rgba($color, 0.16));
+            }
+        }
+    }
+
+    &__initials {
+        font-family: $font-mono;
+        font-size: clamp(1.75rem, 5vw, $fs-2xl);
+        font-weight: $fw-bold;
+        color: rgba($black, 0.55);
+        letter-spacing: 0.02em;
+    }
+
+    &__check {
+        position: absolute;
+        bottom: $space-xs;
+        right: $space-xs;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: $white;
+        color: $black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $fs-xs;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    &__name {
+        font-size: $fs-sm;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-snug;
+    }
+
+    &__username {
+        font-size: $fs-xs;
+        color: $white-faint;
+        margin-top: -4px;
+    }
+
+    &__reason {
+        font-size: $fs-xs;
+        color: $white-muted;
+        font-style: italic;
+        line-height: $lh-snug;
+        max-width: 13rem;
+    }
+
+    &--selected &__portrait {
+        box-shadow: 0 0 0 2px $gold, 0 16px 32px rgba($gold, 0.2);
+        transform: translateY(-2px);
+    }
+}
+
+// Dim unselected nominees once a choice is made, reinforcing the
+// selection without depending on colour alone (the check badge above
+// carries the state for assistive tech and colourblind users).
+.akd-anca-nominees:has(.akd-anca-nominee--selected) 
+.akd-anca-nominee:not(.akd-anca-nominee--selected) {
+    opacity: 0.55;
+}
+
+// ==========================================
+// VOTE ACTION
+// ==========================================
+.akd-anca-vote-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+    text-align: center;
+    min-height: 3rem;
+
+    &__hint {
+        font-size: $fs-sm;
+        color: $white-faint;
+        margin: 0;
+    }
+
+    &__selected {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        color: $white;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        margin: 0;
+
+        i { color: $gold; }
+    }
+
+    &__voted {
+        display: flex;
+        align-items: center;
+        gap: $space-xxs;
+        color: $accent-teal;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// DAILY VOTING NOTE
+// Small, visually secondary text explaining the once per day rule.
+// Sits above the voting stage, not inside it, so it never competes
+// with the category content for attention.
+// ==========================================
+.akd-anca-vote-daily-note {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    max-width: 46rem;
+    margin: $space-lg auto 0;
+    padding: $space-xs $space-md;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: rgba($white, 0.02);
+    color: $white-faint;
+    font-size: $fs-xs;
+    line-height: $lh-snug;
+
+    i {
+        flex-shrink: 0;
+        color: $white-faint;
+    }
+}
+
+// ==========================================
+// PREPARING REVIEW (loading state)
+// Inline SVG circular indicator, the same rotate plus animated arc
+// technique behind the familiar Google style spinner. No new
+// dependency, and it is scoped to this block only, never global.
+// ==========================================
+.akd-anca-vote-preparing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-xxl 0;
+    text-align: center;
+
+    &__label {
+        font-size: $fs-sm;
+        color: $white-muted;
+        margin: 0;
+    }
+}
+
+.akd-anca-spinner {
+    width: 44px;
+    height: 44px;
+    animation: akd-anca-spinner-rotate 1.6s linear infinite;
+
+    &__track {
+        stroke: rgba($white, 0.1);
+    }
+
+    &__arc {
+        stroke: $gold;
+        stroke-linecap: round;
+        transform-origin: center;
+        animation: akd-anca-spinner-dash 1.6s ease-in-out infinite;
+    }
+}
+
+@keyframes akd-anca-spinner-rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes akd-anca-spinner-dash {
+    0% {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+    }
+
+    50% {
+        stroke-dasharray: 100, 200;
+        stroke-dashoffset: -15px;
+    }
+
+    100% {
+        stroke-dasharray: 100, 200;
+        stroke-dashoffset: -125px;
+    }
+}
+
+// ==========================================
+// REVIEW
+// Editable summary of every selection, not a locked confirmation
+// screen. Each row sends the member straight back into the voting
+// stage for that one category.
+// ==========================================
+.akd-anca-vote-review {
+    max-width: 52rem;
+    margin: 0 auto;
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0 0 $space-xs;
+        text-align: center;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        text-align: center;
+        margin: 0 0 $space-lg;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0 0 $space-lg;
+        padding: 0;
+        display: grid;
+        gap: $space-md;
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-xs;
+        padding: $space-lg $space-sm;
+        border: 1px solid $black-line;
+        border-radius: $radius-lg;
+        background: rgba($white, 0.02);
+        text-align: center;
+    }
+
+    &__portrait {
+        position: relative;
+        width: 5.5rem;
+        height: 5.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $black-line;
+        margin-bottom: $space-xxs;
+
+        @each $name, $color in $anca-accents {
+            &--#{$name} {
+                background: linear-gradient(160deg, rgba($color, 0.55), rgba($color, 0.16));
+            }
+        }
+    }
+
+    &__initials {
+        font-family: $font-mono;
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: rgba($black, 0.55);
+    }
+
+    &__check {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: $white;
+        color: $black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    &__nominee {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+        line-height: $lh-snug;
+    }
+
+    &__category {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+
+    &__change {
+        margin-top: $space-xxs;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $gold;
+        font-size: $fs-xs;
+        font-weight: $fw-semibold;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+
+        &:hover {
+            color: color.adjust($gold, $lightness: 10%);
+        }
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+// ==========================================
+// PROGRESS DOTS
+// ==========================================
+.akd-anca-vote-dots {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-xs;
+    margin: 0;
+    padding: 0;
+}
+
+.akd-anca-vote-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid $black-line;
+    background: transparent;
+    color: $white-faint;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: $fw-semibold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+        border-color: rgba($white, 0.3);
+        color: $white;
+    }
+
+    &--active {
+        border-color: $gold;
+        color: $gold;
+    }
+
+    &--voted {
+        background: rgba($accent-teal, 0.14);
+        border-color: rgba($accent-teal, 0.4);
+        color: $accent-teal;
+    }
+
+    &--selected {
+        border-color: rgba($gold, 0.4);
+        color: $gold;
+    }
+
+    &--voted &--active {
+        border-color: $gold;
+        color: $gold;
+    }
+}
+
+// ==========================================
+// SUCCESS SCREEN
+// Only ever shown after the confirmation dialog is accepted, see
+// showFlow(FLOW.SUCCESS) in community-awards-voting.js.
+// ==========================================
+.akd-anca-vote-success-screen {
+    max-width: 30rem;
+    margin: ($space-xxl - $space-sm) auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+
+    &__icon {
+        font-size: 2.5rem;
+        color: $gold;
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        color: $white;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-sm;
+    }
+
+    &__actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-sm;
+    }
+
+    &__back {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: $white-faint;
+        font-size: $fs-xs;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+
+        &:hover {
+            color: $white-muted;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-anca-vote-stage,
+    .akd-anca-nominee,
+    .akd-anca-nominee__portrait {
+        transition: none !important;
+    }
+
+    .akd-anca-vote-stage__center,
+    .akd-anca-nominees,
+    .akd-anca-vote-action {
+        animation: none !important;
+    }
+
+    .akd-anca-spinner,
+    .akd-anca-spinner__arc {
+        animation: none !important;
+    }
+}

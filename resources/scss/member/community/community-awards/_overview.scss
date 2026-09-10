@@ -1,0 +1,596 @@
+@use '../../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// ACCENT MAP
+// Reuses existing tokens only. ANCA's accents are used evenly across
+// the page rather than led by one identity colour, since no single
+// category or member should read as "the important one".
+// ==========================================
+$anca-accents: (
+    'gold':    $gold,
+    'teal':    $accent-teal,
+    'sakura':  $sakura,
+    'violet':  $accent-violet,
+    'ember':   $accent-ember,
+    'crimson': $accent-crimson,
+);
+
+// ==========================================
+// WRAPPER
+// ==========================================
+.akd-anca {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxl;
+    padding-block: $space-lg $space-xxl;
+}
+
+// ==========================================
+// SECTION HEADER
+// ==========================================
+.akd-anca-section {
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+        max-width: 38rem;
+        margin-bottom: $space-lg;
+    }
+
+    &__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: $space-xs;
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: $white-faint;
+        margin: 0;
+
+        &::before {
+            content: '';
+            width: 14px;
+            height: 1px;
+            background: $white-faint;
+        }
+    }
+
+    &__title {
+        font-size: $fs-2xl;
+        font-weight: $fw-bold;
+        letter-spacing: -0.01em;
+        color: $white;
+        line-height: $lh-tight;
+        margin: 0;
+    }
+
+    &__desc {
+        font-size: $fs-sm;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0;
+    }
+}
+
+// ==========================================
+// HERO
+// Real image background with a bottom-weighted scrim, replacing the
+// earlier decorative monogram collage. The image is content (it should
+// carry a meaningful alt), the scrim and grain are the only purely
+// decorative layers.
+// ==========================================
+.akd-anca-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    min-height: 34rem;
+    display: flex;
+    align-items: flex-end;
+    background: $black-soft;
+
+    @media (max-width: $bp-lg) {
+        min-height: 28rem;
+    }
+
+    &__art {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+
+    &__art-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    &__art-scrim {
+        position: absolute;
+        inset: 0;
+        // A flat wash sits closest to the image so every hero stays
+        // readable no matter how bright the underlying photo is. The two
+        // directional gradients layer on top for shape and depth rather
+        // than doing the darkening work themselves, so this keeps
+        // working consistently as the hero image is swapped out.
+        background:
+            linear-gradient(0deg, rgba($black-soft, 0.98) 0%, rgba($black-soft, 0.8) 40%,
+                rgba($black-soft, 0.5) 70%, rgba($black-soft, 0.68) 100%),
+            linear-gradient(100deg, rgba($black-soft, 0.72) 0%, transparent 60%),
+            rgba($black-soft, 0.4);
+    }
+
+    &__grain {
+        position: absolute;
+        inset: 0;
+        background-image: url('/uploads/noise.png');
+        background-size: 220px;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        padding: $space-xxl $space-xl;
+        max-width: 36rem;
+        animation: anca-hero-in 0.6s $ease-standard both;
+
+        @media (max-width: $bp-lg) {
+            padding: $space-xl $space-md;
+        }
+    }
+
+    &__kicker {
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: $white-muted;
+        margin: 0 0 $space-sm;
+    }
+
+    &__headline {
+        font-size: clamp(2.75rem, 6vw, $fs-4xl);
+        font-weight: $fw-bold;
+        line-height: $lh-tight;
+        letter-spacing: -0.01em;
+        color: $white;
+        margin: 0 0 $space-sm;
+    }
+
+    &__tagline {
+        font-size: $fs-base;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+        margin: 0 0 $space-lg;
+        max-width: 28rem;
+    }
+
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: $space-sm;
+        margin-bottom: $space-lg;
+    }
+
+    &__note {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $space-sm;
+    }
+}
+
+@keyframes anca-hero-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.akd-anca-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px 5px 10px;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.04);
+    color: $white-muted;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: $fw-semibold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    &__dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $white-faint;
+    }
+
+    &--nominations &__dot,
+    &--voting &__dot {
+        background: $sakura;
+        animation: anca-pulse 2.2s ease-out infinite;
+    }
+
+    &--nominations,
+    &--voting {
+        border-color: rgba($sakura, 0.35);
+        color: $sakura;
+    }
+
+    &--winners {
+        border-color: rgba($gold, 0.35);
+        background: rgba($gold, 0.08);
+        color: $gold;
+    }
+
+    &--winners &__dot {
+        background: $gold;
+    }
+}
+
+@keyframes anca-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba($sakura, 0.5); }
+    70%  { box-shadow: 0 0 0 6px rgba($sakura, 0); }
+    100% { box-shadow: 0 0 0 0 rgba($sakura, 0); }
+}
+
+// ==========================================
+// PHILOSOPHY / TRAITS
+// ==========================================
+.akd-anca-traits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+}
+
+.akd-anca-trait {
+    padding: $space-md;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: rgba($white, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &__label {
+        font-size: $fs-md;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__note {
+        font-size: $fs-xs;
+        color: $white-muted;
+        line-height: $lh-snug;
+    }
+}
+
+// ==========================================
+// CATEGORIES
+// Flat, colour-led cards, since these stand in for people, not posters.
+// ==========================================
+.akd-anca-categories {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+
+    @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+}
+
+.akd-anca-category {
+    position: relative;
+    padding: $space-lg $space-md $space-md;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    border-left-width: 3px;
+    background: rgba($white, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    transition: transform $transition-base, background $transition-fast,
+        box-shadow $transition-base;
+
+    &:hover {
+        transform: translateY(-3px);
+        background: rgba($white, 0.04);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    // Structural, not data driven. Whichever category renders first or
+    // last gets the wider, slightly larger treatment, so this keeps
+    // working unchanged as the category count grows, shrinks, or
+    // reorders, since it never reads a 'featured' flag.
+    &:first-child,
+    &:last-child {
+        grid-column: span 1;
+        gap: $space-sm;
+
+        .akd-anca-category__name { font-size: calc(#{$fs-lg} * 1.12); }
+
+        @media (min-width: calc(#{$bp-lg} + 1px)) {
+            grid-column: span 2;
+        }
+    }
+
+    &__name {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__blurb {
+        font-size: $fs-xs;
+        color: $white-muted;
+        max-width: 22rem;
+    }
+
+    @each $name, $color in $anca-accents {
+        &--#{$name} {
+            border-left-color: $color;
+
+            .akd-anca-category__name { color: color.adjust($color, $lightness: 12%); }
+        }
+    }
+}
+
+// ==========================================
+// HOW IT WORKS
+// Editorial link-cards, not a stepper. Each carries the correct
+// chronological status for its own stage.
+// ==========================================
+.akd-anca-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-md;
+
+    @media (max-width: $bp-md) { grid-template-columns: 1fr; }
+}
+
+.akd-anca-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    padding: $space-lg $space-md;
+    border-radius: $radius-lg;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    text-decoration: none;
+    transition: border-color $transition-fast, background $transition-fast;
+
+    &:hover {
+        border-color: rgba($white, 0.2);
+        background: rgba($white, 0.04);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    &__status {
+        align-self: flex-start;
+        font-family: $font-mono;
+        font-size: 9px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: $radius-full;
+        border: 1px solid $black-line;
+        color: $white-faint;
+
+        &--open,
+        &--available {
+            color: $sakura;
+            border-color: rgba($sakura, 0.35);
+        }
+
+        &--closed {
+            color: $white-muted;
+        }
+    }
+
+    &__label {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__desc {
+        font-size: $fs-xs;
+        color: $white-muted;
+        line-height: $lh-relaxed;
+    }
+
+    &__link {
+        margin-top: $space-xs;
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $white-faint;
+        transition: gap $transition-fast, color $transition-fast;
+    }
+
+    &:hover &__link {
+        gap: 0.5rem;
+        color: $white;
+    }
+}
+
+// ==========================================
+// DATES
+// ==========================================
+.akd-anca-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-lg;
+    padding: $space-md $space-lg;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    background: rgba($white, 0.015);
+
+    @media (max-width: $bp-sm) {
+        gap: $space-md;
+        padding: $space-md;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: $space-sm;
+        border-left: 1px solid $black-line;
+
+        &:first-child {
+            padding-left: 0;
+            border-left: none;
+        }
+    }
+
+    &__label {
+        font-family: $font-mono;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+    }
+
+    &__value {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+}
+
+// ==========================================
+// ENTRY POINTS
+// Buttons never appear clickable when their stage isn't open or
+// available: only the enabled branch in cta.php renders as an <a>.
+// ==========================================
+.akd-anca-entry {
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: $space-md;
+        margin-bottom: $space-md;
+
+        @media (max-width: $bp-md) { grid-template-columns: 1fr; }
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+        padding: $space-lg $space-md;
+        border-radius: $radius-lg;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.02);
+        text-decoration: none;
+        transition: transform $transition-base, border-color $transition-fast;
+
+        &:hover {
+            transform: translateY(-3px);
+            border-color: rgba($gold, 0.35);
+            box-shadow: 0 12px 28px rgba($gold, 0.12);
+        }
+
+        &--disabled {
+            opacity: 0.5;
+
+            &:hover {
+                transform: none;
+                border-color: $black-line;
+            }
+        }
+    }
+
+    &__status {
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: $fw-semibold;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $white-faint;
+
+        &--active {
+            color: $gold;
+        }
+    }
+
+    &__label {
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        color: $white;
+    }
+
+    &__link {
+        margin-top: $space-xs;
+        display: inline-flex;
+        align-items: center;
+        gap: $space-xxs;
+        font-family: $font-mono;
+        font-size: $fs-xs;
+        color: $gold;
+    }
+}
+
+.akd-anca-honoured-link {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xxs;
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    color: $white-muted;
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    &:hover { color: $gold; }
+}
+
+// ==========================================
+// FOCUS AND MOTION
+// ==========================================
+.akd-anca-step:focus-visible,
+.akd-anca-entry__card:focus-visible,
+.akd-anca-honoured-link:focus-visible {
+    outline: 2px solid $gold;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-anca-hero__content,
+    .akd-anca-status__dot {
+        animation: none !important;
+    }
+}
