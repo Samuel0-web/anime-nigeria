@@ -18,6 +18,7 @@ import './member/challenges.js';
 import './member/community-awards-nominations.js';
 import './member/community-awards-voting.js';
 import './member/honoured-ones.js';
+import './member/gallery.js';
 import { initSettingsPage } from './member/settings';
 
 initPreloader();

@@ -1,17 +1,17 @@
 <?php
-$page_title       = "Blogs";
+$page_title       = "Blog";
 $page_description = "Check your activities.";
 
 $breadcrumbs = [
     ['label' => 'Dashboard', 'url' => '/dashboard'],
-    ['label' => 'Blogs', 'url' => null],
+    ['label' => 'Blog', 'url' => null],
 ];
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="akd-content">
     <!-- Page specific content goes here -->
 </main>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

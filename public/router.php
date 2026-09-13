@@ -214,7 +214,11 @@ $routes = [
     '/member/community/awards/winners'       => 'member/community/awards/winners.php',
     '/member/community/honoured-ones'        => 'member/community/honoured-ones.php',
     '/member/gallery'                        => 'member/gallery.php',
-    '/member/blogs'                          => 'member/blogs.php',
+    '/member/blog'                           => 'member/blogs/blog.php',
+    '/member/blog/category'                  => 'member/blogs/categories.php',
+    '/member/blog/category/{category}'       => 'member/blogs/categories.php',
+    '/member/blog/search'                    => 'member/blogs/search.php',
+    '/member/blog/post/{slug}'               => 'member/blogs/single-post.php',
     '/member/settings'                       => 'member/settings.php',
     '/member/help'                           => 'member/help-centre.php',
 

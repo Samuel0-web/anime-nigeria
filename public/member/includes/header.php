@@ -73,7 +73,7 @@ $navGroups = [
             ],
         ],
         ['label' => 'Gallery', 'icon' => 'fa-solid fa-images', 'url' => '/member/gallery'],
-        ['label' => 'Blogs', 'icon' => 'fa-solid fa-pen-fancy', 'url' => '/member/blogs'],
+        ['label' => 'Blogs', 'icon' => 'fa-solid fa-pen-fancy', 'url' => '/member/blog'],
     ],
     'System' => [
         ['label' => 'Settings', 'icon' => 'fa-solid fa-cog', 'url' => '/member/settings'],
@@ -82,8 +82,7 @@ $navGroups = [
 ];
 
 if (!function_exists('akd_nav_is_route_active')) {
-    function akd_nav_is_route_active(?string $url, string $currentPath): bool
-    {
+    function akd_nav_is_route_active(?string $url, string $currentPath): bool {
         if (!$url) {
             return false;
         }
@@ -93,8 +92,7 @@ if (!function_exists('akd_nav_is_route_active')) {
 }
 
 if (!function_exists('akd_nav_branch_is_active')) {
-    function akd_nav_branch_is_active(array $item, string $currentPath): bool
-    {
+    function akd_nav_branch_is_active(array $item, string $currentPath): bool {
         // Exact match for this item's own URL.
         if (akd_nav_is_route_active($item['url'] ?? null, $currentPath)) {
             return true;
@@ -117,8 +115,7 @@ if (!function_exists('akd_render_nav_badge')) {
      * akd_render_nav_items() so any item — leaf, parent-with-url, or
      * parent-button — can opt into a badge without special-case markup.
      */
-    function akd_render_nav_badge(array $item): void
-    {
+    function akd_render_nav_badge(array $item): void {
         if (empty($item['badge'])) {
             return;
         }

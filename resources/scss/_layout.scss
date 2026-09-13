@@ -1,5 +1,5 @@
+// _layout.scss
 @use 'tokens' as *;
-
 // =============================================================================
 // HEADER
 // =============================================================================
@@ -405,13 +405,76 @@
         opacity:1;
         visibility:visible;
     }
-    
+
+    &__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: $space-sm;
+        width: min(92vw, 1100px);
+        // Bounding the whole viewer to a fixed share of the viewport,
+        // rather than letting content dictate height and overflow when it
+        // does not fit, is what removes the page level scrollbar: nothing
+        // inside can exceed this box, so nothing outside it needs to
+        // scroll.
+        height: min(92vh, 900px);
+        padding: $space-md;
+        box-sizing: border-box;
+    }
+
     &__image{
-        max-width:90vw;
-        max-height:85vh;
+        flex: 1 1 auto;
+        min-height: 0; // required for a flex child to shrink below its
+                       // intrinsic size, without this the image ignores
+                       // __content's height limit and pushes the metadata,
+                       // and the whole viewer, past the viewport
+        max-width:100%;
+        max-height:100%;
+        width: auto;
+        height: auto;
+        object-fit: contain; // scales down to fit, preserves the full
+                              // image and its aspect ratio, never crops
         border-radius:$radius-lg;
     }
-    
+
+    &__meta {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: 30%;
+        overflow-y: auto; // the only element allowed to scroll, and only
+                          // if metadata is genuinely long, the viewer
+                          // itself never does
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        text-align: center;
+        color: $white;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+    }
+
+    &__meta-line {
+        margin: 0;
+        color: $white-faint;
+        font-size: $fs-xs;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__caption {
+        margin: 4px 0 0;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: 1.5;
+        max-width: 640px;
+    }
+
     &__close, &__prev, &__next{
         position:absolute;
         width:54px;
@@ -419,23 +482,78 @@
         border:none;
         border-radius:50%;
         cursor:pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba($white, 0.08);
+        color: $white;
+        font-size: $fs-lg;
+        transition: background-color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.16);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $sakura;
+            outline-offset: 2px;
+        }
     }
-    
+
     &__close{
         top:2rem;
         right:2rem;
     }
-    
+
     &__prev{
         left:2rem;
         top:50%;
         transform:translateY(-50%);
     }
-    
+
     &__next{
         right:2rem;
         top:50%;
         transform:translateY(-50%);
+    }
+}
+
+@media (max-width: $bp-md) {
+    .an-lightbox__content {
+        width: 100vw;
+        height: 100vh;
+        padding: $space-sm;
+    }
+}
+
+.an-lightbox__content {
+    transition: transform $transition-base, opacity $transition-base;
+
+    &.is-dragging {
+        transition: none; // direct 1:1 finger tracking while the mobile
+                           // swipe gesture is in progress, same pattern
+                           // .akd-sidebar/.akd-overlay already use for
+                           // their own drag interactions
+    }
+}
+
+@media (max-width: $bp-lg) {
+    .an-lightbox__close {
+        top: calc(#{$space-md} + env(safe-area-inset-top, 0px));
+        right: calc(#{$space-md} + env(safe-area-inset-right, 0px));
+        background: rgba($black, 0.55);
+        border: 1px solid rgba($white, 0.25);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .an-lightbox,
+    .an-lightbox__image,
+    .an-lightbox__content {
+        transition-duration: 0.001ms !important;
     }
 }
 

@@ -796,7 +796,7 @@ function init2fa(root, modal, confirmDialog) {
                 try {
                     const response = await api(TWO_FACTOR_SETUP_ENDPOINT, {
                         method: 'PUT',
-                        body: JSON.stringify({ code }),
+                        body: { code },
                     });
 
                     if (!response.success) {
@@ -853,7 +853,7 @@ function init2fa(root, modal, confirmDialog) {
                 try {
                     response = await api(TWO_FACTOR_ENDPOINT, {
                     method: 'DELETE',
-                    body: JSON.stringify({ password }),
+                    body: { password },
                 });
                 } catch (err) {
                     if (err.data?.retry_after > 0) {
@@ -866,7 +866,9 @@ function init2fa(root, modal, confirmDialog) {
                         throw rateLimitError;
                     }
 
-                    throw new Error(err.data?.message || 'Something went wrong. Please try again.');
+                    throw new Error(err.data?.message || 
+                        'Something went wrong. Please try again.'
+                    );
                 }
 
                 if (!response.success) {

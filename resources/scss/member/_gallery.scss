@@ -1,2 +1,336 @@
 @use '../tokens' as *;
 @use 'sass:color';
+
+// ==========================================
+// GALLERY
+// ==========================================
+.akd-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: $space-lg;
+    padding-bottom: $space-xl;
+}
+
+@media (max-width: $bp-lg) {
+    .akd-gallery {
+        padding-left: $space-md;
+        padding-right: $space-md;
+    }
+}
+
+.akd-gallery__intro {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+}
+
+.akd-gallery__heading {
+    margin: 0;
+    color: $white;
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+    line-height: $lh-tight;
+}
+
+.akd-gallery__subheading {
+    margin: 0;
+    color: $white-muted;
+    font-size: $fs-base;
+    line-height: $lh-normal;
+    max-width: 640px;
+}
+
+// Hidden below $bp-lg: header.php's own .akd-header__mobile-title already
+// shows the page title at this breakpoint (see _frame.scss), so the
+// Gallery's own heading/subheading would be pure duplication there.
+@media (max-width: $bp-lg) {
+    .akd-gallery__intro {
+        display: none;
+    }
+}
+
+@media (min-width: $bp-lg) {
+    .akd-gallery__intro {
+        margin-top: $space-md;
+    }
+}
+
+// ---- Category filter ----
+.akd-gallery__filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-xs;
+}
+
+.akd-gallery__filter-btn {
+    appearance: none;
+    background: transparent;
+    border: 1px solid $black-line;
+    color: $white-muted;
+    font-family: $font-primary;
+    font-size: $fs-sm;
+    font-weight: $fw-regular;
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+    cursor: pointer;
+    transition: background-color $transition-fast, color $transition-fast,
+        border-color $transition-fast;
+
+    &:hover {
+        color: $white;
+        border-color: rgba($white, 0.2);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+    }
+
+    &.is-active {
+        background: $sakura-dim;
+        border-color: rgba($sakura, 0.4);
+        color: $sakura;
+        font-weight: $fw-semibold;
+    }
+}
+
+// ---- Masonry grid ----
+// Column placement and gap are computed in JS (resources/js/member/gallery.js),
+// not here, since real Pinterest-style packing (shortest column first) needs
+// each item's actual aspect ratio, which SCSS cannot see. This file only
+// handles the box each item renders as once JS has positioned it.
+.akd-gallery__grid {
+    position: relative;
+    width: 100%;
+    visibility: hidden; // avoids a flash of stacked/unpositioned items before JS lays them out
+
+    &.is-ready {
+        visibility: visible;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-gallery__item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    overflow: hidden;
+    padding: 0;
+    background: rgba($white, 0.02);
+    cursor: pointer;
+    transition: transform $transition-base, width $transition-base, opacity $transition-fast;
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-gallery__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover; // safety net only: our declared width/height are estimates,
+                        // this prevents distortion if a real asset's ratio differs slightly
+    transition: transform $transition-base;
+}
+
+.akd-gallery__item:hover .akd-gallery__image,
+.akd-gallery__item:focus-visible .akd-gallery__image {
+    transform: scale(1.03);
+}
+
+.akd-gallery__fallback {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba($white, 0.03);
+    color: $white-faint;
+    font-size: $fs-xl;
+}
+
+.akd-gallery__item.has-error {
+    .akd-gallery__image {
+        visibility: hidden;
+    }
+
+    .akd-gallery__fallback {
+        display: flex;
+    }
+}
+
+// Desktop metadata reveal. Hidden entirely on smaller screens, see the
+// max-width media query below, section 10 of the brief is explicit that
+// mobile should not try to reproduce this awkwardly.
+.akd-gallery__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: $space-sm;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(to top, rgba($black, 0.85) 0%, rgba($black, 0) 55%);
+    transition: opacity $transition-fast;
+}
+
+.akd-gallery__item:hover .akd-gallery__overlay,
+.akd-gallery__item:focus-visible .akd-gallery__overlay {
+    opacity: 1;
+}
+
+.akd-gallery__overlay-title {
+    color: $white;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    line-height: $lh-tight;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.akd-gallery__overlay-meta {
+    color: $white-muted;
+    font-size: $fs-xs;
+}
+
+@media (max-width: $bp-md) {
+    .akd-gallery__overlay {
+        display: none;
+    }
+}
+
+// ---- Empty states ----
+.akd-gallery__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: $space-xs;
+    padding: $space-xxl $space-md;
+    border: 1px dashed $black-line;
+    border-radius: $radius-lg;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-gallery__empty-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-full;
+    background: rgba($white, 0.04);
+    color: $white-faint;
+    font-size: $fs-lg;
+}
+
+.akd-gallery__empty-title {
+    margin: 0;
+    color: $white;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+}
+
+.akd-gallery__empty-text {
+    margin: 0;
+    color: $white-faint;
+    font-size: $fs-sm;
+    max-width: 360px;
+}
+
+// ---- Small additive extension for the Gallery's metadata ----
+// Nothing above this comment has been changed. .an-lightbox__prev/__next
+// exist in the block above but are intentionally never created by the
+// Gallery's JS (no next/prev requested), so they simply go unused here.
+.an-lightbox {
+    &__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $space-sm;
+        max-width: 92vw;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    &__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-width: 640px;
+        text-align: center;
+        padding: 0 $space-md;
+    }
+
+    &__title {
+        margin: 0;
+        color: $white;
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+    }
+
+    &__meta-line {
+        margin: 0;
+        color: $white-faint;
+        font-size: $fs-xs;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__caption {
+        margin: $space-xxs 0 0;
+        color: $white-muted;
+        font-size: $fs-sm;
+        line-height: $lh-normal;
+    }
+
+    // The supplied block gives __close its shape (circle, size, position)
+    // but no visual treatment at all, so on its own it would be an
+    // invisible hit target. This fills that in without touching the rules
+    // above.
+    &__close {
+        background: rgba($white, 0.08);
+        color: $white;
+        font-size: $fs-lg;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.16);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $sakura;
+            outline-offset: 2px;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-gallery__item,
+    .akd-gallery__image,
+    .akd-gallery__overlay {
+        transition-duration: 0.001ms !important;
+    }
+}

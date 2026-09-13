@@ -220,8 +220,8 @@ export function useModal() {
         }
     }
 
-    function open({ title = '', subtitle = '', content = null, footer = null, size = 'default',
-        className = '', beforeClose = null, initialFocus = null,
+    function open({ title = '', subtitle = '', content = null, footer = null, 
+        size = 'default', className = '', beforeClose = null, initialFocus = null,
     } = {}) {
         if (isOpen) reallyClose();
         closeRequest = null;

@@ -16,6 +16,14 @@ function getTranslateX(el) {
     return parseFloat(parts[4]) || 0;
 }
 
+// The lightbox (modules/lightbox.js) owns touch interaction entirely while
+// it is open. Checking its DOM state directly here, rather than a shared
+// event or flag, keeps the two modules decoupled, sidebar.js does not
+// need to know lightbox.js exists beyond this one selector.
+function isLightboxOpen() {
+    return document.querySelector('.an-lightbox.is-open') !== null;
+}
+
 // Walks up from the initial touch target looking for an element that owns
 // native horizontal scrolling — e.g. .akd-dash-rail, which is a plain
 // overflow-x: auto strip below the desktop breakpoint. Deliberately stops
@@ -134,6 +142,7 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
 
     function onTouchStart(e) {
         if (window.innerWidth >= DESKTOP_BP) return;
+        if (isLightboxOpen()) return;
         if (e.touches.length !== 1) return;
         if (gesture.pending || gesture.active) return;
         if (isInsideHorizontalScroller(e.target)) return;
@@ -158,6 +167,23 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
     }
 
     function onTouchMove(e) {
+        if (isLightboxOpen()) {
+            // Covers the gesture opening the lightbox mid-drag (the
+            // guard above only stops a NEW gesture from starting once the
+            // lightbox is already open). Any sidebar drag already
+            // in-flight gets cleanly cancelled here instead of continuing
+            // to move the sidebar underneath the now-open lightbox.
+            if (gesture.pending || gesture.active) {
+                sidebar.classList.remove('is-dragging');
+                overlay?.classList.remove('is-dragging');
+                sidebar.style.transform = '';
+                if (overlay) overlay.style.opacity = '';
+                resetGestureState();
+            }
+
+            return;
+        }
+
         if (!gesture.pending && !gesture.active) return;
         const touch = e.touches[0];
         if (!touch) return;
