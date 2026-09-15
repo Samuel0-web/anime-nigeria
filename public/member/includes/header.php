@@ -259,7 +259,7 @@ $todayDate = date('l, F jS');
     <?php vite('member'); ?>
 
     <?php if (vite_is_dev()): ?>
-        <script type="module">
+        <script type="module"<?= \App\Security\Nonce::attr() ?>>
             import RefreshRuntime from 'http://127.0.0.1:5173/@react-refresh';
             RefreshRuntime.injectIntoGlobalHook(window);
             window.$RefreshReg$ = () => {};
@@ -324,7 +324,7 @@ $todayDate = date('l, F jS');
 </div>
 
 <div class="akd-layout" id="akdLayout">
-    <script>
+    <script<?= \App\Security\Nonce::attr() ?>>
         (function () {
             try {
                 var uid = <?= (int) $user['id'] ?>;

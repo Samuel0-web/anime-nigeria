@@ -170,5 +170,7 @@ $defaultYear = $years[0];
     </section>
 </main>
 
-<script>const honoredOnes = <?= json_encode($honoredOnes, JSON_PRETTY_PRINT); ?>;</script>
+<script<?= \App\Security\Nonce::attr() ?>>
+const honoredOnes = <?= json_encode($honoredOnes, JSON_PRETTY_PRINT); ?>;
+</script>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

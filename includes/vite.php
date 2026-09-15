@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use App\Security\Nonce;
+
 // Vite can emit CSS for imported chunks (shared modules).
 // Recursively collect all CSS files so shared styles (e.g. Font Awesome)
 // are loaded in production builds.
@@ -39,11 +41,12 @@ function vite(string $bundle = 'public'): void {
     ];
 
     $devServer = 'http://127.0.0.1:5173';
+    $nonce = Nonce::attr();
 
     if (vite_is_dev()) {
         echo <<<HTML
-        <script type="module" src="{$devServer}/@vite/client"></script>
-        <script type="module" src="{$devServer}/{$entries[$bundle]}"></script>
+        <script type="module"{$nonce} src="{$devServer}/@vite/client"></script>
+        <script type="module"{$nonce} src="{$devServer}/{$entries[$bundle]}"></script>
 
         HTML;
         return;
@@ -63,7 +66,7 @@ function vite(string $bundle = 'public'): void {
 
     $asset = $manifest[$entries[$bundle]];
 
-    // NEW: Collect CSS from the entry AND all imported chunks
+    // Collect CSS from the entry AND all imported chunks
     $cssFiles = [];
     collectCss($manifest, $entries[$bundle], $cssFiles);
 
@@ -71,5 +74,10 @@ function vite(string $bundle = 'public'): void {
         echo '<link rel="stylesheet" href="/build/' . htmlspecialchars($css) . '">' . PHP_EOL;
     }
 
-    echo '<script type="module" src="/build/' . htmlspecialchars($asset['file']) . '"></script>';
+    echo '<script type="module"' . $nonce . ' src="/build/'
+        . htmlspecialchars($asset['file']) . '"></script>';
+}
+
+if (!function_exists('vite')) {
+    require __DIR__ . '/vite.php';
 }

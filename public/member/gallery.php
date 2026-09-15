@@ -86,18 +86,22 @@ $galleryCategories = akd_gallery_categories($galleryItems);
                 <p class="akd-gallery__empty-text">New moments will appear here when they're added.</p>
             </div>
 
-            <script type="application/json" data-gallery-data><?= json_encode(
-                array_map(static function (array $item): array {
-                    return [
-                        'id'            => $item['id'],
-                        'title'         => $item['title'],
-                        'caption'       => $item['caption'],
-                        'categoryLabel' => $item['category'],
-                        'date'          => $item['date'],
-                    ];
-                }, $galleryItems),
-                JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
-            ) ?></script>
+            <script type="application/json" 
+                data-gallery-data<?= \App\Security\Nonce::attr() ?>
+            >
+                <?= json_encode(
+                    array_map(static function (array $item): array {
+                        return [
+                            'id'            => $item['id'],
+                            'title'         => $item['title'],
+                            'caption'       => $item['caption'],
+                            'categoryLabel' => $item['category'],
+                            'date'          => $item['date'],
+                        ];
+                    }, $galleryItems),
+                    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+                ) ?>
+            </script>
         <?php endif; ?>
     </div>
 </main>

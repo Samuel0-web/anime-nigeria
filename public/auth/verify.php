@@ -71,7 +71,7 @@ $pageDescription = 'Verify your account';
 </main>
 
 <?php if ($status === 'verified'): ?>
-    <script>
+    <script<?= \App\Security\Nonce::attr() ?>>
         setTimeout(() => {
             window.location.href = "/auth/username";
         }, 3000);

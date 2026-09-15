@@ -1,6 +1,8 @@
 <?php
 namespace App\Security;
 
+use App\Security\Nonce;
+
 class Headers {
     public static function send(): void {
         // Dev detection: matches vite_is_dev() in includes/vite.php
@@ -14,6 +16,9 @@ class Headers {
         $viteWs     = $isDev ? 'ws://127.0.0.1:5173 '   : '';
         // Vite HMR client spawns a SharedWorker/Worker from a blob: URL
         $viteWorker = $isDev ? 'blob: http://127.0.0.1:5173 ' : '';
+
+        // CSP nonce for this request
+        $nonce = Nonce::get();
 
         // Prevent MIME sniffing
         header('X-Content-Type-Options: nosniff');
@@ -43,14 +48,17 @@ class Headers {
             . "object-src 'none'; "
             . "frame-ancestors 'none'; "
 
-            // JavaScript
-            . "script-src 'self' 'unsafe-inline' " . $viteHttp . "; "
+            // JavaScript — nonce + strict-dynamic.
+            // 'self' / Vite origin are fallback for browsers that don't
+            // support strict-dynamic; modern browsers ignore them.
+            . "script-src 'nonce-" . $nonce . "' 'strict-dynamic' 'self' "
+                . $viteHttp . "; "
 
             // Workers — Vite HMR uses a blob: SharedWorker in dev
             . "worker-src 'self' " . $viteWorker . "; "
             . "child-src 'self' "  . $viteWorker . "; "
 
-            // Styles
+            // Styles — keep 'unsafe-inline' (see note below)
             . "style-src 'self' 'unsafe-inline' " . $viteHttp . "; "
 
             // Fonts

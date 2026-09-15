@@ -80,7 +80,7 @@ $auth->requireGuest();
     </main>
 
     <?php if (!empty($_SESSION['oauth_error'])): ?>
-        <script>
+        <script<?= \App\Security\Nonce::attr() ?>>
             window.oauthError = <?= json_encode($_SESSION['oauth_error']) ?>;
         </script>
         <?php unset($_SESSION['oauth_error']); ?>
