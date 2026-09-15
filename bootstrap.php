@@ -3,6 +3,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Security\Headers;
+use App\Services\IpGeolocationService;
+use GuzzleHttp\Client;
+
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
@@ -17,7 +20,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $db = App\Database\Database::connection();
 $mail = new App\Mail\Mail(new App\Mail\SmtpMailer(), $_ENV['APP_URL']);
-$auth = new App\Auth\Auth($db, $mail);
+$ipGeolocation = new IpGeolocationService(new Client());
+$auth = new App\Auth\Auth($db, $mail, $ipGeolocation);
 $auth->boot();
 Headers::send();
 

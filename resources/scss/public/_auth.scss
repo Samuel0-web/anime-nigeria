@@ -121,6 +121,13 @@
 
 .an-auth__field{
     position:relative;
+
+    // JS-driven fallback class (works everywhere, including iOS Safari)
+    &.is-filled label {
+        top: .6rem;
+        font-size: .72rem;
+        color: $gold;
+    }
 }
 
 .an-auth__input{
@@ -143,10 +150,29 @@
     }
 
     &:focus + label,
-    &:not(:placeholder-shown) + label{
+    &:not(:placeholder-shown) + label,
+    &:-webkit-autofill + label {
         top:.6rem;
         font-size:.72rem;
         color:$gold;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:active {
+        border-color: $black-line !important;
+        -webkit-text-fill-color: $white !important;
+        -webkit-box-shadow: 0 0 0 1000px $input-autofill-bg inset !important;
+        box-shadow: 0 0 0 1000px $input-autofill-bg inset !important;
+    }
+
+    // keep the gold focus ring working when the field is both autofilled and focused
+    &:-webkit-autofill:focus {
+        border-color: $gold !important;
+        -webkit-box-shadow: 0 0 0 1000px $input-autofill-bg inset,
+            0 0 0 1px $gold inset !important;
+        box-shadow: 0 0 0 1000px $input-autofill-bg inset,
+            0 0 0 1px $gold inset !important;
     }
 }
 
@@ -780,7 +806,7 @@
     min-width: 0;
     aspect-ratio: 1;
     text-align: center;
-    font-size: 1.35rem;
+    font-size: 1.75rem;
     font-weight: $fw-semibold;
     font-family: $font-mono;
     color: $white;
@@ -851,12 +877,87 @@
 }
 
 @media (max-width: $bp-sm) {
-    .an-auth__otp {
-        gap: .4rem;
+    // ---- page becomes a full-height sheet ----
+    .an-auth {
+        padding: 0;
+        place-items: stretch;
+        align-content: start;
+        min-height: 100dvh; // better than 100vh on mobile (handles URL bar)
     }
 
+    // soften the glows so they don't compete with text
+    .an-auth__glow {
+        filter: blur(90px);
+        opacity: .7;
+    }
+
+    // ---- card dissolves into the page ----
+    .an-auth__card {
+        width: 100%;
+        max-width: 100%;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+
+        padding: max(1.75rem, env(safe-area-inset-top)) 1.25rem
+                 max(2rem, env(safe-area-inset-bottom));
+
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        box-shadow: none;
+    }
+
+    // logo / intro: a bit tighter, left-aligned reads less "boxed"
+    .an-auth__logo {
+        width: 140px;
+        margin-bottom: $space-lg;
+    }
+
+    .an-auth__intro {
+        text-align: left;
+        margin-bottom: $space-lg;
+
+        h1 { font-size: 1.75rem; }
+        p  { font-size: .95rem; }
+    }
+
+    // ---- breathing room between fields ----
+    .an-auth__form {
+        gap: $space-md; // was $space-sm — this is the biggest win
+    }
+
+    // keep the remember / forgot row on one line (undo your column flip)
+    .an-auth__row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: $space-xs;
+    }
+
+    .an-auth__divider,
+    .an-auth__divider2 {
+        margin: 1.25rem 0;
+    }
+
+    .an-auth__submit {
+        position: sticky;
+        bottom: max(.75rem, env(safe-area-inset-bottom));
+    }
+
+    .an-auth__footer {
+        margin-top: auto;           // pin to bottom of sheet
+        padding-top: $space-lg;
+    }
+
+    // OTP inputs get cramped below 360px — tighten them
+    .an-auth__otp {
+        gap: .35rem;
+    }
     .an-auth__otp-input {
-        font-size: 1.1rem;
+        font-size: 1.4rem;
         border-radius: $radius-sm;
     }
 }

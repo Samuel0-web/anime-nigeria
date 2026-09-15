@@ -1011,8 +1011,19 @@
 }
 
 .akd-settings-row__session-meta,
-.akd-settings-row__session-activity {
+.akd-settings-row__session-activity,
+.akd-settings-row__session-location,
+.akd-settings-row__session-ip {
     font-size: $fs-xs;
+}
+
+.akd-settings-row__session-ip {
+    font-family: $font-mono;
+}
+
+.akd-settings-row__location-approx {
+    color: $white-faint;
+    opacity: 0.75;
 }
 
 // ============================================================

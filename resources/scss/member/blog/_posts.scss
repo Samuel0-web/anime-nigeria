@@ -1,0 +1,27 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// BLOGS — ALL ARTICLES ARCHIVE
+// ==========================================
+.akd-blog-archive-page__intro {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    padding-top: $space-sm;
+}
+
+.akd-blog-archive-page__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-md;
+    flex-wrap: wrap;
+}
+
+.akd-blog-archive-page__count {
+    flex-shrink: 0;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    color: $white-faint;
+}

@@ -28,6 +28,10 @@ class LoginSession {
                 browser_version,
                 is_bot,
                 ip_address,
+                location_city,
+                location_region,
+                location_country,
+                location_country_code,
                 user_agent,
                 created_at,
                 last_activity_at
@@ -46,6 +50,10 @@ class LoginSession {
                 :browser_version,
                 :is_bot,
                 :ip_address,
+                :location_city,
+                :location_region,
+                :location_country,
+                :location_country_code,
                 :user_agent,
                 CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP
@@ -66,6 +74,10 @@ class LoginSession {
             ':browser_version'          => $data['browser_version'] ?? null,
             ':is_bot'                   => !empty($data['is_bot']) ? 1 : 0,
             ':ip_address'               => $data['ip_address'] ?? null,
+            ':location_city'            => $data['location_city'] ?? null,
+            ':location_region'          => $data['location_region'] ?? null,
+            ':location_country'         => $data['location_country'] ?? null,
+            ':location_country_code'    => $data['location_country_code'] ?? null,
             ':user_agent'               => $data['user_agent'] ?? null,
         ]);
 

@@ -125,6 +125,12 @@ $formatSession = static function (array $session, ?int $currentSessionId): array
             'brand' => $session['brand'] ?? null,
             'model' => $session['model'] ?? null,
         ],
+        'location' => [
+            'city' => $session['location_city'] ?? null,
+            'region' => $session['location_region'] ?? null,
+            'country' => $session['location_country'] ?? null,
+            'country_code' => $session['location_country_code'] ?? null,
+        ],
         'ip_address' => $session['ip_address'] ?? null,
         'created_at' => $session['created_at'] ?? null,
         'last_active_at' => $session['last_activity_at'] ?? null,

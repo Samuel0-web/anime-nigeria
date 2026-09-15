@@ -1051,20 +1051,64 @@ function formatRelativeTime(isoString) {
     return then.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function describeSession(session) {
-    const browser = session.browser?.name
-        ? `${session.browser.name}${session.browser.version ? ' ' + session.browser.version : ''}`
-        : 'Unknown browser';
+// ------------------------------------------------------------
+// Human-friendly device labels.
+//
+// The server keeps detailed detection data (exact browser_version,
+// os_version, brand, model) for diagnostics/security. This layer is
+// purely presentational: it turns that data into a compact
+// "Browser · Platform" label instead of exposing raw version numbers
+// as the primary label on a session card.
+// ------------------------------------------------------------
+function getPlatformLabel(session) {
+    const deviceType = (session.device?.type || '').toLowerCase();
+    const osName = session.os?.name || '';
+    const osLower = osName.toLowerCase();
 
-    const os = session.os?.name
-        ? `${session.os.name}${session.os.version ? ' ' + session.os.version : ''}`
-        : 'Unknown OS';
+    // iOS/iPadOS read far better as the device name than as the OS name.
+    if (osLower === 'ios' || osLower === 'ipados') {
+        return deviceType === 'tablet' ? 'iPad' : 'iPhone';
+    }
 
-    const deviceLabel = session.device?.brand
+    if (osName) return osName;
+
+    // No OS detected at all — fall back to whatever device type is known.
+    if (deviceType === 'smartphone' || deviceType === 'mobile') return 'Mobile';
+    if (deviceType === 'tablet') return 'Tablet';
+    return null;
+}
+
+function getCompactDeviceLabel(session) {
+    const browserName = session.browser?.name;
+    const platformLabel = getPlatformLabel(session);
+
+    if (browserName && platformLabel) return `${browserName} · ${platformLabel}`;
+    if (browserName) return browserName;
+    if (platformLabel) return platformLabel;
+    return 'Unknown device';
+}
+
+function getDeviceMetaLabel(session) {
+    return session.device?.brand
         ? `${session.device.brand}${session.device.model ? ' ' + session.device.model : ''}`
         : null;
+}
 
-    return { browser, os, deviceLabel };
+// ------------------------------------------------------------
+// Approximate location formatting. City/region/country all come back
+// nullable — old sessions created before this feature shipped, or
+// sessions where the lookup failed, will have none of them set.
+// ------------------------------------------------------------
+function formatLocation(location) {
+    if (!location) return null;
+    const { city, region, country } = location;
+
+    if (city && country) return `${city}, ${country}`;
+    if (region && country) return `${region}, ${country}`;
+    if (country) return country;
+    if (city) return city;
+    if (region) return region;
+    return null;
 }
 
 function initSessions(root, modal, confirmDialog) {
@@ -1248,23 +1292,31 @@ function initSessions(root, modal, confirmDialog) {
         }
     }
 
+    // Hierarchy, top to bottom: device/browser label -> approximate
+    // location -> activity/status -> IP (technical, lowest priority).
     function buildSessionRow(session) {
-        const { browser, os, deviceLabel } = describeSession(session);
+        const label = getCompactDeviceLabel(session);
+        const deviceMeta = getDeviceMetaLabel(session);
+        const locationLabel = formatLocation(session.location);
+
         const el = document.createElement('div');
         el.className = 'akd-settings-row akd-settings-row--session';
         el.setAttribute('data-session-row', String(session.id));
+
         const icon = document.createElement('div');
         icon.className = 'akd-settings-row__icon akd-settings-row__icon--security';
         icon.setAttribute('aria-hidden', 'true');
         icon.innerHTML = `<i class="${getSessionIcon(session)}"></i>`;
+
         const content = document.createElement('div');
         content.className = 'akd-settings-row__content';
+
         const top = document.createElement('div');
         top.className = 'akd-settings-row__top';
-        const label = document.createElement('span');
-        label.className = 'akd-settings-row__label';
-        label.textContent = browser;
-        top.appendChild(label);
+        const labelEl = document.createElement('span');
+        labelEl.className = 'akd-settings-row__label';
+        labelEl.textContent = label;
+        top.appendChild(labelEl);
 
         if (session.is_current) {
             const badge = document.createElement('span');
@@ -1274,20 +1326,41 @@ function initSessions(root, modal, confirmDialog) {
         }
 
         content.appendChild(top);
-        const meta = document.createElement('p');
-        meta.className = 'akd-settings-row__desc akd-settings-row__session-meta';
-        const metaParts = [os];
-        if (deviceLabel) metaParts.push(deviceLabel);
-        meta.textContent = metaParts.join(' · ');
-        content.appendChild(meta);
+
+        // Brand/model — only meaningful for devices that actually have one
+        // (mostly mobile). Desktop sessions typically have no brand.
+        if (deviceMeta) {
+            const meta = document.createElement('p');
+            meta.className = 'akd-settings-row__desc akd-settings-row__session-meta';
+            meta.textContent = deviceMeta;
+            content.appendChild(meta);
+        }
+
+        const location = document.createElement('p');
+        location.className = 'akd-settings-row__desc akd-settings-row__session-location';
+
+        if (locationLabel) {
+            location.innerHTML = `${escapeHtml(locationLabel)} <span class="akd-settings-row__location-approx">· Approximate location</span>`;
+        } else {
+            location.textContent = 'Location unavailable';
+        }
+
+        content.appendChild(location);
+
         const activity = document.createElement('p');
         activity.className = 'akd-settings-row__desc akd-settings-row__session-activity';
-        const activityParts = [];
-        if (session.ip_address) activityParts.push(session.ip_address);
-        activityParts.push(session.is_current ? 'Active now'
-            : `Last active ${formatRelativeTime(session.last_active_at)}`);
-        activity.textContent = activityParts.join(' · ');
+        activity.textContent = session.is_current
+            ? 'Active now'
+            : `Last active ${formatRelativeTime(session.last_active_at)}`;
         content.appendChild(activity);
+
+        if (session.ip_address) {
+            const ip = document.createElement('p');
+            ip.className = 'akd-settings-row__desc akd-settings-row__session-ip';
+            ip.textContent = session.ip_address;
+            content.appendChild(ip);
+        }
+
         el.append(icon, content);
 
         if (!session.is_current) {

@@ -1,0 +1,69 @@
+@use '../../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// BLOGS — CATEGORIES PAGE
+// ==========================================
+.akd-blog-categories-page__intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-md;
+    flex-wrap: wrap;
+}
+
+.akd-blog-categories-page__title {
+    margin-bottom: $space-xxs;
+}
+
+.akd-blog-categories-page__count {
+    flex-shrink: 0;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    color: $white-faint;
+}
+
+.akd-blog-categories-nav {
+    display: flex;
+    gap: $space-xs;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.akd-blog-categories-nav__item {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xxs;
+    padding: $space-xxs $space-sm;
+    min-height: 40px;
+    background: rgba($white, 0.03);
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    color: $white-muted;
+    font-size: $fs-sm;
+    text-decoration: none;
+    transition: all $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+
+    &.is-active {
+        background: $sakura-dim;
+        border-color: rgba($sakura, 0.3);
+        color: $sakura;
+    }
+}
+
+.akd-blog-categories-nav__count {
+    font-size: 10px;
+    font-weight: $fw-bold;
+    color: inherit;
+    opacity: 0.7;
+}

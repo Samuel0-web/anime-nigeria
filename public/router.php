@@ -218,6 +218,7 @@ $routes = [
     '/member/blog/category'                  => 'member/blogs/categories.php',
     '/member/blog/category/{category}'       => 'member/blogs/categories.php',
     '/member/blog/search'                    => 'member/blogs/search.php',
+    '/member/blog/posts'                     => 'member/blogs/posts.php',
     '/member/blog/post/{slug}'               => 'member/blogs/single-post.php',
     '/member/settings'                       => 'member/settings.php',
     '/member/help'                           => 'member/help-centre.php',

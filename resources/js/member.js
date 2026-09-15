@@ -19,13 +19,16 @@ import './member/community-awards-nominations.js';
 import './member/community-awards-voting.js';
 import './member/honoured-ones.js';
 import './member/gallery.js';
+import { initBlogSearch, initBlogCardImages } from './member/blog';
+import { initCommentComposer, initTableOfContents, initCopyLink, initArticleLightbox } 
+    from './member/single-post';
 import { initSettingsPage } from './member/settings';
 
 initPreloader();
 
 document.addEventListener('DOMContentLoaded', () => {
-    initSidebar({layoutId: 'akdLayout', sidebarId: 'akdSidebar', toggleBtnId: 'sidebarToggle',
-        closeBtnId: 'sidebarClose', overlayId: 'akdOverlay',
+    initSidebar({layoutId: 'akdLayout', sidebarId: 'akdSidebar', 
+        toggleBtnId: 'sidebarToggle', closeBtnId: 'sidebarClose', overlayId: 'akdOverlay',
         profileBtnId: 'profileDropdownTrigger', dropdownId: 'profileDropdown',
     });
 
@@ -33,5 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initAchievementModal();
     initSettingsPage();
     initAnnouncementsFilter();
+    initBlogSearch();
+    initBlogCardImages();
+    initCommentComposer();
+    initTableOfContents();
+    initCopyLink();
+    initArticleLightbox();
     initLogout();
 });

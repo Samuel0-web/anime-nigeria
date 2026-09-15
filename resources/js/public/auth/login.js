@@ -3,10 +3,12 @@ import { setLoading, clearLoading } from "../../modules/loading-state.js";
 import { setError, clearError, setValid, showFormMessage, clearFormMessage } from "./helpers";
 import { initEmailValidation } from "./email-validation";
 import { startCooldown } from "../../modules/cooldown.js";
+import { initFilledState } from "../../modules/state.js";
 
 export function initLogin(form, updateButtons) {
     if (document.body.dataset.page !== "login") return;
     if (!form) return;
+    initFilledState(form); 
     const button = form.querySelector(".an-auth__submit");
     const email = form.querySelector("#email");
     const password = form.querySelector("#password");

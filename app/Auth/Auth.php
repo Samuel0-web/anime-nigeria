@@ -9,6 +9,7 @@ use App\Models\TwoFactorAuth;
 use App\Models\LoginSession;
 use App\Security\Device;
 use App\Security\DeviceIdentifier;
+use App\Services\IpGeolocationService;
 use App\Services\RateLimiter;
 use App\Services\TwoFactorService;
 use PDO;
@@ -51,12 +52,13 @@ class Auth {
     private LoginSession $loginSessions;
     private TwoFactorAuth $twoFactorAuth;
     private TwoFactorService $twoFactorService;
+    private IpGeolocationService $ipGeolocation;
     
     private array $errors = [];
     private string $errorType = 'validation';
     private array $meta = [];
 
-    public function __construct(PDO $db, Mail $mail) {
+    public function __construct(PDO $db, Mail $mail, IpGeolocationService $ipGeolocation) {
         $this->db = $db;
         $this->users = new User($db);
         $this->mail = $mail;
@@ -66,6 +68,7 @@ class Auth {
         $this->loginSessions = new LoginSession($db);
         $this->twoFactorAuth = new TwoFactorAuth($db);
         $this->twoFactorService = new TwoFactorService($this->twoFactorAuth, $this->rateLimiter);
+        $this->ipGeolocation = $ipGeolocation;
     }
 
     // =========================================================================
@@ -299,6 +302,8 @@ class Auth {
         $deviceIdentifier = DeviceIdentifier::get();
         $deviceIdentifierHash = DeviceIdentifier::hash($deviceIdentifier);
         $sessionIdHash = hash('sha256', session_id());
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $location = $this->resolveApproximateLocation($ipAddress);
 
         $loginSessionId = $this->loginSessions->create([
             'user_id'                => (int) $user['id'],
@@ -313,7 +318,11 @@ class Auth {
             'browser'                => $device['browser'] ?? null,
             'browser_version'        => $device['browser_version'] ?? null,
             'is_bot'                 => !empty($device['is_bot']),
-            'ip_address'             => $_SERVER['REMOTE_ADDR'] ?? null,
+            'ip_address'             => $ipAddress,
+            'location_city'          => $location['city'] ?? null,
+            'location_region'        => $location['region'] ?? null,
+            'location_country'       => $location['country'] ?? null,
+            'location_country_code'  => $location['country_code'] ?? null,
             'user_agent'             => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
@@ -323,6 +332,22 @@ class Auth {
         }
 
         return $loginSessionId;
+    }
+
+    /**
+     * Resolve an approximate IP-based location for session metadata.
+     *
+     * This is a best-effort snapshot taken once, at session creation.
+     * IpGeolocationService::lookup() already never throws, but this
+     * wrapper is an extra safety net: authentication must never be
+     * affected by a geolocation failure of any kind.
+     */
+    private function resolveApproximateLocation(?string $ip): ?array {
+        try {
+            return $this->ipGeolocation->lookup($ip);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function destroyPhpSession(): void {
