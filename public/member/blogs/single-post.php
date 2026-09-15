@@ -22,6 +22,7 @@ $tocItems = $prepared['toc'];
 $hydratedComments = akd_blog_comments_for_article($blogComments ?? [], $article['id']);
 
 $page_title = $article['title'];
+$navTitle = 'Article';
 $page_description = $article['excerpt'];
 
 $breadcrumbs = [

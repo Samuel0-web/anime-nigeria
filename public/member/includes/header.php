@@ -15,6 +15,7 @@ if ($user === null) {
 }
 
 $page_title = $page_title ?? 'Member Dashboard';
+$navTitle = $navTitle ?? $page_title;
 $page_description = $page_description ?? 'Anime Nigeria Member Dashboard';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $canonicalPath = rtrim($currentPath, '/') ?: '/';
@@ -343,7 +344,7 @@ $todayDate = date('l, F jS');
 
             <div class="akd-header__context">
                 <h1 class="akd-header__mobile-title">
-                    <?= htmlspecialchars($page_title) ?>
+                    <?= htmlspecialchars($navTitle) ?>
                 </h1>
                 
                 <nav class="akd-breadcrumbs" aria-label="Breadcrumb">
