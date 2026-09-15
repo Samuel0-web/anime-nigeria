@@ -20,7 +20,8 @@ import './member/community-awards-voting.js';
 import './member/honoured-ones.js';
 import './member/gallery.js';
 import { initBlogSearch, initBlogCardImages } from './member/blog';
-import { initCommentComposer, initTableOfContents, initCopyLink, initArticleLightbox } 
+import { initCommentComposer, initTableOfContents, initCopyLink, initArticleLightbox,
+    initReplyExpansion, initReplyComposers, initMobileCommentReply }
     from './member/single-post';
 import { initSettingsPage } from './member/settings';
 
@@ -42,5 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTableOfContents();
     initCopyLink();
     initArticleLightbox();
+    initReplyExpansion();
+    initReplyComposers();
+    initMobileCommentReply();
     initLogout();
 });

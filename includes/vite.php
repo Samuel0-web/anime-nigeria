@@ -20,6 +20,16 @@ function collectCss(array $manifest, string $key, array &$css = []): void {
     }
 }
 
+function vite_is_dev(): bool {
+    static $isDev = null;
+    if ($isDev !== null) return $isDev;
+
+    $appEnv = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV']
+           ?? (getenv('APP_ENV') !== false ? getenv('APP_ENV') : null) ?? 'production';
+
+    return $isDev = in_array($appEnv, ['local', 'development', 'dev', 'testing'], true);
+}
+
 function vite(string $bundle = 'public'): void {
     $entries = [
         'public' => 'resources/js/public.js',
@@ -29,11 +39,8 @@ function vite(string $bundle = 'public'): void {
     ];
 
     $devServer = 'http://127.0.0.1:5173';
-    $connection = @fsockopen('127.0.0.1', 5173, $errno, $errstr, 0.2);
 
-    if ($connection) {
-        fclose($connection);
-
+    if (vite_is_dev()) {
         echo <<<HTML
         <script type="module" src="{$devServer}/@vite/client"></script>
         <script type="module" src="{$devServer}/{$entries[$bundle]}"></script>

@@ -60,14 +60,39 @@
     opacity: 0.5;
 }
 
-// Hero (reuses .akd-blog-card__media/__image/__placeholder as-is, so
-// the loading skeleton and lightbox cursor behave identically to every
-// other Blog image, only the container needs new rules)
+// Hero. Self-contained rather than reusing .akd-blog-card__media, see
+// single-post-hero.php for why.
 .akd-post__hero {
     max-width: 900px;
     margin: 0 auto $space-xl;
-    border-radius: $radius-lg;
+}
+
+.akd-post-hero__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
+    border-radius: $radius-lg;
+    background: linear-gradient(155deg, rgba($white, 0.06), rgba($white, 0.015));
+}
+
+.akd-post-hero__placeholder {
+    // position: absolute;
+    // inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $fs-2xl;
+    color: rgba($white, 0.12);
+}
+
+.akd-post-hero__image {
+    // position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 // Two column layout
@@ -175,10 +200,13 @@
 
 .akd-post-content__figure {
     margin: 0;
+    display: flex;
+    justify-content: center;
 }
 
 .akd-post-content__image {
     width: 100%;
+    max-width: 26rem;
     height: auto;
     border-radius: $radius-md;
     display: block;
@@ -292,6 +320,18 @@
     }
 }
 
+.akd-post-share__btn.is-copied {
+    background: rgba(#22c55e, 0.14);
+    border-color: rgba(#22c55e, 0.3);
+    color: #22c55e;
+
+    &:hover {
+        background: rgba(#22c55e, 0.14);
+        border-color: rgba(#22c55e, 0.3);
+        color: #22c55e;
+    }
+}
+
 // Tags
 .akd-post-tags {
     max-width: 42rem;
@@ -362,9 +402,11 @@
     min-width: 0;
 }
 
-.akd-comment-composer__textarea {
+.akd-comment-composer__textarea,
+.akd-reply-composer__textarea {
     width: 100%;
-    min-height: 3rem;
+    min-height: 2.75rem;
+    max-height: 6.25rem;
     padding: $space-sm;
     background: $input-bg;
     border: 1px solid $black-line;
@@ -373,7 +415,8 @@
     font-family: $font-primary;
     font-size: $fs-sm;
     line-height: $lh-normal;
-    resize: vertical;
+    resize: none;
+    overflow-y: auto;
     transition: border-color $transition-fast, background-color $transition-fast;
 
     &::placeholder {
@@ -412,6 +455,7 @@
 .akd-comment-composer__actions {
     display: flex;
     justify-content: flex-end;
+    gap: $space-xs;
     margin-top: $space-xs;
 }
 
@@ -441,10 +485,42 @@
     }
 }
 
+.akd-comment-composer__cancel {
+    padding: $space-xxs $space-sm;
+    background: none;
+    border: 1px solid $black-line;
+    border-radius: $radius-sm;
+    color: $white-muted;
+    font-size: $fs-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+    }
+}
+
 .akd-comment-list {
     display: flex;
     flex-direction: column;
     gap: $space-md;
+
+    &.is-scrollable {
+        max-height: 32rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: $space-xs;
+
+        @media (max-width: $bp-md) {
+            max-height: 60vh;
+        }
+    }
 }
 
 .akd-comment {
@@ -480,6 +556,90 @@
     color: $white-faint;
 }
 
+.akd-comment__actions {
+    display: flex;
+    align-items: center;
+    margin-top: 2px;
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-comment__reply-btn {
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: $fs-xs;
+    color: $white-faint;
+    cursor: pointer;
+    transition: color $transition-fast;
+
+    &:hover {
+        color: $sakura;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
+.akd-reply-composer {
+    margin-top: $space-sm;
+    padding-left: $space-lg;
+}
+
+.akd-comment-avatar--sm {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+}
+
+.akd-comment-replies {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    margin-top: $space-sm;
+    // padding-left: $space-lg;
+    // border-left: 2px solid $black-line;
+}
+
+.is-hidden-reply {
+    display: none;
+}
+
+.akd-comment-replies__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: $space-xs;
+    padding: 4px 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: $fs-xs;
+    color: $white-faint;
+    cursor: pointer;
+    transition: color $transition-fast;
+
+    i {
+        font-size: 10px;
+    }
+
+    &:hover {
+        color: $sakura;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
 .akd-comment__time {
     color: $white-faint;
 }
@@ -513,7 +673,10 @@
     .akd-post-toc__list a,
     .akd-post-share__btn,
     .akd-comment-composer__textarea,
-    .akd-comment-composer__submit {
+    .akd-comment-composer__submit,
+    .akd-comment-composer__cancel,
+    .akd-comment__reply-btn,
+    .akd-comment-replies__toggle {
         transition-duration: 0.001ms !important;
     }
 }

@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTriviaWinnersFaq();
   initBlogHero();
   initLeaderboardFaq();
+  initTriviaFaq();
   initTriviaWinnersFaq();
   initAnimeAwards();
   initDropdowns();

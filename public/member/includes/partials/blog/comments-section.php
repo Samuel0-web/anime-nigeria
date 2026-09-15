@@ -30,7 +30,7 @@
         </div>
     </form>
 
-    <div class="akd-comment-list" data-comment-list>
+    <div class="akd-comment-list<?= count($hydratedComments) > 10 ? ' is-scrollable' : '' ?>" data-comment-list>
         <?php if (empty($hydratedComments)): ?>
             <div class="akd-blog-empty akd-comment-empty" data-comment-empty>
                 <p class="akd-blog-empty__title">No comments yet.</p>

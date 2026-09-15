@@ -1,11 +1,11 @@
 <?php
 /**
  * @var array<int,array{id:string,text:string}> $tocItems
- * @var string $canonicalUrl
+ * @var string $publicShareUrl
  * @var array<string,mixed> $article
  */
 $shareTitle = $article['title'];
-$shareUrl = $canonicalUrl;
+$shareUrl = $publicShareUrl;
 ?>
 <aside class="akd-post__sidebar">
     <?php if (count($tocItems) >= 2): ?>

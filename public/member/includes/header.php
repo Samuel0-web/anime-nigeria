@@ -258,14 +258,15 @@ $todayDate = date('l, F jS');
 
     <?php vite('member'); ?>
 
-    <script type="module">
-        import RefreshRuntime from 'http://127.0.0.1:5173/@react-refresh';
-
-        RefreshRuntime.injectIntoGlobalHook(window);
-        window.$RefreshReg$ = () => {};
-        window.$RefreshSig$ = () => (type) => type;
-        window.__vite_plugin_react_preamble_installed__ = true;
-    </script>
+    <?php if (vite_is_dev()): ?>
+        <script type="module">
+            import RefreshRuntime from 'http://127.0.0.1:5173/@react-refresh';
+            RefreshRuntime.injectIntoGlobalHook(window);
+            window.$RefreshReg$ = () => {};
+            window.$RefreshSig$ = () => (type) => type;
+            window.__vite_plugin_react_preamble_installed__ = true;
+        </script>
+    <?php endif; ?>
 
     <?php vite('react'); ?>
 </head>

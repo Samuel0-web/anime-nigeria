@@ -379,12 +379,47 @@ if (!function_exists('akd_blog_initials')) {
     }
 }
 
+if (!function_exists('akd_blog_hydrate_comment')) {
+    /**
+     * Adds identity details (fullname, avatar color, initials) from
+     * the player roster to one mock comment or reply, and recurses
+     * into its replies if it has any.
+     *
+     * @param array<string,mixed> $comment
+     * @return array<string,mixed>
+     */
+    function akd_blog_hydrate_comment(array $comment): array
+    {
+        $player = akdFindPlayerByUsername($comment['username']);
+        $fullname = $player['fullname'] ?? $comment['username'];
+
+        $hydrated = [
+            'id' => $comment['id'],
+            'fullname' => $fullname,
+            'username' => $comment['username'],
+            'content' => $comment['content'],
+            'created_at' => $comment['created_at'],
+            'avatar_color' => akdPlayerAvatarColor($comment['username']),
+            'initials' => akd_blog_initials($fullname),
+        ];
+
+        if (!empty($comment['replies'])) {
+            $replies = array_map('akd_blog_hydrate_comment', $comment['replies']);
+
+            usort($replies, static function (array $a, array $b): int {
+                return strtotime($a['created_at']) <=> strtotime($b['created_at']);
+            });
+
+            $hydrated['replies'] = $replies;
+        }
+
+        return $hydrated;
+    }
+}
+
 if (!function_exists('akd_blog_comments_for_article')) {
     /**
-     * Hydrates the mock comments for one article with identity details
-     * from the player roster (fullname, avatar color, initials), then
-     * sorts chronologically. Comments store only a username, roster
-     * data stays the single source of truth for everything else.
+     * Hydrates and sorts the mock comments for one article.
      *
      * @param array<int,array<int,array<string,mixed>>> $commentsByArticle
      * @return array<int,array<string,mixed>>
@@ -392,27 +427,63 @@ if (!function_exists('akd_blog_comments_for_article')) {
     function akd_blog_comments_for_article(array $commentsByArticle, int $articleId): array
     {
         $comments = $commentsByArticle[$articleId] ?? [];
-        $hydrated = [];
-
-        foreach ($comments as $comment) {
-            $player = akdFindPlayerByUsername($comment['username']);
-            $fullname = $player['fullname'] ?? $comment['username'];
-
-            $hydrated[] = [
-                'id' => $comment['id'],
-                'fullname' => $fullname,
-                'username' => $comment['username'],
-                'content' => $comment['content'],
-                'created_at' => $comment['created_at'],
-                'avatar_color' => akdPlayerAvatarColor($comment['username']),
-                'initials' => akd_blog_initials($fullname),
-            ];
-        }
+        $hydrated = array_map('akd_blog_hydrate_comment', $comments);
 
         usort($hydrated, static function (array $a, array $b): int {
             return strtotime($a['created_at']) <=> strtotime($b['created_at']);
         });
 
         return $hydrated;
+    }
+}
+
+if (!function_exists('akd_blog_public_url')) {
+    /**
+     * TODO: point this at the real public article URL once one exists.
+     * No public per-article route was found in router.php, only the
+     * flat /blog -> blogs/index.php page with no slug handling, so
+     * this currently falls back to the member URL rather than
+     * inventing a new public route. Centralising it here means only
+     * this function needs to change later, not every partial that
+     * builds a share link.
+     */
+    function akd_blog_public_url(array $article, string $memberUrl): string
+    {
+        return $memberUrl;
+    }
+}
+
+if (!function_exists('akd_blog_more_to_explore')) {
+    /**
+     * Broader discovery picks distinct from "More from Category": this
+     * pool draws from OTHER categories, ranked by shared tags then
+     * recency, current article and any already-shown ids excluded.
+     *
+     * @param array<int,array<string,mixed>> $articles
+     * @param array<int,int> $excludeIds
+     * @return array<int,array<string,mixed>>
+     */
+    function akd_blog_more_to_explore(array $articles, array $article, array $excludeIds = [], int $limit = 3): array
+    {
+        $pool = array_values(array_filter($articles, static function (array $candidate) use ($article, $excludeIds) {
+            return $candidate['id'] !== $article['id']
+                && $candidate['category'] !== $article['category']
+                && !in_array($candidate['id'], $excludeIds, true);
+        }));
+
+        $tags = $article['tags'] ?? [];
+
+        usort($pool, static function (array $a, array $b) use ($tags) {
+            $sharedA = count(array_intersect($a['tags'] ?? [], $tags));
+            $sharedB = count(array_intersect($b['tags'] ?? [], $tags));
+
+            if ($sharedA !== $sharedB) {
+                return $sharedB <=> $sharedA;
+            }
+
+            return strtotime($b['published_at']) <=> strtotime($a['published_at']);
+        });
+
+        return array_slice($pool, 0, $limit);
     }
 }
