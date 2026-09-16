@@ -1,4 +1,7 @@
 <?php
+require __DIR__ . '/vite.php';
+require_once __DIR__ . '/../bootstrap.php';
+
 $pageTitle       = $pageTitle       ?? "Anime Nigeria — Nigeria's Home for Otakus";
 $pageDescription = $pageDescription ?? "Anime Nigeria is Nigeria's anime and Japanese culture community — discussions, challenges, trivia, awards, blogs, and events for otaku across the country.";
 
@@ -52,7 +55,6 @@ $navGroups = [
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $canonicalPath = rtrim($currentPath, '/') ?: '/';
 $canonicalUrl = rtrim((string) ($_ENV['APP_URL'] ?? 'https://animenigeria.ng'), '/') . $canonicalPath;
-require __DIR__ . '/vite.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

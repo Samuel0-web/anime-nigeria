@@ -5,7 +5,9 @@ require __DIR__ . '/../../../includes/vite.php';
 $auth->requireAuth();
 
 use App\Security\Csrf;
+use App\Security\Nonce;
 use App\Support\Avatar;
+
 $user = $auth->user();
 
 if ($user === null) {
@@ -259,7 +261,7 @@ $todayDate = date('l, F jS');
     <?php vite('member'); ?>
 
     <?php if (vite_is_dev()): ?>
-        <script type="module"<?= \App\Security\Nonce::attr() ?>>
+        <script type="module"<?= Nonce::attr() ?>>
             import RefreshRuntime from 'http://127.0.0.1:5173/@react-refresh';
             RefreshRuntime.injectIntoGlobalHook(window);
             window.$RefreshReg$ = () => {};
@@ -324,7 +326,7 @@ $todayDate = date('l, F jS');
 </div>
 
 <div class="akd-layout" id="akdLayout">
-    <script<?= \App\Security\Nonce::attr() ?>>
+    <script<?= Nonce::attr() ?>>
         (function () {
             try {
                 var uid = <?= (int) $user['id'] ?>;

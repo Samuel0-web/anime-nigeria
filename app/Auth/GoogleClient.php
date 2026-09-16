@@ -2,6 +2,7 @@
 namespace App\Auth;
 
 use GuzzleHttp\Client;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
 class GoogleClient {
@@ -108,15 +109,11 @@ class GoogleClient {
     // =========================================================================
     // PRIVATE - Helpers
     // =========================================================================
-    
     /**
      * Decode JSON response with consistent error handling.
      */
-    private function decodeResponse($response): array {
-        return json_decode(
-            $response->getBody()->getContents(),
-            true,
-            512,
+    private function decodeResponse(ResponseInterface $response): array {
+        return json_decode($response->getBody()->getContents(), true, 512,
             JSON_THROW_ON_ERROR
         );
     }

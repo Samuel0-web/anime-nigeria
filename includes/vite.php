@@ -77,7 +77,3 @@ function vite(string $bundle = 'public'): void {
     echo '<script type="module"' . $nonce . ' src="/build/'
         . htmlspecialchars($asset['file']) . '"></script>';
 }
-
-if (!function_exists('vite')) {
-    require __DIR__ . '/vite.php';
-}
