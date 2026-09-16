@@ -1,16 +1,16 @@
 // resources/js/member/gallery.js
-// Member Gallery: category filter, a JS-computed masonry layout (shortest
-// column first, using each item's real rendered dimensions once its image
-// has loaded, an estimated aspect ratio otherwise), and the shared
-// lightbox from modules/lightbox.js (built on the existing .an-lightbox
-// markup in _layout.scss). No prev/next controls, by request: single
-// image and close only.
-import { useLightbox } from '../modules/lightbox.js';
+// Member Gallery: category filter and a JS-computed masonry layout
+// (shortest column first, using each item's real rendered dimensions
+// once its image has loaded, an estimated aspect ratio otherwise).
+//
+// The lightbox is Fancybox (see modules/lightbox.js). The Gallery is
+// responsible only for rendering Fancybox-compatible triggers; it does
+// not open, close, or configure the viewer itself.
+import { initLightbox } from '../modules/lightbox.js';
 
 // Mirrors the breakpoints in _tokens.scss ($bp-md, $bp-lg, $bp-xl) and the
 // $space-sm / $space-md spacing scale. Kept in sync by hand, the same
-// tradeoff already accepted elsewhere in this codebase (see
-// akd_challenge_accent_hex() in challenges-support.php).
+// tradeoff already accepted elsewhere in this codebase.
 function getColumnCount(width) {
     if (width >= 1280) return 4;
     if (width >= 1024) return 3;
@@ -23,7 +23,7 @@ function getGap(width) {
 
 function debounce(fn, wait) {
     let timeoutId;
-    
+
     return (...args) => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => fn(...args), wait);
@@ -34,18 +34,11 @@ function getVisibleItems(grid) {
     return Array.from(grid.querySelectorAll('.akd-gallery__item')).filter((item) => !item.hidden);
 }
 
-// The overlap/gap bug traced to here: dataset.width/height are only ever
-// the PHP-side estimated placeholders (see the comment in gallery-data.php),
-// not each asset's real dimensions. Once the browser finishes loading an
-// image, .akd-gallery__image's width:100%/height:auto renders it at the
-// image's ACTUAL intrinsic aspect ratio, which can differ from the
-// estimate, while the column bookkeeping was still reserving space for
-// the estimated height. That mismatch is what let one item's real
-// rendered edge fall past the top reserved for the item below it in the
-// same column. Reading naturalWidth/naturalHeight once an image is
-// actually complete (already true immediately for cached images) closes
-// that gap: the space reserved and the space rendered become the same
-// number.
+// Reads real natural dimensions when the image is complete, and falls
+// back to the PHP-supplied estimate otherwise. Reading naturalWidth/
+// naturalHeight once the image is actually loaded closes the
+// estimated-vs-rendered aspect ratio gap that used to cause column
+// overlap.
 function getItemDimensions(item) {
     const img = item.querySelector('.akd-gallery__image');
 
@@ -91,25 +84,8 @@ function layoutMasonry(grid) {
         columnHeights[targetColumn] += renderedHeight + gap;
     });
 
-    // Bottom edge of the tallest column, nothing more: once columnHeights
-    // reflects each item's REAL rendered height instead of an estimate
-    // (see getItemDimensions above), this already lands on the true
-    // bottom edge of the lowest item, no separate fix needed here.
     grid.style.height = `${Math.max(...columnHeights) - gap}px`;
     grid.classList.add('is-ready');
-}
-
-function readGalleryData(root) {
-    const script = root.querySelector('[data-gallery-data]');
-    if (!script) return new Map();
-
-    try {
-        const list = JSON.parse(script.textContent);
-        return new Map(list.map((entry) => [String(entry.id), entry]));
-    } catch (error) {
-        console.error('Gallery data could not be parsed', error);
-        return new Map();
-    }
 }
 
 function initFilter(root, grid, onChange) {
@@ -140,55 +116,26 @@ function initGallery() {
     const root = document.querySelector('.akd-gallery');
     const grid = root?.querySelector('[data-gallery-grid]');
     if (!root || !grid) return;
-
     const filteredEmpty = root.querySelector('[data-gallery-filtered-empty]');
-    const galleryData = readGalleryData(root);
-    const lightbox = useLightbox();
-    let openTriggerEl = null;
 
     function refresh() {
         const visible = getVisibleItems(grid);
-
         if (filteredEmpty) filteredEmpty.hidden = visible.length !== 0;
         grid.hidden = visible.length === 0;
-
-        // If a filter change hid the item currently shown in the lightbox,
-        // close it rather than leaving it pointing at something no longer
-        // in the visible collection.
-        if (lightbox.isOpen() && openTriggerEl && openTriggerEl.hidden) {
-            lightbox.close();
-            openTriggerEl = null;
-        }
-
         layoutMasonry(grid);
     }
 
     initFilter(root, grid, refresh);
 
-    grid.addEventListener('click', (event) => {
-        const item = event.target.closest('.akd-gallery__item');
-        if (!item) return;
-
-        const data = galleryData.get(item.dataset.galleryItem);
-        const img = item.querySelector('.akd-gallery__image');
-        if (!data || !img) return;
-
-        openTriggerEl = item;
-        lightbox.open({
-            src: img.currentSrc || img.src,
-            alt: img.alt,
-            title: data.title,
-            categoryLabel: data.categoryLabel,
-            date: data.date,
-            caption: data.caption,
-            triggerEl: item,
-        });
-    });
+    // Global Fancybox binding. The Gallery does not pass a selector —
+    // every `[data-fancybox]` anchor on the site is covered by the one
+    // delegated listener. initLightbox is idempotent, so this same call
+    // from single-post or any other consumer is a no-op.
+    initLightbox();
 
     // One shared debounced relayout, reused by both the resize observer
-    // below and the per-image load listeners: several images finishing
-    // around the same time (a fast scroll through lazy-loaded items)
-    // should collapse into a single recalculation, not one per image.
+    // and the per-image load listeners: several images finishing around
+    // the same time should collapse into one recalculation.
     const scheduleLayout = debounce(() => layoutMasonry(grid), 120);
 
     grid.querySelectorAll('.akd-gallery__image').forEach((img) => {
@@ -196,21 +143,16 @@ function initGallery() {
             img.closest('.akd-gallery__item')?.classList.add('has-error');
         }, { once: true });
 
-        // Cached images are already `complete` here, getItemDimensions()
-        // picks up their real size on the very first layoutMasonry() call
-        // with no extra event needed. This listener only matters for
-        // images NOT yet complete at that first call (the ones still
-        // waiting on loading="lazy"), so their placeholder estimate gets
-        // replaced with the real size the moment it's known.
+        // Cached images are already `complete` here. This listener only
+        // matters for images still waiting on loading="lazy".
         if (!img.complete) {
             img.addEventListener('load', scheduleLayout, { once: true });
         }
     });
 
-    // ResizeObserver rather than a window 'resize' listener: it also picks
-    // up the sidebar collapse/expand transition, which changes .akd-content
-    // (and so this grid)'s available width without the window itself
-    // resizing at all.
+    // ResizeObserver rather than a window 'resize' listener: it also
+    // picks up the sidebar collapse/expand transition, which changes
+    // .akd-content's available width without the window resizing.
     const resizeObserver = new ResizeObserver(scheduleLayout);
     resizeObserver.observe(grid);
     refresh();

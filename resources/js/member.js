@@ -21,7 +21,9 @@ import './member/honoured-ones.js';
 import './member/gallery.js';
 import { initBlogSearch, initBlogCardImages } from './member/blog';
 import { initCommentComposer, initTableOfContents, initCopyLink, initArticleLightbox,
-    initReplyExpansion, initReplyComposers, initMobileCommentReply }
+    initReplyExpansion, initReplyComposers, initMobileCommentReply, 
+    initMobileCommentsSheet, initCommentListHeight, initCommentDeletion, 
+    initMobileCommentLongPressDelete }
     from './member/single-post';
 import { initSettingsPage } from './member/settings';
 
@@ -46,5 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initReplyExpansion();
     initReplyComposers();
     initMobileCommentReply();
+    initMobileCommentLongPressDelete();
+    initMobileCommentsSheet();
+    initCommentListHeight();
+    initCommentDeletion();
     initLogout();
 });

@@ -189,7 +189,10 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         if (!touch) return;
 
         if (gesture.active) {
-            e.preventDefault();
+             if (e.cancelable) {
+                e.preventDefault();
+            }
+
             updateFromTouch(touch, e.timeStamp);
             return;
         }
@@ -209,7 +212,11 @@ export function initSidebar({layoutId, sidebarId, toggleBtnId, closeBtnId, overl
         sidebar.classList.add('is-dragging');
         overlay?.classList.add('is-dragging');
         document.body.style.overflow = 'hidden';
-        e.preventDefault();
+
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
         updateFromTouch(touch, e.timeStamp);
     }
 

@@ -627,16 +627,10 @@
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     padding-bottom: $space-xxs;
-    scrollbar-width: thin;
-    scrollbar-color: $black-line transparent;
+    scrollbar-width: none;
 
     &::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: $black-line;
-        border-radius: $radius-full;
+        display: none;
     }
 }
 

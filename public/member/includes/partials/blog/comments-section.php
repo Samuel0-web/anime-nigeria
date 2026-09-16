@@ -4,10 +4,18 @@
  * @var array<string,mixed> $user
  * @var string $avatarColor
  * @var string $userInitials
+ * @var int $totalCommentCount
  */
 ?>
+<button type="button" class="akd-comments-trigger" data-comments-trigger>
+    <span>Comments &middot; <span data-comments-trigger-count><?= (int) $totalCommentCount ?></span></span>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+</button>
+
 <section class="akd-post-comments" id="comments" aria-labelledby="akdCommentsHeading">
-    <h2 class="akd-post-comments__heading" id="akdCommentsHeading">Comments</h2>
+    <h2 class="akd-post-comments__heading" id="akdCommentsHeading">
+        Comments <span class="akd-post-comments__count" data-comments-heading-count>&middot; <?= (int) $totalCommentCount ?></span>
+    </h2>
 
     <form class="akd-comment-composer" data-comment-form novalidate>
         <div class="akd-comment-composer__row">
@@ -30,9 +38,12 @@
         </div>
     </form>
 
-    <div class="akd-comment-list<?= count($hydratedComments) > 10 ? ' is-scrollable' : '' ?>" data-comment-list>
+    <div class="akd-comment-list" data-comment-list>
         <?php if (empty($hydratedComments)): ?>
             <div class="akd-blog-empty akd-comment-empty" data-comment-empty>
+                <span class="akd-comment-empty__icon" aria-hidden="true">
+                    <i class="fa-regular fa-comments"></i>
+                </span>
                 <p class="akd-blog-empty__title">No comments yet.</p>
                 <p class="akd-blog-empty__body">Be the first to share your thoughts.</p>
             </div>
@@ -44,8 +55,11 @@
     </div>
 </section>
 
-<script type="application/json" id="akdCurrentUser"><?= json_encode([
-    'fullname' => $user['fullname'] ?? 'Member',
-    'initials' => $userInitials,
-    'avatarColor' => $avatarColor,
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+<script type="application/json" id="akdCurrentUser"<?= \App\Security\Nonce::attr() ?>>
+    <?= json_encode([
+        'fullname' => $user['fullname'] ?? 'Member',
+        'username' => $user['username'] ?? '',
+        'initials' => $userInitials,
+        'avatarColor' => $avatarColor,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>
+</script>

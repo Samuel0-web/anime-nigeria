@@ -7,8 +7,6 @@
 // ==========================================
 .akd-post__header {
     max-width: 46rem;
-    margin: 0 auto $space-lg;
-    padding-top: $space-sm;
     display: flex;
     flex-direction: column;
     gap: $space-xs;
@@ -64,7 +62,6 @@
 // single-post-hero.php for why.
 .akd-post__hero {
     max-width: 900px;
-    margin: 0 auto $space-xl;
 }
 
 .akd-post-hero__media {
@@ -77,8 +74,6 @@
 }
 
 .akd-post-hero__placeholder {
-    // position: absolute;
-    // inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,8 +82,6 @@
 }
 
 .akd-post-hero__image {
-    // position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -201,13 +194,16 @@
 .akd-post-content__figure {
     margin: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .akd-post-content__image {
-    width: 100%;
-    max-width: 26rem;
-    height: auto;
+    width: auto;
+    height: 22rem;
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
     border-radius: $radius-md;
     display: block;
 }
@@ -215,6 +211,7 @@
 .akd-post-content__caption {
     margin-top: $space-xxs;
     font-size: $fs-xs;
+    font-style: italic;
     color: $white-faint;
     text-align: center;
 }
@@ -364,8 +361,16 @@
 
 // Comments
 .akd-post-comments {
+    width: 100%;
+    box-sizing: border-box;
     max-width: 46rem;
     margin: $space-xxl auto 0;
+}
+
+.akd-comment-composer,
+.akd-comment-list {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .akd-post-comments__heading {
@@ -373,6 +378,11 @@
     font-size: $fs-lg;
     font-weight: $fw-semibold;
     color: $white;
+}
+
+.akd-post-comments__count {
+    color: $white-faint;
+    font-weight: $fw-regular;
 }
 
 .akd-comment-composer {
@@ -511,15 +521,139 @@
     flex-direction: column;
     gap: $space-md;
 
+    // max-height is set inline by JS, computed from the actual
+    // rendered height of a comment plus up to 2 replies, times 10.
     &.is-scrollable {
-        max-height: 32rem;
         overflow-y: auto;
         overscroll-behavior: contain;
         padding-right: $space-xs;
+    }
+}
 
-        @media (max-width: $bp-md) {
-            max-height: 60vh;
-        }
+.akd-comments-trigger {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: $space-sm $space-md;
+    margin: $space-xxl auto 0;
+    max-width: 46rem;
+    background: rgba($white, 0.02);
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    color: $white-muted;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    i {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+
+    &:hover {
+        background: rgba($white, 0.05);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+    }
+
+    @media (max-width: $bp-lg) {
+        display: flex;
+    }
+}
+
+@media (max-width: $bp-lg) {
+    .akd-post-comments {
+        display: none;
+    }
+}
+
+// When moved into the shared modal for the mobile sheet
+.akd-post-comments--in-modal {
+    display: block;
+    max-width: none;
+    margin: 0;
+
+    .akd-post-comments__heading {
+        display: none;
+    }
+}
+
+.akd-comment-avatar {
+    text-decoration: none;
+}
+
+.akd-comment__profile-link--self {
+    cursor: default;
+}
+
+.akd-comment__profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .akd-comment__author {
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
+.akd-comment__reply-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: $white-faint;
+    font-size: $fs-xs;
+
+    i {
+        font-size: 8px;
+    }
+}
+
+.akd-comment--nested-reply {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: .95rem;
+        top: 35px;
+        bottom: -10px;
+        width: 2px;
+        background: $black-line;
+    }
+}
+
+.akd-comment__delete-btn {
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: $fs-xs;
+    color: $white-faint;
+    cursor: pointer;
+    transition: color $transition-fast;
+
+    &:hover {
+        color: $accent-crimson;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $sakura;
+        outline-offset: 2px;
+        border-radius: 2px;
     }
 }
 
@@ -544,6 +678,7 @@
 .akd-comment__author {
     font-weight: $fw-semibold;
     color: $white;
+    font-size: $fs-sm;
 }
 
 .akd-comment__username {
@@ -601,21 +736,39 @@
     flex-direction: column;
     gap: $space-sm;
     margin-top: $space-sm;
-    // padding-left: $space-lg;
-    // border-left: 2px solid $black-line;
 }
 
-.is-hidden-reply {
-    display: none;
+.akd-comment--reply {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.28s ease, opacity 0.22s ease;
+
+    &:not(.is-hidden-reply) {
+        opacity: 1;
+        // max-height is set inline by JS to the exact measured height for
+        // the duration of the transition, then cleared once it completes,
+        // see animateReplyVisibility() in single-post.js
+    }
 }
 
-.akd-comment-replies__toggle {
+.akd-comment-replies__controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    width: 100%;
+    gap: $space-sm;
     margin-top: $space-xs;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-comment-replies__toggle,
+.akd-comment-replies__hide {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     padding: 4px 0;
     background: none;
     border: none;
@@ -638,6 +791,10 @@
         outline-offset: 2px;
         border-radius: 2px;
     }
+
+    &[hidden] {
+        display: none;
+    }
 }
 
 .akd-comment__time {
@@ -646,19 +803,52 @@
 
 .akd-comment__text {
     margin: 2px 0 0;
-    font-size: $fs-sm;
+    font-size: $fs-base;
     line-height: $lh-normal;
     color: $white-muted;
     overflow-wrap: anywhere;
 }
 
 .akd-comment-empty {
-    padding: $space-lg $space-md;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 14rem;
+    padding: $space-xl $space-md;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.akd-comment-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $space-xs;
+    border-radius: $radius-full;
+    background: rgba($white, 0.03);
+    color: rgba($white, 0.25);
+    font-size: $fs-lg;
 }
 
 // Related articles
 .akd-post-related {
     margin-top: $space-xxl;
+
+    .akd-blog__section-title {
+        margin-bottom: $space-sm;
+        font-size: $fs-xl;
+    }
+
+    .akd-blog-card--rail-wide {
+        flex-basis: 15rem;
+    }
+
+    .akd-blog-card__title {
+        font-size: $fs-lg;
+    }
 }
 
 @media (max-width: $bp-md) {
@@ -676,7 +866,9 @@
     .akd-comment-composer__submit,
     .akd-comment-composer__cancel,
     .akd-comment__reply-btn,
-    .akd-comment-replies__toggle {
+    .akd-comment-replies__toggle,
+    .akd-comment-replies__hide,
+    .akd-comment--reply {
         transition-duration: 0.001ms !important;
     }
 }

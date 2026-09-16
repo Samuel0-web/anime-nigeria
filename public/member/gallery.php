@@ -47,34 +47,45 @@ $galleryCategories = akd_gallery_categories($galleryItems);
 
             <div class="akd-gallery__grid" data-gallery-grid>
                 <?php foreach ($galleryItems as $item): ?>
-                    <button
-                        type="button"
+                    <div
                         class="akd-gallery__item"
                         data-gallery-item="<?= (int) $item['id'] ?>"
                         data-gallery-category="<?= htmlspecialchars(akd_gallery_slug($item['category'])) ?>"
                         data-width="<?= (int) $item['width'] ?>"
                         data-height="<?= (int) $item['height'] ?>"
-                        aria-label="View <?= htmlspecialchars($item['title']) ?>"
                     >
-                        <img
-                            src="<?= htmlspecialchars($item['image']) ?>"
-                            alt="<?= htmlspecialchars($item['alt']) ?>"
-                            width="<?= (int) $item['width'] ?>"
-                            height="<?= (int) $item['height'] ?>"
-                            loading="lazy"
-                            decoding="async"
-                            class="akd-gallery__image"
+                        <?php /* The <a> is a real interactive element, keyboard-focusable,
+                            and carries the full-size image URL for Fancybox. The
+                            thumbnail (data-width/height estimates) is only the
+                            preview inside it. */ ?>
+                        <a
+                            class="akd-gallery__link"
+                            href="<?= htmlspecialchars($item['image']) ?>"
+                            data-fancybox
+                            <?php if (!empty($item['caption'])): ?>
+                                data-caption="<?= htmlspecialchars($item['caption'], ENT_QUOTES) ?>"
+                            <?php endif; ?>
                         >
-                        <span class="akd-gallery__fallback" aria-hidden="true">
-                            <i class="fa-solid fa-image"></i>
-                        </span>
-                        <span class="akd-gallery__overlay" aria-hidden="true">
-                            <span class="akd-gallery__overlay-title"><?= htmlspecialchars($item['title']) ?></span>
-                            <span class="akd-gallery__overlay-meta">
-                                <?= htmlspecialchars($item['category']) ?><?= $item['date'] ? ' &bull; ' . htmlspecialchars($item['date']) : '' ?>
+                            <img
+                                src="<?= htmlspecialchars($item['image']) ?>"
+                                alt="<?= htmlspecialchars($item['alt']) ?>"
+                                width="<?= (int) $item['width'] ?>"
+                                height="<?= (int) $item['height'] ?>"
+                                loading="lazy"
+                                decoding="async"
+                                class="akd-gallery__image"
+                            >
+                            <span class="akd-gallery__fallback" aria-hidden="true">
+                                <i class="fa-solid fa-image"></i>
                             </span>
-                        </span>
-                    </button>
+                            <span class="akd-gallery__overlay" aria-hidden="true">
+                                <span class="akd-gallery__overlay-title"><?= htmlspecialchars($item['title']) ?></span>
+                                <span class="akd-gallery__overlay-meta">
+                                    <?= htmlspecialchars($item['category']) ?><?= $item['date'] ? ' &bull; ' . htmlspecialchars($item['date']) : '' ?>
+                                </span>
+                            </span>
+                        </a>
+                    </div>
                 <?php endforeach; ?>
             </div>
 
@@ -85,23 +96,6 @@ $galleryCategories = akd_gallery_categories($galleryItems);
                 <h3 class="akd-gallery__empty-title">Nothing here yet</h3>
                 <p class="akd-gallery__empty-text">New moments will appear here when they're added.</p>
             </div>
-
-            <script type="application/json" 
-                data-gallery-data<?= \App\Security\Nonce::attr() ?>
-            >
-                <?= json_encode(
-                    array_map(static function (array $item): array {
-                        return [
-                            'id'            => $item['id'],
-                            'title'         => $item['title'],
-                            'caption'       => $item['caption'],
-                            'categoryLabel' => $item['category'],
-                            'date'          => $item['date'],
-                        ];
-                    }, $galleryItems),
-                    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
-                ) ?>
-            </script>
         <?php endif; ?>
     </div>
 </main>

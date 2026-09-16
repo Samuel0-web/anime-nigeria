@@ -1,19 +1,22 @@
-import { useLightbox } from '../modules/lightbox';
+import { initLightbox } from '../modules/lightbox';
+import { useModal } from '../modules/modal';
+import { useConfirmDialog } from '../modules/confirm-dialog';
 import { success, error } from '../modules/toast';
 
-// Keep in sync with AKD_BLOG_COMMENT_MAX_LENGTH in blog-support.php.
 const COMMENT_MAX_LENGTH = 500;
-
-// Demonstrates the error path the brief asks for without a real
-// backend to fail against yet. Remove this once comment submission is
-// wired to an actual endpoint.
 const SIMULATED_FAILURE_RATE = 0.12;
 const REPLY_INITIAL_VISIBLE = 2;
 const REPLY_BATCH_SIZE = 10;
+const LONG_PRESS_MS = 2500;
+const MOBILE_BP = 1024;
+const TAP_EXCLUDE_SELECTOR = 'a, button, textarea, input, [data-reply-list], [data-reply-composer], .akd-comment__profile-link';
+let longPressTimer = null;
+let longPressTriggered = false;
+let localIdCounter = 900000;
 
-// Matches modules/lightbox.js's own MOBILE_BP, the established split
-// for touch-gesture purposes in this codebase.
-const MOBILE_TAP_REPLY_BP = 1024;
+function nextLocalId() {
+    return localIdCounter++;
+}
 
 function autoGrowTextarea(textarea) {
     textarea.style.height = 'auto';
@@ -35,29 +38,125 @@ function readCurrentUser() {
 function updateCommentListScrollState() {
     const list = document.querySelector('[data-comment-list]');
     if (!list) return;
-
-    const count = list.querySelectorAll(':scope > .akd-comment').length;
-    list.classList.toggle('is-scrollable', count > 10);
+    list.classList.toggle('is-scrollable', list.scrollHeight > list.clientHeight);
 }
 
-function updateReplyExpandControl(list) {
-    const toggle = list.parentElement?.querySelector('[data-reply-expand]');
-    if (!toggle) return;
+function checkCommentListEmpty() {
+    const list = document.querySelector('[data-comment-list]');
+    if (!list) return;
+    if (list.querySelector('.akd-comment-thread')) return;
+    if (list.querySelector('[data-comment-empty]')) return;
 
-    const total = parseInt(list.dataset.totalReplies, 10) || 0;
-    const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
-    const hidden = total - visible;
-    const label = toggle.querySelector('[data-reply-expand-label]');
-    const icon = toggle.querySelector('i');
+    const empty = document.createElement('div');
+    empty.className = 'akd-blog-empty akd-comment-empty';
+    empty.setAttribute('data-comment-empty', '');
+    empty.innerHTML = `
+        <span class="akd-comment-empty__icon" aria-hidden="true"><i class="fa-regular fa-comments"></i></span>
+        <p class="akd-blog-empty__title">No comments yet.</p>
+        <p class="akd-blog-empty__body">Be the first to share your thoughts.</p>
+    `;
+    list.appendChild(empty);
+}
 
-    if (hidden <= 0) {
-        if (label) label.textContent = 'Hide replies';
-        if (icon) icon.className = 'fa-solid fa-chevron-up';
-        toggle.setAttribute('aria-expanded', 'true');
+function updateCommentCounts() {
+    const total = document.querySelectorAll('.akd-comment-thread, .akd-comment--reply').length;
+
+    const triggerLabel = document.querySelector('[data-comments-trigger-count]');
+    if (triggerLabel) triggerLabel.textContent = total;
+
+    const headingCount = document.querySelector('[data-comments-heading-count]');
+    if (headingCount) headingCount.textContent = `\u00b7 ${total}`;
+}
+
+function computeCommentUnitHeight(list) {
+    const first = list.querySelector(':scope > .akd-comment-thread');
+    const body = first?.querySelector(':scope > .akd-comment__body');
+    const meta = body?.querySelector(':scope > .akd-comment__meta');
+    const text = body?.querySelector(':scope > .akd-comment__text');
+    const actions = body?.querySelector(':scope > .akd-comment__actions');
+    if (!meta || !text || !actions) return null;
+
+    const rowGap = parseFloat(getComputedStyle(list).rowGap) || 0;
+    const baseHeight = meta.getBoundingClientRect().height
+        + text.getBoundingClientRect().height
+        + actions.getBoundingClientRect().height;
+
+    const sampleReply = body.querySelector('.akd-comment--reply:not(.is-hidden-reply)');
+    const replyHeight = sampleReply ? sampleReply.getBoundingClientRect().height : baseHeight * 0.85;
+    return baseHeight + rowGap + (replyHeight + rowGap) * 2;
+}
+
+export function initCommentListHeight() {
+    const list = document.querySelector('[data-comment-list]');
+    if (!list || window.innerWidth < MOBILE_BP) return;
+
+    requestAnimationFrame(() => {
+        const unitHeight = computeCommentUnitHeight(list);
+        if (!unitHeight) return;
+        list.style.maxHeight = `${Math.round(unitHeight * 10)}px`;
+        updateCommentListScrollState();
+    });
+}
+
+export function initMobileCommentsSheet() {
+    const trigger = document.querySelector('[data-comments-trigger]');
+    const panel = document.getElementById('comments');
+    if (!trigger || !panel) return;
+    const anchor = document.createComment('comments-anchor');
+    panel.parentElement.insertBefore(anchor, panel);
+
+    trigger.addEventListener('click', () => {
+        const modal = useModal();
+        panel.classList.add('akd-post-comments--in-modal');
+
+        modal.open({
+            title: 'Comments',
+            content: panel,
+            size: 'lg',
+            className: 'akd-comments-sheet',
+            beforeClose: () => {
+                anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+                panel.classList.remove('akd-post-comments--in-modal');
+            },
+        });
+    });
+}
+
+// ---- Reply reveal/hide animation ----
+
+function animateReplyVisibility(reply, shouldShow) {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+        reply.classList.toggle('is-hidden-reply', !shouldShow);
+        reply.style.maxHeight = '';
+        return;
+    }
+
+    if (shouldShow) {
+        reply.classList.remove('is-hidden-reply');
+        const targetHeight = reply.scrollHeight;
+        reply.style.maxHeight = '0px';
+        requestAnimationFrame(() => {
+            reply.style.maxHeight = `${targetHeight}px`;
+        });
+        reply.addEventListener('transitionend', function handler(event) {
+            if (event.propertyName !== 'max-height') return;
+            reply.style.maxHeight = '';
+            reply.removeEventListener('transitionend', handler);
+        });
     } else {
-        if (label) label.textContent = `View ${hidden} ${hidden === 1 ? 'reply' : 'replies'}`;
-        if (icon) icon.className = 'fa-solid fa-chevron-down';
-        toggle.setAttribute('aria-expanded', 'false');
+        const currentHeight = reply.scrollHeight;
+        reply.style.maxHeight = `${currentHeight}px`;
+        requestAnimationFrame(() => {
+            reply.style.maxHeight = '0px';
+        });
+        reply.addEventListener('transitionend', function handler(event) {
+            if (event.propertyName !== 'max-height') return;
+            reply.classList.add('is-hidden-reply');
+            reply.style.maxHeight = '';
+            reply.removeEventListener('transitionend', handler);
+        });
     }
 }
 
@@ -68,48 +167,101 @@ function setReplyVisibility(list, visibleCount) {
 
     list.querySelectorAll('[data-reply-index]').forEach((reply) => {
         const index = parseInt(reply.dataset.replyIndex, 10);
-        reply.classList.toggle('is-hidden-reply', index >= clamped);
+        const shouldShow = index < clamped;
+        const isCurrentlyHidden = reply.classList.contains('is-hidden-reply');
+
+        if (shouldShow === isCurrentlyHidden) {
+            animateReplyVisibility(reply, shouldShow);
+        }
     });
+}
+
+function updateReplyExpandControl(list) {
+    const controls = list.parentElement?.querySelector('[data-reply-controls]');
+    if (!controls) return;
+
+    const viewBtn = controls.querySelector('[data-reply-view]');
+    const viewLabel = viewBtn?.querySelector('[data-reply-view-label]');
+    const viewIcon = viewBtn?.querySelector('i');
+    const hideBtn = controls.querySelector('[data-reply-hide]');
+
+    const total = parseInt(list.dataset.totalReplies, 10) || 0;
+    const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
+    const hidden = total - visible;
+    const hasExpandedAtLeastOnce = visible > REPLY_INITIAL_VISIBLE;
+
+    controls.hidden = total <= 2;
+
+    if (hidden <= 0) {
+        if (viewLabel) viewLabel.textContent = 'Hide all replies';
+        if (viewIcon) viewIcon.className = 'fa-solid fa-chevron-up';
+        viewBtn?.setAttribute('aria-expanded', 'true');
+        if (hideBtn) hideBtn.hidden = true;
+    } else {
+        if (viewLabel) viewLabel.textContent = `View ${hidden} ${hidden === 1 ? 'reply' : 'replies'}`;
+        if (viewIcon) viewIcon.className = 'fa-solid fa-chevron-down';
+        viewBtn?.setAttribute('aria-expanded', 'false');
+        if (hideBtn) hideBtn.hidden = !hasExpandedAtLeastOnce;
+    }
 }
 
 export function initReplyExpansion() {
     document.addEventListener('click', (event) => {
-        const toggle = event.target.closest('[data-reply-expand]');
-        if (!toggle) return;
+        const viewBtn = event.target.closest('[data-reply-view]');
+        if (viewBtn) {
+            const body = viewBtn.closest('.akd-comment__body');
+            const list = body?.querySelector('[data-reply-list]');
+            if (!list) return;
+            const total = parseInt(list.dataset.totalReplies, 10) || 0;
+            const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
+            setReplyVisibility(list, visible >= total ? REPLY_INITIAL_VISIBLE : visible + REPLY_BATCH_SIZE);
+            updateReplyExpandControl(list);
+            return;
+        }
 
-        const list = toggle.parentElement?.querySelector('[data-reply-list]');
-        if (!list) return;
-
-        const total = parseInt(list.dataset.totalReplies, 10) || 0;
-        const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
-
-        setReplyVisibility(list, visible >= total ? REPLY_INITIAL_VISIBLE : visible + REPLY_BATCH_SIZE);
-        updateReplyExpandControl(list);
+        const hideBtn = event.target.closest('[data-reply-hide]');
+        if (hideBtn) {
+            const body = hideBtn.closest('.akd-comment__body');
+            const list = body?.querySelector('[data-reply-list]');
+            if (!list) return;
+            setReplyVisibility(list, REPLY_INITIAL_VISIBLE);
+            updateReplyExpandControl(list);
+        }
     });
 }
 
+// ---- Reply composer ----
+
 function openReplyComposer(replyBtn) {
-    const body = replyBtn.closest('.akd-comment__body');
-    const composer = body?.querySelector('[data-reply-composer]');
+    const thread = replyBtn.closest('.akd-comment-thread');
+    const composer = thread?.querySelector('[data-reply-composer]');
     if (!composer) return;
 
-    const willOpen = composer.hidden;
+    const targetUsername = replyBtn.dataset.replyUsername || '';
+    const targetName = replyBtn.dataset.replyName || 'this comment';
+    const isTopLevelTarget = replyBtn.closest('.akd-comment') === thread;
+    const sameTargetOpen = !composer.hidden && composer.dataset.replyToUsername === targetUsername;
 
     document.querySelectorAll('[data-reply-composer]:not([hidden])').forEach((open) => {
         if (open !== composer) open.hidden = true;
     });
 
-    composer.hidden = !willOpen;
-    if (!willOpen) return;
+    if (sameTargetOpen) {
+        composer.hidden = true;
+        return;
+    }
 
-    const name = replyBtn.dataset.replyName || 'this comment';
+    composer.hidden = false;
+    composer.dataset.replyToUsername = targetUsername;
+    composer.dataset.replyToIsTopLevel = isTopLevelTarget ? '1' : '0';
+
     const label = composer.querySelector('[data-reply-label]');
     const textarea = composer.querySelector('[data-reply-input]');
     const avatar = composer.querySelector('[data-reply-avatar]');
     const user = readCurrentUser();
 
-    if (label) label.textContent = `Reply to ${name}`;
-    if (textarea) textarea.setAttribute('placeholder', `Reply to ${name}...`);
+    if (label) label.textContent = `Reply to ${targetName}`;
+    if (textarea) textarea.setAttribute('placeholder', `Reply to ${targetName}...`);
 
     if (avatar && user) {
         avatar.style.backgroundColor = user.avatarColor;
@@ -121,8 +273,8 @@ function openReplyComposer(replyBtn) {
 
 function closeReplyComposer(composer) {
     composer.hidden = true;
-
     const textarea = composer.querySelector('[data-reply-input]');
+
     if (textarea) {
         textarea.value = '';
         autoGrowTextarea(textarea);
@@ -138,8 +290,8 @@ function closeReplyComposer(composer) {
     if (countEl) countEl.textContent = `0/${COMMENT_MAX_LENGTH}`;
 }
 
-function ensureReplyList(commentArticle, composer) {
-    let list = commentArticle.querySelector('[data-reply-list]');
+function ensureReplyList(thread, composer) {
+    let list = thread.querySelector('[data-reply-list]');
 
     if (!list) {
         list = document.createElement('div');
@@ -153,32 +305,69 @@ function ensureReplyList(commentArticle, composer) {
     return list;
 }
 
-function ensureReplyToggle(list) {
-    let toggle = list.parentElement?.querySelector('[data-reply-expand]');
-    const total = parseInt(list.dataset.totalReplies, 10) || 0;
+function ensureReplyControls(list) {
+    let controls = list.parentElement?.querySelector('[data-reply-controls]');
 
-    if (!toggle && total > 2) {
-        toggle = document.createElement('button');
-        toggle.type = 'button';
-        toggle.className = 'akd-comment-replies__toggle';
-        toggle.setAttribute('data-reply-expand', '');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.innerHTML = '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i><span data-reply-expand-label></span>';
-        list.insertAdjacentElement('afterend', toggle);
+    if (!controls) {
+        controls = document.createElement('div');
+        controls.className = 'akd-comment-replies__controls';
+        controls.setAttribute('data-reply-controls', '');
+        controls.innerHTML = `
+            <button type="button" class="akd-comment-replies__toggle" data-reply-view aria-expanded="false">
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                <span data-reply-view-label></span>
+            </button>
+            <button type="button" class="akd-comment-replies__hide" data-reply-hide hidden>Hide</button>
+        `;
+        list.insertAdjacentElement('afterend', controls);
     }
 
-    return toggle;
+    return controls;
+}
+
+function buildReplyElement(user, text, thread, replyToUsername) {
+    const profileHref = `/member/player/${encodeURIComponent(user.username || '')}`;
+    const reply = document.createElement('article');
+    reply.className = `akd-comment akd-comment--reply${replyToUsername ? ' akd-comment--nested-reply' : ''}`;
+    reply.dataset.commentId = String(nextLocalId());
+    reply.dataset.parentId = thread.dataset.commentId || '';
+    reply.dataset.replyToUsername = replyToUsername || '';
+
+    reply.innerHTML = `
+        <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: ${user.avatarColor}" aria-hidden="true">${user.initials}</span>
+        <div class="akd-comment__body">
+            <div class="akd-comment__meta">
+                <span class="akd-comment__profile-link akd-comment__profile-link--self">
+                    <span class="akd-comment__author"></span>
+                    <span class="akd-comment__username"></span>
+                </span>
+                ${replyToUsername ? `<span class="akd-comment__reply-target"><i class="fa-solid fa-caret-right" aria-hidden="true"></i> @${replyToUsername}</span>` : ''}
+            </div>
+            <p class="akd-comment__text"></p>
+            <div class="akd-comment__actions">
+                <span class="akd-comment__time">Just now</span>
+                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="${user.fullname}" data-reply-username="${user.username || ''}">Reply</button>
+                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="reply">Delete</button>
+            </div>
+        </div>
+    `;
+
+    reply.querySelector('.akd-comment__author').textContent = user.fullname;
+    reply.querySelector('.akd-comment__username').textContent = `@${user.username || ''}`;
+    reply.querySelector('.akd-comment__text').textContent = text;
+    return reply;
 }
 
 function submitReply(submitBtn) {
     const composer = submitBtn.closest('[data-reply-composer]');
-    const commentArticle = composer?.closest('.akd-comment');
+    const thread = composer?.closest('.akd-comment-thread');
     const textarea = composer?.querySelector('[data-reply-input]');
     const errorEl = composer?.querySelector('[data-reply-error]');
     const submitLabel = composer?.querySelector('[data-reply-submit-label]');
     const user = readCurrentUser();
-
-    if (!composer || !commentArticle || !textarea || !user) return;
+    if (!composer || !thread || !textarea || !user) return;
 
     const text = textarea.value.trim();
     if (errorEl) {
@@ -209,34 +398,23 @@ function submitReply(submitBtn) {
         submitBtn.disabled = false;
         if (submitLabel) submitLabel.textContent = 'Reply';
 
-        const list = ensureReplyList(commentArticle, composer);
+        const list = ensureReplyList(thread, composer);
         const total = parseInt(list.dataset.totalReplies, 10) || 0;
+        const replyToIsTopLevel = composer.dataset.replyToIsTopLevel === '1';
+        const replyToUsername = replyToIsTopLevel ? null : composer.dataset.replyToUsername;
 
-        const reply = document.createElement('article');
-        reply.className = 'akd-comment akd-comment--reply';
+        const reply = buildReplyElement(user, text, thread, replyToUsername);
         reply.setAttribute('data-reply-index', String(total));
-        reply.innerHTML = `
-            <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: ${user.avatarColor}" aria-hidden="true">${user.initials}</span>
-            <div class="akd-comment__body">
-                <div class="akd-comment__meta">
-                    <span class="akd-comment__author"></span>
-                </div>
-                <p class="akd-comment__text"></p>
-                <span class="akd-comment__time">Just now</span>
-            </div>
-        `;
-        reply.querySelector('.akd-comment__author').textContent = user.fullname;
-        reply.querySelector('.akd-comment__text').textContent = text;
         list.appendChild(reply);
-
         list.dataset.totalReplies = String(total + 1);
 
-        const toggle = ensureReplyToggle(list);
+        const controls = ensureReplyControls(list);
         const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
         setReplyVisibility(list, visible + 1);
-        if (toggle) updateReplyExpandControl(list);
+        updateReplyExpandControl(list);
 
         closeReplyComposer(composer);
+        updateCommentCounts();
         success('Reply posted');
     }, 500);
 }
@@ -263,13 +441,10 @@ export function initReplyComposers() {
     document.addEventListener('input', (event) => {
         const textarea = event.target.closest('[data-reply-input]');
         if (!textarea) return;
-
         autoGrowTextarea(textarea);
-
         const composer = textarea.closest('[data-reply-composer]');
         const countEl = composer?.querySelector('[data-reply-count]');
         if (countEl) countEl.textContent = `${textarea.value.length}/${COMMENT_MAX_LENGTH}`;
-
         const errorEl = composer?.querySelector('[data-reply-error]');
         if (errorEl) {
             errorEl.hidden = true;
@@ -278,33 +453,122 @@ export function initReplyComposers() {
     });
 }
 
+// ---- Mobile tap-to-reply / long-press-to-delete ----
+
 export function initMobileCommentReply() {
     document.addEventListener('click', (event) => {
-        if (window.innerWidth >= MOBILE_TAP_REPLY_BP) return;
+        if (window.innerWidth >= MOBILE_BP) return;
+        if (longPressTriggered) {
+            longPressTriggered = false;
+            return;
+        }
 
         const target = event.target.closest('[data-comment-tap-target]');
         if (!target) return;
-
-        if (event.target.closest('a, button, textarea, input, [data-reply-list], [data-reply-composer]')) return;
-
+        if (event.target.closest(TAP_EXCLUDE_SELECTOR)) return;
         target.querySelector('[data-reply-toggle]')?.click();
     });
 }
 
+export function initMobileCommentLongPressDelete() {
+    document.addEventListener('touchstart', (event) => {
+        if (window.innerWidth >= MOBILE_BP) return;
+        const target = event.target.closest('[data-comment-tap-target]');
+        if (!target) return;
+        if (event.target.closest(TAP_EXCLUDE_SELECTOR)) return;
+
+        longPressTriggered = false;
+        longPressTimer = window.setTimeout(() => {
+            longPressTriggered = true;
+            target.closest('.akd-comment')?.querySelector('[data-comment-delete]')?.click();
+        }, LONG_PRESS_MS);
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => clearTimeout(longPressTimer), { passive: true });
+    document.addEventListener('touchmove', () => clearTimeout(longPressTimer), { passive: true });
+}
+
+// ---- Delete ----
+
+export function initCommentDeletion() {
+    document.addEventListener('click', async (event) => {
+        const deleteBtn = event.target.closest('[data-comment-delete]');
+        if (!deleteBtn) return;
+        const commentArticle = deleteBtn.closest('.akd-comment');
+        if (!commentArticle) return;
+        const isReply = deleteBtn.dataset.deleteTarget === 'reply';
+
+        const confirmed = await useConfirmDialog().ask({
+            title: isReply ? 'Delete reply' : 'Delete comment',
+            message: `This will remove the ${isReply ? 'reply' : 'comment'}. This cannot be undone.`,
+            confirmLabel: 'Delete',
+            cancelLabel: 'Cancel',
+            destructive: true,
+        });
+
+        if (!confirmed) return;
+
+        const parentList = commentArticle.closest('[data-reply-list]');
+        commentArticle.remove();
+
+        if (parentList) {
+            const remaining = parentList.querySelectorAll('[data-reply-index]').length;
+            parentList.dataset.totalReplies = String(remaining);
+            setReplyVisibility(parentList, Math.min(parseInt(parentList.dataset.visibleReplies, 10) || 0, remaining));
+            updateReplyExpandControl(parentList);
+        } else {
+            checkCommentListEmpty();
+        }
+
+        updateCommentListScrollState();
+        updateCommentCounts();
+    });
+}
+
+// ---- Top-level comment composer ----
+
 function buildCommentElement(user, text) {
     const article = document.createElement('article');
-    article.className = 'akd-comment';
+    article.className = 'akd-comment akd-comment-thread';
+    article.dataset.commentId = String(nextLocalId());
+    const profileHref = `/member/player/${encodeURIComponent(user.username || '')}`;
 
     article.innerHTML = `
         <span class="akd-comment-avatar" style="background-color: ${user.avatarColor}" aria-hidden="true">${user.initials}</span>
         <div class="akd-comment__body" data-comment-tap-target>
             <div class="akd-comment__meta">
-                <span class="akd-comment__author"></span>
-                <span class="akd-comment__username"></span>
+                <span class="akd-comment__profile-link akd-comment__profile-link--self">
+                    <span class="akd-comment__author"></span>
+                    <span class="akd-comment__username"></span>
+                </span>
             </div>
             <p class="akd-comment__text"></p>
             <div class="akd-comment__actions">
                 <span class="akd-comment__time">Just now</span>
+                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="${user.fullname}" data-reply-username="${user.username || ''}">Reply</button>
+                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="comment">Delete</button>
+            </div>
+
+            <div class="akd-reply-composer" data-reply-composer hidden>
+                <div class="akd-comment-composer__row">
+                    <span class="akd-comment-avatar akd-comment-avatar--sm" data-reply-avatar aria-hidden="true"></span>
+                    <div class="akd-comment-composer__field">
+                        <label class="visually-hidden" data-reply-label>Reply</label>
+                        <textarea class="akd-comment-composer__textarea akd-reply-composer__textarea" data-reply-input maxlength="${COMMENT_MAX_LENGTH}" placeholder="Write a reply..." rows="1"></textarea>
+                        <div class="akd-comment-composer__meta">
+                            <span class="akd-comment-composer__error" data-reply-error hidden></span>
+                            <span class="akd-comment-composer__count" data-reply-count>0/${COMMENT_MAX_LENGTH}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="akd-comment-composer__actions">
+                    <button type="button" class="akd-comment-composer__cancel" data-reply-cancel>Cancel</button>
+                    <button type="button" class="akd-comment-composer__submit" data-reply-submit>
+                        <span data-reply-submit-label>Reply</span>
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -318,16 +582,13 @@ function buildCommentElement(user, text) {
 export function initCommentComposer() {
     const form = document.querySelector('[data-comment-form]');
     if (!form) return;
-
     const textarea = form.querySelector('[data-comment-input]');
     const countEl = form.querySelector('[data-comment-count]');
     const errorEl = form.querySelector('[data-comment-error]');
     const submitBtn = form.querySelector('[data-comment-submit]');
     const submitLabel = form.querySelector('[data-comment-submit-label]');
     const list = document.querySelector('[data-comment-list]');
-    const emptyState = document.querySelector('[data-comment-empty]');
     const user = readCurrentUser();
-
     if (!textarea || !list || !user) return;
 
     const updateCount = () => {
@@ -356,7 +617,6 @@ export function initCommentComposer() {
     form.addEventListener('submit', (event) => {
         event.preventDefault();
         clearError();
-
         const text = textarea.value.trim();
 
         if (!text) {
@@ -380,10 +640,10 @@ export function initCommentComposer() {
                 return;
             }
 
-            list.appendChild(buildCommentElement(user, text));
-            emptyState?.remove();
+            document.querySelector('[data-comment-empty]')?.remove();
+            list.prepend(buildCommentElement(user, text));
             updateCommentListScrollState();
-
+            updateCommentCounts();
             textarea.value = '';
             updateCount();
             autoGrowTextarea(textarea);
@@ -394,10 +654,11 @@ export function initCommentComposer() {
     });
 }
 
+// ---- Table of contents, copy link, lightbox (unchanged) ----
+
 export function initTableOfContents() {
     const toc = document.querySelector('[data-post-toc]');
     if (!toc) return;
-
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     toc.querySelectorAll('a').forEach((link) => {
@@ -405,7 +666,6 @@ export function initTableOfContents() {
             const targetId = link.getAttribute('href')?.slice(1);
             const target = targetId ? document.getElementById(targetId) : null;
             if (!target) return;
-
             event.preventDefault();
             target.scrollIntoView({
                 behavior: prefersReducedMotion ? 'auto' : 'smooth',
@@ -418,18 +678,15 @@ export function initTableOfContents() {
 export function initCopyLink() {
     const button = document.querySelector('[data-copy-link]');
     if (!button) return;
-
     const icon = button.querySelector('i');
     const originalIconClass = icon ? icon.className : '';
     let resetTimer = null;
 
     const showCopiedState = () => {
         if (!icon) return;
-
         button.classList.add('is-copied');
         button.disabled = true;
         icon.className = 'fa-solid fa-check';
-
         clearTimeout(resetTimer);
         resetTimer = window.setTimeout(() => {
             icon.className = originalIconClass;
@@ -468,19 +725,5 @@ export function initCopyLink() {
 }
 
 export function initArticleLightbox() {
-    const images = document.querySelectorAll('[data-post-lightbox-image]');
-    if (!images.length) return;
-
-    const lightbox = useLightbox();
-
-    images.forEach((img) => {
-        img.addEventListener('click', () => {
-            lightbox.open({
-                src: img.currentSrc || img.src,
-                alt: img.alt,
-                caption: img.getAttribute('data-lightbox-caption') || '',
-                triggerEl: img,
-            });
-        });
-    });
+    initLightbox();
 }

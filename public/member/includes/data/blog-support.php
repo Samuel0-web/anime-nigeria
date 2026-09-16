@@ -429,8 +429,11 @@ if (!function_exists('akd_blog_comments_for_article')) {
         $comments = $commentsByArticle[$articleId] ?? [];
         $hydrated = array_map('akd_blog_hydrate_comment', $comments);
 
+        // Newest first for top-level comments only. akd_blog_hydrate_comment()
+        // sorts each comment's own replies oldest-first internally, that
+        // ordering is untouched by this.
         usort($hydrated, static function (array $a, array $b): int {
-            return strtotime($a['created_at']) <=> strtotime($b['created_at']);
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
         });
 
         return $hydrated;
@@ -485,5 +488,69 @@ if (!function_exists('akd_blog_more_to_explore')) {
         });
 
         return array_slice($pool, 0, $limit);
+    }
+}
+
+if (!function_exists('akd_blog_flatten_replies')) {
+    /**
+     * Flattens an arbitrarily nested reply tree into one chronological
+     * list for TikTok style attribution. A reply directly under the
+     * parent comment gets no attribution. A reply to another reply is
+     * tagged with that reply's username. No nested DOM is ever built,
+     * no matter how deep the original chain goes.
+     *
+     * @param array<int,array<string,mixed>> $replies
+     * @return array<int,array<string,mixed>>
+     */
+    function akd_blog_flatten_replies(array $replies): array
+    {
+        $flat = [];
+
+        foreach ($replies as $reply) {
+            $flat[] = [
+                'id' => $reply['id'],
+                'fullname' => $reply['fullname'],
+                'username' => $reply['username'],
+                'content' => $reply['content'],
+                'created_at' => $reply['created_at'],
+                'avatar_color' => $reply['avatar_color'],
+                'initials' => $reply['initials'],
+                'reply_to_username' => null,
+            ];
+
+            if (!empty($reply['replies'])) {
+                foreach (akd_blog_flatten_replies($reply['replies']) as $nested) {
+                    if ($nested['reply_to_username'] === null) {
+                        $nested['reply_to_username'] = $reply['username'];
+                    }
+                    $flat[] = $nested;
+                }
+            }
+        }
+
+        return $flat;
+    }
+}
+
+if (!function_exists('akd_blog_count_comments_with_replies')) {
+    /**
+     * Total discussion count (comments plus every nested reply), used
+     * for the mobile "Comments · N" entry point.
+     *
+     * @param array<int,array<string,mixed>> $comments
+     */
+    function akd_blog_count_comments_with_replies(array $comments): int
+    {
+        $count = 0;
+
+        foreach ($comments as $comment) {
+            $count++;
+
+            if (!empty($comment['replies'])) {
+                $count += akd_blog_count_comments_with_replies($comment['replies']);
+            }
+        }
+
+        return $count;
     }
 }

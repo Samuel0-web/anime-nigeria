@@ -1,23 +1,48 @@
 <?php
-/** @var array<string,mixed> $comment */
-$replies = $comment['replies'] ?? [];
-$totalReplies = count($replies);
+/**
+ * @var array<string,mixed> $comment
+ * @var array<string,mixed> $user
+ */
+$flatReplies = akd_blog_flatten_replies($comment['replies'] ?? []);
+usort($flatReplies, static function (array $a, array $b): int {
+    return strtotime($a['created_at']) <=> strtotime($b['created_at']);
+});
+$totalReplies = count($flatReplies);
 $initialVisible = min(2, $totalReplies);
+$currentUsername = $user['username'] ?? '';
+$isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $currentUsername) === 0;
 ?>
-<article class="akd-comment" data-comment-id="<?= (int) $comment['id'] ?>">
-    <span class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($comment['avatar_color']) ?>;" aria-hidden="true">
-        <?= htmlspecialchars($comment['initials']) ?>
-    </span>
+<article class="akd-comment akd-comment-thread" data-comment-id="<?= (int) $comment['id'] ?>">
+    <?php if ($isOwnComment): ?>
+        <span class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($comment['avatar_color']) ?>;" aria-hidden="true">
+            <?= htmlspecialchars($comment['initials']) ?>
+        </span>
+    <?php else: ?>
+        <a class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($comment['avatar_color']) ?>;" href="/member/player/<?= htmlspecialchars($comment['username']) ?>" aria-hidden="true">
+            <?= htmlspecialchars($comment['initials']) ?>
+        </a>
+    <?php endif; ?>
     <div class="akd-comment__body" data-comment-tap-target>
         <div class="akd-comment__meta">
-            <span class="akd-comment__author"><?= htmlspecialchars($comment['fullname']) ?></span>
-            <span class="akd-comment__username">@<?= htmlspecialchars($comment['username']) ?></span>
+            <?php if ($isOwnComment): ?>
+                <span class="akd-comment__profile-link akd-comment__profile-link--self">
+                    <span class="akd-comment__author"><?= htmlspecialchars($comment['fullname']) ?></span>
+                    <span class="akd-comment__username">@<?= htmlspecialchars($comment['username']) ?></span>
+                </span>
+            <?php else: ?>
+                <a class="akd-comment__profile-link" href="/member/player/<?= htmlspecialchars($comment['username']) ?>">
+                    <span class="akd-comment__author"><?= htmlspecialchars($comment['fullname']) ?></span>
+                    <span class="akd-comment__username">@<?= htmlspecialchars($comment['username']) ?></span>
+                </a>
+            <?php endif; ?>
         </div>
         <p class="akd-comment__text"><?= nl2br(htmlspecialchars($comment['content'])) ?></p>
         <div class="akd-comment__actions">
             <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($comment['created_at'])) ?></span>
             <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
-            <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($comment['fullname']) ?>">Reply</button>
+            <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($comment['fullname']) ?>" data-reply-username="<?= htmlspecialchars($comment['username']) ?>">Reply</button>
+            <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+            <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="comment">Delete</button>
         </div>
 
         <div class="akd-reply-composer" data-reply-composer hidden>
@@ -42,33 +67,64 @@ $initialVisible = min(2, $totalReplies);
 
         <?php if ($totalReplies > 0): ?>
             <div class="akd-comment-replies" data-reply-list data-total-replies="<?= $totalReplies ?>" data-visible-replies="<?= $initialVisible ?>">
-                <?php foreach ($replies as $index => $reply): ?>
-                    <article class="akd-comment akd-comment--reply<?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>" data-reply-index="<?= $index ?>">
-                        <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($reply['avatar_color']) ?>;" aria-hidden="true">
-                            <?= htmlspecialchars($reply['initials']) ?>
-                        </span>
+                <?php foreach ($flatReplies as $index => $reply): ?>
+                    <?php $isOwnReply = $currentUsername !== '' && strcasecmp($reply['username'], $currentUsername) === 0; ?>
+                    <article
+                        class="akd-comment akd-comment--reply<?= $reply['reply_to_username'] ? ' akd-comment--nested-reply' : '' ?><?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>"
+                        data-comment-id="<?= (int) $reply['id'] ?>"
+                        data-parent-id="<?= (int) $comment['id'] ?>"
+                        data-reply-to-username="<?= htmlspecialchars($reply['reply_to_username'] ?? '') ?>"
+                        data-reply-index="<?= $index ?>"
+                    >
+                        <?php if ($isOwnReply): ?>
+                            <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($reply['avatar_color']) ?>;" aria-hidden="true">
+                                <?= htmlspecialchars($reply['initials']) ?>
+                            </span>
+                        <?php else: ?>
+                            <a class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($reply['avatar_color']) ?>;" href="/member/player/<?= htmlspecialchars($reply['username']) ?>" aria-hidden="true">
+                                <?= htmlspecialchars($reply['initials']) ?>
+                            </a>
+                        <?php endif; ?>
                         <div class="akd-comment__body">
                             <div class="akd-comment__meta">
-                                <span class="akd-comment__author"><?= htmlspecialchars($reply['fullname']) ?></span>
-                                <span class="akd-comment__username">@<?= htmlspecialchars($reply['username']) ?></span>
+                                <?php if ($isOwnReply): ?>
+                                    <span class="akd-comment__profile-link akd-comment__profile-link--self">
+                                        <span class="akd-comment__author"><?= htmlspecialchars($reply['fullname']) ?></span>
+                                        <span class="akd-comment__username">@<?= htmlspecialchars($reply['username']) ?></span>
+                                    </span>
+                                <?php else: ?>
+                                    <a class="akd-comment__profile-link" href="/member/player/<?= htmlspecialchars($reply['username']) ?>">
+                                        <span class="akd-comment__author"><?= htmlspecialchars($reply['fullname']) ?></span>
+                                        <span class="akd-comment__username">@<?= htmlspecialchars($reply['username']) ?></span>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($reply['reply_to_username']): ?>
+                                    <span class="akd-comment__reply-target">
+                                        <i class="fa-solid fa-caret-right" aria-hidden="true"></i> @<?= htmlspecialchars($reply['reply_to_username']) ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
                             <p class="akd-comment__text"><?= nl2br(htmlspecialchars($reply['content'])) ?></p>
                             <div class="akd-comment__actions">
                                 <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($reply['created_at'])) ?></span>
                                 <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
-                                <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($reply['fullname']) ?>">Reply</button>
+                                <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($reply['fullname']) ?>" data-reply-username="<?= htmlspecialchars($reply['username']) ?>">Reply</button>
+                                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                                <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="reply">Delete</button>
                             </div>
                         </div>
                     </article>
                 <?php endforeach; ?>
             </div>
 
-            <?php if ($totalReplies > 2): $hiddenCount = $totalReplies - $initialVisible; ?>
-                <button type="button" class="akd-comment-replies__toggle" data-reply-expand aria-expanded="false">
+            <div class="akd-comment-replies__controls" data-reply-controls<?= $totalReplies <= 2 ? ' hidden' : '' ?>>
+                <?php $hiddenCount = $totalReplies - $initialVisible; ?>
+                <button type="button" class="akd-comment-replies__toggle" data-reply-view aria-expanded="false">
                     <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                    <span data-reply-expand-label>View <?= $hiddenCount ?> <?= $hiddenCount === 1 ? 'reply' : 'replies' ?></span>
+                    <span data-reply-view-label>View <?= $hiddenCount ?> <?= $hiddenCount === 1 ? 'reply' : 'replies' ?></span>
                 </button>
-            <?php endif; ?>
+                <button type="button" class="akd-comment-replies__hide" data-reply-hide hidden>Hide</button>
+            </div>
         <?php endif; ?>
     </div>
 </article>

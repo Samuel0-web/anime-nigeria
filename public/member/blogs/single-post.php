@@ -20,6 +20,7 @@ $prepared = akd_blog_prepare_content($article['content'] ?? []);
 $contentBlocks = $prepared['blocks'];
 $tocItems = $prepared['toc'];
 $hydratedComments = akd_blog_comments_for_article($blogComments ?? [], $article['id']);
+$totalCommentCount = akd_blog_count_comments_with_replies($hydratedComments);
 $page_title = $article['title'];
 $navTitle = 'Article';
 $page_description = $article['excerpt'];

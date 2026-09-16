@@ -121,18 +121,36 @@
     border: 1px solid $black-line;
     border-radius: $radius-md;
     overflow: hidden;
-    padding: 0;
     background: rgba($white, 0.02);
     cursor: pointer;
     transition: transform $transition-base, width $transition-base, opacity $transition-fast;
 
-    &:focus-visible {
+    &:focus-within {
         outline: 2px solid $sakura;
         outline-offset: 2px;
     }
 
     &[hidden] {
         display: none;
+    }
+}
+
+// New: the Fancybox trigger. Fills the item, block-level so the img
+// resolves the item's height, and carries the pointer cursor that used
+// to live on the button.
+.akd-gallery__link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    cursor: zoom-in;
+
+    &:focus {
+        // Outline is drawn by the parent's :focus-within above, so the
+        // default UA focus ring is suppressed here to avoid a double
+        // ring.
+        outline: none;
     }
 }
 
@@ -146,8 +164,13 @@
 }
 
 .akd-gallery__item:hover .akd-gallery__image,
-.akd-gallery__item:focus-visible .akd-gallery__image {
+.akd-gallery__item:focus-within .akd-gallery__image {
     transform: scale(1.03);
+}
+
+.akd-gallery__item:hover .akd-gallery__overlay,
+.akd-gallery__item:focus-within .akd-gallery__overlay {
+    opacity: 1;
 }
 
 .akd-gallery__fallback {

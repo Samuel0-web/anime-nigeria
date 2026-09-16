@@ -32,14 +32,16 @@
 
             case 'image': ?>
                 <figure class="akd-post-content__figure">
-                    <img
-                        src="<?= htmlspecialchars($block['src']) ?>"
-                        alt="<?= htmlspecialchars($block['alt'] ?? '') ?>"
-                        class="akd-post-content__image"
-                        loading="lazy"
-                        data-post-lightbox-image
-                        <?php if (!empty($block['caption'])): ?>data-lightbox-caption="<?= htmlspecialchars($block['caption']) ?>"<?php endif; ?>
+                    <?php /* Anchor is the Fancybox trigger; href is the full-size URL. */ ?>
+                    <a href="<?= htmlspecialchars($block['src']) ?>"
+                        data-fancybox
+                        <?php if (!empty($block['caption'])): ?>data-caption="<?= htmlspecialchars($block['caption'], ENT_QUOTES) ?>"<?php endif; ?>
                     >
+                        <img src="<?= htmlspecialchars($block['src']) ?>"
+                            alt="<?= htmlspecialchars($block['alt'] ?? '') ?>"
+                            class="akd-post-content__image" loading="lazy"
+                        >
+                    </a>
                     <?php if (!empty($block['caption'])): ?>
                         <figcaption class="akd-post-content__caption"><?= htmlspecialchars($block['caption']) ?></figcaption>
                     <?php endif; ?>
