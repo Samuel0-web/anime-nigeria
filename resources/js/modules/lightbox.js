@@ -1,8 +1,8 @@
 // resources/js/modules/lightbox.js
-// Sole owner of Fancybox. Consumers render:
+// Sole owner of Fancybox. Declarative consumers render:
 // <a href="full.jpg" data-fancybox data-caption="…"><img ...></a>
-// A delegated bind covers all current and future consumers. No attribute
-// value means each image is a single-item set.
+// Programmatic consumers (e.g. an avatar preview button that has no <a>)
+// call openLightbox(src). Both paths share the same options object below.
 import { Fancybox } from '@fancyapps/ui';
 import { Compactmode } from '@fancyapps/ui/dist/fancybox/fancybox.compactmode.js';
 import '@fancyapps/ui/dist/fancybox/fancybox.css';
@@ -30,38 +30,42 @@ function releaseScrollLock() {
     body.removeAttribute('inert');
 }
 
+// Shared by Fancybox.bind (declarative anchors) and Fancybox.show
+// (programmatic calls). Single source of truth so the two entry points
+// can never drift.
+const LIGHTBOX_OPTIONS = {
+    plugins: { Compactmode },
+    hideScrollbar: true,
+    Thumbs: false,
+    Slideshow: false,
+    Carousel: { Navigation: false },
+    Toolbar: {
+        display: {
+            left: [],
+            middle: [],
+            right: ['close'],
+        },
+    },
+    on: {
+        close: releaseScrollLock,
+        destroy: releaseScrollLock,
+    },
+};
+
+// Idempotent — safe to call from any consumer's init.
 export function initLightbox() {
     if (initialized) return;
     initialized = true;
+    Fancybox.bind('[data-fancybox]', LIGHTBOX_OPTIONS);
+}
 
-    Fancybox.bind('[data-fancybox]', {
-        plugins: { Compactmode },
-
-        // Keep the scrollbar visible while the viewer is open.
-        hideScrollbar: true,
-
-        // Single-image viewer with no thumbnails, slideshow, navigation,
-        // or toolbar items other than close.
-        Thumbs: false,
-        Slideshow: false,
-        Carousel: { Navigation: false },
-        Toolbar: {
-            display: {
-                left: [],
-                middle: [],
-                right: ['close'],
-            },
-        },
-
-        on: {
-            close: releaseScrollLock,
-            destroy: releaseScrollLock,
-        },
-    });
+// Open a single image without a DOM trigger. Used by consumers that
+// cannot be declarative anchors (e.g. the avatar preview button).
+export function openLightbox(src) {
+    Fancybox.show([{ src, type: 'image' }], LIGHTBOX_OPTIONS);
 }
 
 export function closeLightbox() {
     Fancybox.close();
-    // Ensure cleanup even if the instance is already mid-teardown.
     releaseScrollLock();
 }

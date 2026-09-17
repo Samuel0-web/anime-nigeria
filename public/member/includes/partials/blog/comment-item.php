@@ -41,8 +41,10 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
             <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($comment['created_at'])) ?></span>
             <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
             <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($comment['fullname']) ?>" data-reply-username="<?= htmlspecialchars($comment['username']) ?>">Reply</button>
-            <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
-            <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="comment">Delete</button>
+            <?php if ($isOwnComment): ?>
+                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="comment">Delete</button>
+            <?php endif; ?>
         </div>
 
         <div class="akd-reply-composer" data-reply-composer hidden>
@@ -109,8 +111,10 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                                 <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($reply['created_at'])) ?></span>
                                 <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
                                 <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($reply['fullname']) ?>" data-reply-username="<?= htmlspecialchars($reply['username']) ?>">Reply</button>
-                                <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
-                                <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="reply">Delete</button>
+                                <?php if ($isOwnReply): ?>
+                                    <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
+                                    <button type="button" class="akd-comment__delete-btn" data-comment-delete data-delete-target="reply">Delete</button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </article>

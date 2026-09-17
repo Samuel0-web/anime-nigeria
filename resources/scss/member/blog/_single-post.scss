@@ -73,10 +73,19 @@
     background: linear-gradient(155deg, rgba($white, 0.06), rgba($white, 0.015));
 }
 
+.akd-post-hero__media > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: zoom-in;
+}
+
 .akd-post-hero__placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
     font-size: $fs-2xl;
     color: rgba($white, 0.12);
 }
@@ -198,6 +207,10 @@
     align-items: center;
 }
 
+.akd-post-content__figure > a {
+    cursor: zoom-in;
+}
+
 .akd-post-content__image {
     width: auto;
     height: 22rem;
@@ -220,10 +233,6 @@
     border: none;
     border-top: 1px solid $black-line;
     margin: $space-sm 0;
-}
-
-[data-post-lightbox-image] {
-    cursor: zoom-in;
 }
 
 // Table of contents
@@ -573,15 +582,43 @@
     }
 }
 
-// When moved into the shared modal for the mobile sheet
+// When moved into the shared modal for the mobile sheet. Reordered with
+// flexbox rather than moving the composer in the markup, so desktop's
+// inline layout (composer first, then list) is untouched, only the
+// visual position changes here.
 .akd-post-comments--in-modal {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     max-width: none;
     margin: 0;
 
     .akd-post-comments__heading {
         display: none;
     }
+
+    .akd-comment-list {
+        order: 1;
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        padding-bottom: $space-sm;
+    }
+
+    .akd-comment-composer {
+        order: 2;
+        flex-shrink: 0;
+        margin-bottom: 0;
+        padding-top: $space-sm;
+        border-top: 1px solid $black-line;
+    }
+}
+
+// Scoped to this sheet only. _modal.scss and its other consumers
+// (profile modal, achievement modal, etc.) are not touched.
+.akd-comments-sheet .akd-modal__body {
+    padding-left: $space-sm;
+    padding-right: $space-sm;
 }
 
 .akd-comment-avatar {
@@ -722,7 +759,6 @@
 
 .akd-reply-composer {
     margin-top: $space-sm;
-    padding-left: $space-lg;
 }
 
 .akd-comment-avatar--sm {
@@ -746,9 +782,12 @@
 
     &:not(.is-hidden-reply) {
         opacity: 1;
-        // max-height is set inline by JS to the exact measured height for
-        // the duration of the transition, then cleared once it completes,
-        // see animateReplyVisibility() in single-post.js
+        // The resting state for a visible reply. JS temporarily overrides
+        // this with an inline pixel value only while a reveal/collapse
+        // transition is running (see animateReplyVisibility() in
+        // single-post.js), then clears the inline style, which falls
+        // back to this rule rather than to the base max-height: 0 above.
+        max-height: none;
     }
 }
 
