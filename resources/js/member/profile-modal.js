@@ -59,10 +59,10 @@ function createProfileTemplate({ isGoogle, userInitials, avatarColor, avatarUrl,
 
             <div class="akd-modal__avatar-field">
                 <div class="akd-modal__avatar-wrap" data-user-initials="${userInitials}" data-avatar-color="${avatarColor}">
-                    <button type="button" class="akd-modal__avatar-preview" data-avatar-preview aria-label="View profile picture">
+                    <div class="akd-modal__avatar-preview">
                         <img src="${avatarUrl}" alt="" class="akd-modal__avatar-img" data-avatar-img${avatarUrl ? '' : ' style="display:none;"'}>
                         <div class="akd-modal__avatar-img akd-modal__avatar-img--initials" data-avatar-initials style="background-color: ${avatarColor};${avatarUrl ? ' display:none;' : ''}">${userInitials}</div>
-                    </button>
+                    </div>
                     <label class="akd-modal__avatar-upload" for="avatarUploadInput" aria-label="Upload new photo">
                         <i class="fa-solid fa-pen"></i>
                     </label>
@@ -139,10 +139,7 @@ function createPasswordField(name, label, id, autocomplete, hint = '', extra = '
     `;
 }
 
-export function initProfileModal({
-    triggerSelector = '[data-modal-open="edit-profile"]',
-    lightboxId = 'akdAvatarLightbox',
-} = {}) {
+export function initProfileModal({ triggerSelector = '[data-modal-open="edit-profile"]' } = {}) {
     const triggers = document.querySelectorAll(triggerSelector);
     if (!triggers.length) return;
     const profile = document.querySelector('.akd-profile');
@@ -150,38 +147,31 @@ export function initProfileModal({
     const profileConfig = JSON.parse(profile.dataset.profileConfig);
     const modalApi = useModal();
     const confirmDialog = useConfirmDialog();
-    const lightbox = createLightbox(lightboxId);
 
     // Build the form once; modal.js moves this same node in and out of its body.
     const form = createProfileTemplate(profileConfig).content.firstElementChild;
-
     const isGoogleAccount = form.dataset.isGoogle === '1';
     const banner = form.querySelector('[data-modal-banner]');
-
     const fullNameField = form.querySelector('[data-field="fullname"]');
     const usernameField = form.querySelector('[data-field="username"]');
     const currentPasswordField = form.querySelector('[data-field="currentPassword"]');
     const newPasswordField = form.querySelector('[data-field="newPassword"]');
     const confirmPasswordField = form.querySelector('[data-field="confirmPassword"]');
-
     const fullNameInput = fullNameField.querySelector('input');
     const usernameInput = usernameField.querySelector('input');
     const currentPasswordInput = currentPasswordField?.querySelector('input') ?? null;
     const newPasswordInput = newPasswordField?.querySelector('input') ?? null;
     const confirmPasswordInput = confirmPasswordField?.querySelector('input') ?? null;
-
     let originalFullName = fullNameInput.value;
     let originalUsername = usernameInput.value;
 
     // ---- Avatar ----
     const avatarWrap = form.querySelector('.akd-modal__avatar-wrap');
-    const avatarPreviewBtn = form.querySelector('[data-avatar-preview]');
     const avatarImg = form.querySelector('[data-avatar-img]');
     const avatarInitialsEl = form.querySelector('[data-avatar-initials]');
     const avatarInput = form.querySelector('[data-avatar-input]');
     const avatarError = form.querySelector('[data-avatar-error]');
     const avatarRemoveBtn = form.querySelector('[data-avatar-remove]');
-
     let userInitials = avatarWrap.dataset.userInitials || '';
     let hadOriginalAvatar = avatarImg.style.display !== 'none' && !!avatarImg.getAttribute('src');
     let originalAvatarSrc = avatarImg.getAttribute('src') || null;
@@ -357,11 +347,6 @@ export function initProfileModal({
         updateDirtyState();
     });
 
-    avatarPreviewBtn?.addEventListener('click', () => {
-        if (!hasAvatarImage()) return;
-        lightbox.open(avatarImg.src);
-    });
-
     // ---- Validation ----
     function setFieldError(fieldWrap, message) {
         if (!fieldWrap) return;
@@ -531,16 +516,26 @@ export function initProfileModal({
         const cacheBust = Date.now();
 
         document.querySelectorAll('[data-user-avatar-container]').forEach((container) => {
+            const link = container.querySelector('[data-user-avatar-link]');
             const img = container.querySelector('[data-user-avatar]');
             const fallback = container.querySelector('[data-user-avatar-initials]');
 
             if (user.avatar) {
+                const src = `${user.avatar}?v=${cacheBust}`;
+                if (link) {
+                    link.href = src;
+                    setDisplay(link, true, 'block');
+                }
                 if (img) {
-                    img.src = `${user.avatar}?v=${cacheBust}`;
+                    img.src = src;
                     setDisplay(img, true);
                 }
                 setDisplay(fallback, false);
             } else {
+                if (link) {
+                    link.removeAttribute('href');
+                    setDisplay(link, false);
+                }
                 if (img) {
                     img.removeAttribute('src');
                     setDisplay(img, false);
@@ -680,8 +675,7 @@ export function initProfileModal({
         resetState();
         modalApi.open({
             title: 'Edit Profile',
-            subtitle: isGoogleAccount
-                ? 'Update your name and username.'
+            subtitle: isGoogleAccount ? 'Update your name and username.'
                 : 'Update your name, username, avatar and password.',
             content: form,
             footer: createFooterContent(),
@@ -691,47 +685,4 @@ export function initProfileModal({
     }
 
     triggers.forEach((trigger) => trigger.addEventListener('click', openProfileModal));
-}
-
-// ---- Lightbox (reuses the existing .an-lightbox component; not owned by modal.js) ----
-function createLightbox(overlayId) {
-    const overlay = document.getElementById(overlayId);
-    const img = overlay?.querySelector('[data-lightbox-image]');
-    const closeBtn = overlay?.querySelector('[data-lightbox-close]');
-
-    if (!overlay || !img) {
-        return { open: () => {}, close: () => {}, isOpen: () => false };
-    }
-
-    let lastFocusedEl = null;
-
-    function handleKeydown(e) {
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            close();
-        }
-    }
-
-    function open(src) {
-        lastFocusedEl = document.activeElement;
-        img.src = src;
-        overlay.classList.add('is-open');
-        document.addEventListener('keydown', handleKeydown, true);
-        closeBtn?.focus();
-    }
-
-    function close() {
-        overlay.classList.remove('is-open');
-        document.removeEventListener('keydown', handleKeydown, true);
-        lastFocusedEl?.focus();
-        lastFocusedEl = null;
-    }
-
-    closeBtn?.addEventListener('click', close);
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) close();
-    });
-
-    return { open, close, isOpen: () => overlay.classList.contains('is-open') };
 }

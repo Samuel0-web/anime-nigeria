@@ -137,9 +137,11 @@ function animateReplyVisibility(reply, shouldShow) {
         reply.classList.remove('is-hidden-reply');
         const targetHeight = reply.scrollHeight;
         reply.style.maxHeight = '0px';
+        
         requestAnimationFrame(() => {
             reply.style.maxHeight = `${targetHeight}px`;
         });
+
         reply.addEventListener('transitionend', function handler(event) {
             if (event.propertyName !== 'max-height') return;
             reply.style.maxHeight = '';
@@ -148,12 +150,14 @@ function animateReplyVisibility(reply, shouldShow) {
     } else {
         const currentHeight = reply.scrollHeight;
         reply.style.maxHeight = `${currentHeight}px`;
+        reply.classList.add('is-hidden-reply');
+
         requestAnimationFrame(() => {
             reply.style.maxHeight = '0px';
         });
+
         reply.addEventListener('transitionend', function handler(event) {
             if (event.propertyName !== 'max-height') return;
-            reply.classList.add('is-hidden-reply');
             reply.style.maxHeight = '';
             reply.removeEventListener('transitionend', handler);
         });
@@ -236,11 +240,12 @@ function openReplyComposer(replyBtn) {
     const thread = replyBtn.closest('.akd-comment-thread');
     const composer = thread?.querySelector('[data-reply-composer]');
     if (!composer) return;
-
+    const targetEl = replyBtn.closest('.akd-comment');
     const targetUsername = replyBtn.dataset.replyUsername || '';
     const targetName = replyBtn.dataset.replyName || 'this comment';
-    const isTopLevelTarget = replyBtn.closest('.akd-comment') === thread;
-    const sameTargetOpen = !composer.hidden && composer.dataset.replyToUsername === targetUsername;
+    const targetId = targetEl?.dataset.commentId || '';
+    const isTopLevelTarget = targetEl === thread;
+    const sameTargetOpen = !composer.hidden && composer.dataset.replyToId === targetId;
 
     document.querySelectorAll('[data-reply-composer]:not([hidden])').forEach((open) => {
         if (open !== composer) open.hidden = true;
@@ -253,8 +258,8 @@ function openReplyComposer(replyBtn) {
 
     composer.hidden = false;
     composer.dataset.replyToUsername = targetUsername;
+    composer.dataset.replyToId = targetId;
     composer.dataset.replyToIsTopLevel = isTopLevelTarget ? '1' : '0';
-
     const label = composer.querySelector('[data-reply-label]');
     const textarea = composer.querySelector('[data-reply-input]');
     const avatar = composer.querySelector('[data-reply-avatar]');
@@ -325,13 +330,15 @@ function ensureReplyControls(list) {
     return controls;
 }
 
-function buildReplyElement(user, text, thread, replyToUsername) {
+function buildReplyElement(user, text, thread, replyToUsername, replyToId) {
     const profileHref = `/member/player/${encodeURIComponent(user.username || '')}`;
     const reply = document.createElement('article');
-    reply.className = `akd-comment akd-comment--reply${replyToUsername ? ' akd-comment--nested-reply' : ''}`;
+    reply.className = 'akd-comment akd-comment--reply is-hidden-reply';
     reply.dataset.commentId = String(nextLocalId());
     reply.dataset.parentId = thread.dataset.commentId || '';
     reply.dataset.replyToUsername = replyToUsername || '';
+    reply.dataset.replyToId = replyToId || '';
+    reply.dataset.replyIndex = '0';
 
     reply.innerHTML = `
         <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: ${user.avatarColor}" aria-hidden="true">${user.initials}</span>
@@ -358,6 +365,42 @@ function buildReplyElement(user, text, thread, replyToUsername) {
     reply.querySelector('.akd-comment__username').textContent = `@${user.username || ''}`;
     reply.querySelector('.akd-comment__text').textContent = text;
     return reply;
+}
+
+function findReplyInsertionAnchor(list, targetId) {
+    const items = Array.from(list.querySelectorAll(':scope > [data-comment-id]'));
+    const targetIndex = items.findIndex((el) => el.dataset.commentId === targetId);
+    if (targetIndex === -1) return null;
+
+    // A target's descendants sit contiguously right after it in this
+    // flat list (the PHP renderer builds it depth-first), so walking
+    // forward until an item's reply-to-id falls outside the growing
+    // descendant set finds exactly where that target's chain ends.
+    const descendantIds = new Set([targetId]);
+    let anchor = items[targetIndex];
+
+    for (let i = targetIndex + 1; i < items.length; i++) {
+        const el = items[i];
+        const parentRef = el.dataset.replyToId || '';
+        if (parentRef && descendantIds.has(parentRef)) {
+            descendantIds.add(el.dataset.commentId);
+            anchor = el;
+        } else {
+            break;
+        }
+    }
+
+    return anchor;
+}
+
+function reindexReplyList(list) {
+    const items = Array.from(list.querySelectorAll(':scope > [data-comment-id]'));
+
+    items.forEach((el, index) => {
+        el.dataset.replyIndex = String(index);
+    });
+
+    return items.length;
 }
 
 function submitReply(submitBtn) {
@@ -397,22 +440,26 @@ function submitReply(submitBtn) {
     window.setTimeout(() => {
         submitBtn.disabled = false;
         if (submitLabel) submitLabel.textContent = 'Reply';
-
         const list = ensureReplyList(thread, composer);
-        const total = parseInt(list.dataset.totalReplies, 10) || 0;
         const replyToIsTopLevel = composer.dataset.replyToIsTopLevel === '1';
+        const replyToId = composer.dataset.replyToId || '';
         const replyToUsername = replyToIsTopLevel ? null : composer.dataset.replyToUsername;
+        const reply = buildReplyElement(user, text, thread, replyToUsername, replyToId);
+        const anchor = replyToIsTopLevel ? null : findReplyInsertionAnchor(list, replyToId);
 
-        const reply = buildReplyElement(user, text, thread, replyToUsername);
-        reply.setAttribute('data-reply-index', String(total));
-        list.appendChild(reply);
-        list.dataset.totalReplies = String(total + 1);
+        if (anchor) {
+            anchor.classList.add('akd-comment--nested-reply');
+            anchor.insertAdjacentElement('afterend', reply);
+        } else {
+            list.appendChild(reply);
+        }
 
-        const controls = ensureReplyControls(list);
-        const visible = parseInt(list.dataset.visibleReplies, 10) || 0;
-        setReplyVisibility(list, visible + 1);
+        const previousVisible = parseInt(list.dataset.visibleReplies, 10) || 0;
+        list.dataset.totalReplies = String(reindexReplyList(list));
+        ensureReplyControls(list);
+        const newIndex = parseInt(reply.dataset.replyIndex, 10);
+        setReplyVisibility(list, Math.max(previousVisible + 1, newIndex + 1));
         updateReplyExpandControl(list);
-
         closeReplyComposer(composer);
         updateCommentCounts();
         success('Reply posted');
@@ -507,15 +554,21 @@ export function initCommentDeletion() {
         });
 
         if (!confirmed) return;
-
         const parentList = commentArticle.closest('[data-reply-list]');
         commentArticle.remove();
 
         if (parentList) {
-            const remaining = parentList.querySelectorAll('[data-reply-index]').length;
+            const visible = parseInt(parentList.dataset.visibleReplies, 10) || 0;
+            const remaining = reindexReplyList(parentList);
             parentList.dataset.totalReplies = String(remaining);
-            setReplyVisibility(parentList, Math.min(parseInt(parentList.dataset.visibleReplies, 10) || 0, remaining));
+            setReplyVisibility(parentList, Math.min(visible, remaining));
             updateReplyExpandControl(parentList);
+
+            parentList.querySelectorAll('.akd-comment--nested-reply').forEach((anchor) => {
+                const id = anchor.dataset.commentId;
+                const stillPointed = parentList.querySelector(`[data-reply-to-id="${id}"]`);
+                if (!stillPointed) anchor.classList.remove('akd-comment--nested-reply');
+            });
         } else {
             checkCommentListEmpty();
         }

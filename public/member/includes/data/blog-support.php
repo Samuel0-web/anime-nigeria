@@ -516,12 +516,14 @@ if (!function_exists('akd_blog_flatten_replies')) {
                 'avatar_color' => $reply['avatar_color'],
                 'initials' => $reply['initials'],
                 'reply_to_username' => null,
+                'reply_to_id' => null,
             ];
 
             if (!empty($reply['replies'])) {
                 foreach (akd_blog_flatten_replies($reply['replies']) as $nested) {
-                    if ($nested['reply_to_username'] === null) {
+                    if ($nested['reply_to_id'] === null) {
                         $nested['reply_to_username'] = $reply['username'];
+                        $nested['reply_to_id'] = $reply['id'];
                     }
                     $flat[] = $nested;
                 }

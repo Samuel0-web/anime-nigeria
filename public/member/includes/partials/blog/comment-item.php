@@ -4,11 +4,21 @@
  * @var array<string,mixed> $user
  */
 $flatReplies = akd_blog_flatten_replies($comment['replies'] ?? []);
+
 usort($flatReplies, static function (array $a, array $b): int {
     return strtotime($a['created_at']) <=> strtotime($b['created_at']);
 });
+
 $totalReplies = count($flatReplies);
 $initialVisible = min(2, $totalReplies);
+$nestedReplyTargetIds = [];
+
+foreach ($flatReplies as $flatReply) {
+    if (!empty($flatReply['reply_to_id'])) {
+        $nestedReplyTargetIds[(string) $flatReply['reply_to_id']] = true;
+    }
+}
+
 $currentUsername = $user['username'] ?? '';
 $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $currentUsername) === 0;
 ?>
@@ -72,10 +82,11 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                 <?php foreach ($flatReplies as $index => $reply): ?>
                     <?php $isOwnReply = $currentUsername !== '' && strcasecmp($reply['username'], $currentUsername) === 0; ?>
                     <article
-                        class="akd-comment akd-comment--reply<?= $reply['reply_to_username'] ? ' akd-comment--nested-reply' : '' ?><?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>"
+                        class="akd-comment akd-comment--reply<?= isset($nestedReplyTargetIds[(string) $reply['id']]) ? ' akd-comment--nested-reply' : '' ?><?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>"
                         data-comment-id="<?= (int) $reply['id'] ?>"
                         data-parent-id="<?= (int) $comment['id'] ?>"
                         data-reply-to-username="<?= htmlspecialchars($reply['reply_to_username'] ?? '') ?>"
+                        data-reply-to-id="<?= htmlspecialchars((string) ($reply['reply_to_id'] ?? '')) ?>"
                         data-reply-index="<?= $index ?>"
                     >
                         <?php if ($isOwnReply): ?>
@@ -127,7 +138,10 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                     <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
                     <span data-reply-view-label>View <?= $hiddenCount ?> <?= $hiddenCount === 1 ? 'reply' : 'replies' ?></span>
                 </button>
-                <button type="button" class="akd-comment-replies__hide" data-reply-hide hidden>Hide</button>
+                <button type="button" class="akd-comment-replies__hide" data-reply-hide hidden>
+                    <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+                    <span data-reply-hide-label>Hide</span>
+                </button>
             </div>
         <?php endif; ?>
     </div>

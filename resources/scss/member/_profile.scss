@@ -153,6 +153,20 @@
         animation: akd-ring-rotate 40s linear infinite;
     }
 
+    &__link {
+        display: block;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: $radius-full;
+        cursor: zoom-in;
+
+        &:focus-visible {
+            outline: 2px solid $sakura;
+            outline-offset: 3px;
+        }
+    }
+
     &__image {
         position: relative;
         width: 100%;
@@ -592,19 +606,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    padding: 0;
-    border: none;
-    background: none;
     border-radius: $radius-full;
-    cursor: pointer;
-    transition: opacity $transition-fast;
-
-    &:hover { opacity: 0.85; }
-
-    &:focus-visible {
-        outline: 2px solid rgba($sakura, 0.6);
-        outline-offset: 2px;
-    }
 }
 
 .akd-modal__avatar-img {
@@ -1143,7 +1145,8 @@
 // MOTION PREFERENCES
 // ==========================================
 @media (prefers-reduced-motion: reduce) {
-    .akd-avatar-ring::before, .akd-xp-bar__fill, .akd-xp-bar__fill::after, .akd-spinner {
+    .akd-avatar-ring::before, .akd-xp-bar__fill, .akd-xp-bar__fill::after,
+    .akd-spinner {
         animation: none;
     }
 
@@ -1151,7 +1154,7 @@
         transform: scaleX(1);
     }
 
-    .akd-modal, .akd-modal-overlay, .akd-confirm, .akd-confirm-overlay, .an-lightbox,
+    .akd-modal, .akd-modal-overlay, .akd-confirm, .akd-confirm-overlay,
     .akd-password-collapse__panel, .akd-password-collapse__chevron {
         transition: none;
     }

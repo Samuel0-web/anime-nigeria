@@ -86,10 +86,23 @@ $activityGroups = [
         <section class="akd-profile-hero">
             <div class="akd-profile-hero__identity">
                 <div class="akd-avatar-ring" data-user-avatar-container>
-                    <img data-user-avatar src="<?= htmlspecialchars($avatarUrl ?? '') ?>"
-                        alt="<?= htmlspecialchars($fullname) ?>" class="akd-avatar-ring__image"
+                    <?php /* Only the image sits inside the Fancybox anchor; the initials
+                        fallback remains a plain sibling so a user with no uploaded
+                        avatar has no clickable target. updateUserUI() in
+                        profile-modal.js toggles this anchor in/out of view when the
+                        avatar changes. */ ?>
+                    <a class="akd-avatar-ring__link" data-user-avatar-link
+                        href="<?= htmlspecialchars($avatarUrl ?? '') ?>" data-fancybox
+                        aria-label="View profile picture"
                         <?= $avatarUrl ? '' : 'style="display:none"' ?>
                     >
+                        <img data-user-avatar
+                            src="<?= htmlspecialchars($avatarUrl ?? '') ?>"
+                            alt="<?= htmlspecialchars($fullname) ?>"
+                            class="akd-avatar-ring__image"
+                            <?= $avatarUrl ? '' : 'style="display:none"' ?>
+                        >
+                    </a>
 
                     <div data-user-avatar-initials class="akd-avatar-ring__image akd-avatar-ring__image--initials"
                         style="<?= $avatarUrl ? 'display:none;' : 'display:flex;' ?>; background-color: <?= htmlspecialchars($avatarColor) ?>;"
@@ -348,14 +361,6 @@ $activityGroups = [
                 <?php endforeach; ?>
             </div>
         </section>
-    </div>
-
-    <!-- Avatar Lightbox -->
-    <div class="an-lightbox" id="akdAvatarLightbox">
-        <button type="button" class="an-lightbox__close" data-lightbox-close aria-label="Close">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-        <img src="" alt="Profile picture" class="an-lightbox__image" data-lightbox-image>
     </div>
 </main>
 

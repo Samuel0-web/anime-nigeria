@@ -582,14 +582,41 @@
     }
 }
 
-// When moved into the shared modal for the mobile sheet. Reordered with
-// flexbox rather than moving the composer in the markup, so desktop's
-// inline layout (composer first, then list) is untouched, only the
-// visual position changes here.
+// Scoped to this sheet only. _modal.scss and its other consumers
+// (profile modal, achievement modal, etc.) are not touched. The base
+// .akd-modal only ever gets a max-height, never an explicit height, so
+// it sizes to fit its content. That left our panel's height: 100%
+// below with nothing resolvable to size against (percentage heights
+// don't resolve against an auto-height ancestor), so the entire modal
+// body grew to fit every comment and scrolled as one unit, carrying
+// the composer along with it. An explicit height here, matching the
+// existing max-height values, is what actually fixes that.
+.akd-comments-sheet .akd-modal {
+    height: min(720px, calc(100vh - 32px));
+}
+
+@media (max-width: $bp-md) {
+    .akd-comments-sheet .akd-modal {
+        height: 92vh;
+    }
+}
+
+.akd-comments-sheet .akd-modal__body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-left: $space-sm;
+    padding-right: $space-sm;
+}
+
+// Reordered with flexbox rather than moving the composer in the markup,
+// so desktop's inline layout (composer first, then list) is untouched,
+// only the visual position changes here.
 .akd-post-comments--in-modal {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     max-width: none;
     margin: 0;
 
@@ -602,6 +629,7 @@
         flex: 1 1 auto;
         min-height: 0;
         max-height: none;
+        overflow-y: auto;
         padding-bottom: $space-sm;
     }
 
@@ -612,13 +640,6 @@
         padding-top: $space-sm;
         border-top: 1px solid $black-line;
     }
-}
-
-// Scoped to this sheet only. _modal.scss and its other consumers
-// (profile modal, achievement modal, etc.) are not touched.
-.akd-comments-sheet .akd-modal__body {
-    padding-left: $space-sm;
-    padding-right: $space-sm;
 }
 
 .akd-comment-avatar {
@@ -770,23 +791,32 @@
 .akd-comment-replies {
     display: flex;
     flex-direction: column;
-    gap: $space-sm;
     margin-top: $space-sm;
+    // Spacing between replies now comes from margin-top on each item
+    // below, not gap. Flexbox gap inserts space between every pair of
+    // siblings regardless of height, so a batch of collapsed
+    // (max-height: 0) replies was still each contributing a full gap,
+    // adding up to a large empty block. Margin, zeroed specifically on
+    // hidden items, actually collapses to nothing.
 }
 
 .akd-comment--reply {
     overflow: hidden;
     max-height: 0;
+    margin-top: 0;
     opacity: 0;
-    transition: max-height 0.28s ease, opacity 0.22s ease;
+    transition: max-height 0.28s ease, opacity 0.22s ease, margin-top 0.28s ease;
+
+    &:not(:first-child) {
+        margin-top: $space-sm;
+    }
+
+    &.is-hidden-reply {
+        margin-top: 0;
+    }
 
     &:not(.is-hidden-reply) {
         opacity: 1;
-        // The resting state for a visible reply. JS temporarily overrides
-        // this with an inline pixel value only while a reveal/collapse
-        // transition is running (see animateReplyVisibility() in
-        // single-post.js), then clears the inline style, which falls
-        // back to this rule rather than to the base max-height: 0 above.
         max-height: none;
     }
 }
@@ -817,13 +847,9 @@
     cursor: pointer;
     transition: color $transition-fast;
 
-    i {
-        font-size: 10px;
-    }
+    i { font-size: 10px; }
 
-    &:hover {
-        color: $sakura;
-    }
+    &:hover { color: $sakura; }
 
     &:focus-visible {
         outline: 2px solid $sakura;
@@ -831,14 +857,10 @@
         border-radius: 2px;
     }
 
-    &[hidden] {
-        display: none;
-    }
+    &[hidden] { display: none; }
 }
 
-.akd-comment__time {
-    color: $white-faint;
-}
+.akd-comment__time { color: $white-faint; }
 
 .akd-comment__text {
     margin: 2px 0 0;
