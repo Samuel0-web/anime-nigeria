@@ -10,6 +10,12 @@ use App\Support\Avatar;
 
 $user = $auth->user();
 
+require_once __DIR__ . '/data/notifications-data.php';
+require_once __DIR__ . '/data/notifications-support.php';
+
+$notifUnreadCount = akd_notify_unread_count($notifications);
+$notifPreview     = akd_notify_preview($notifications, 4);
+
 if ($user === null) {
     $auth->logout();
     header('Location: /login');
@@ -21,7 +27,7 @@ $navTitle = $navTitle ?? $page_title;
 $page_description = $page_description ?? 'Anime Nigeria Member Dashboard';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $canonicalPath = rtrim($currentPath, '/') ?: '/';
-$canonicalUrl = rtrim((string) ($_ENV['APP_URL'] ?? 'https://animenigeria.ng'), '/') . $canonicalPath;
+$canonicalUrl = rtrim((string) \App\Core\Config::get('APP_URL'), '/') . $canonicalPath;
 
 $breadcrumbs ??= [
     [
@@ -388,10 +394,70 @@ $todayDate = date('l, F jS');
         </div>
 
         <div class="akd-header__actions">
-            <button class="akd-header__notification" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="akd-header__badge">3</span>
-            </button>
+            <div class="akd-notif" data-notif-root>
+                <button type="button" class="akd-header__notification"
+                    data-notif-trigger aria-haspopup="true" aria-expanded="false"
+                    aria-controls="notifDropdown"
+                    aria-label="Notifications<?= $notifUnreadCount > 0 ? ', ' . $notifUnreadCount . ' unread' : '' ?>"
+                >
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <?php if ($notifUnreadCount > 0): ?>
+                        <span class="akd-header__badge"><?= $notifUnreadCount > 9 ? '9+' : $notifUnreadCount ?></span>
+                    <?php endif; ?>
+                </button>
+
+                <div class="akd-notif-dropdown" id="notifDropdown" aria-label="Notification previews" data-notif-dropdown>
+                    <div class="akd-notif-dropdown__header">
+                        <h2 class="akd-notif-dropdown__title">Notifications</h2>
+                    </div>
+
+                    <?php if (empty($notifPreview)): ?>
+                        <div class="akd-notif-dropdown__empty">
+                            <p>No notifications yet</p>
+                            <span>We'll show your latest activity here.</span>
+                        </div>
+                    <?php else: ?>
+                        <ul class="akd-notif-dropdown__list">
+                            <?php foreach ($notifPreview as $notif): ?>
+                                <?php $hasCta = !empty($notif['cta']['url']); ?>
+                                <li class="akd-notif-dropdown__item<?= !empty($notif['unread']) ? ' akd-notif-dropdown__item--unread' : '' ?>"
+                                    data-notif-id="<?= htmlspecialchars($notif['id']) ?>"
+                                >
+                                    <?php if ($hasCta): ?>
+                                        <a href="<?= htmlspecialchars($notif['cta']['url']) ?>" class="akd-notif-dropdown__item-inner akd-notif-dropdown__item-inner--link">
+                                    <?php else: ?>
+                                        <div class="akd-notif-dropdown__item-inner">
+                                    <?php endif; ?>
+                                        <span class="akd-notif-dropdown__icon akd-notif-dropdown__icon--<?= htmlspecialchars($notif['accent']) ?>">
+                                            <i class="fa-solid <?= htmlspecialchars($notif['icon']) ?>" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="akd-notif-dropdown__body">
+                                            <span class="akd-notif-dropdown__item-title">
+                                                <?= htmlspecialchars($notif['title']) ?>
+                                                <?php if (!empty($notif['unread'])): ?>
+                                                    <span class="akd-visually-hidden">, new</span>
+                                                <?php endif; ?>
+                                            </span>
+                                            <?php if (!empty($notif['description'])): ?>
+                                                <span class="akd-notif-dropdown__item-text"><?= htmlspecialchars($notif['description']) ?></span>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="akd-notif-dropdown__time"><?= htmlspecialchars($notif['time']) ?></span>
+                                    <?php if ($hasCta): ?>
+                                        </a>
+                                    <?php else: ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+
+                    <a href="/member/notifications" class="akd-notif-dropdown__view-all">
+                        View all notifications
+                    </a>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -455,6 +521,7 @@ $todayDate = date('l, F jS');
                     </a>
                     <div class="akd-sidebar__dropdown-divider"></div>
                     <form action="/logout" method="POST" class="akd-sidebar__dropdown-logout-form" data-logout-form>
+                        <input type="hidden" name="_token" value="<?= htmlspecialchars(\App\Security\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                         <button type="submit" class="akd-sidebar__dropdown-item
                             akd-sidebar__dropdown-item--logout" role="menuitem"
                         >

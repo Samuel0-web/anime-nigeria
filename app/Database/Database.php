@@ -1,6 +1,7 @@
 <?php
 namespace App\Database;
 
+use App\Core\Config;
 use PDO;
 use PDOException;
 
@@ -53,7 +54,7 @@ class Database {
 
         while ($attempt < $maxRetries) {
             try {
-                $pdo = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'],
+                $pdo = new PDO($dsn, Config::get('DB_USERNAME'), Config::get('DB_PASSWORD'),
                     self::getDefaultOptions()
                 );
 
@@ -103,9 +104,9 @@ class Database {
     private static function buildDsn(): string {
         return sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-            $_ENV['DB_HOST'],
-            $_ENV['DB_PORT'],
-            $_ENV['DB_DATABASE'],
+            Config::get('DB_HOST'),
+            Config::get('DB_PORT'),
+            Config::get('DB_DATABASE'),
             self::CHARSET
         );
     }

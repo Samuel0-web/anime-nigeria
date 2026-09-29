@@ -1,12 +1,12 @@
 <?php
 namespace App\Auth;
 use PDO;
+use App\Security\Cookie;
 
 class RememberMe {
     // =========================================================================
     // CONSTANTS
     // =========================================================================
-    private const COOKIE_NAME = 'remember_me';
     private const LIFETIME = 60 * 60 * 24 * 30; // 30 days
     private const SELECTOR_BYTES = 12;
     private const VALIDATOR_BYTES = 32;
@@ -29,42 +29,24 @@ class RememberMe {
         $this->setCookie($token['selector'], $token['validator']);
     }
 
-    private function incrementAuthSessionVersion(int $userId): void {
+    private function incrementAuthSessionVersion(int $userId): bool {
         $stmt = $this->db->prepare("UPDATE users
             SET auth_session_version = auth_session_version + 1 WHERE id = ?"
         );
 
-        $stmt->execute([$userId]);
+        return $stmt->execute([$userId]) && $stmt->rowCount() === 1;
     }
 
-    private function isLoginSessionActive(int $loginSessionId, int $userId): bool {
-        $stmt = $this->db->prepare("SELECT id FROM login_sessions WHERE id = :id
-            AND user_id = :user_id AND revoked_at IS NULL LIMIT 1
-        ");
-
-        $stmt->execute([
-            ':id' => $loginSessionId,
-            ':user_id' => $userId,
-        ]);
-
-        return $stmt->fetchColumn() !== false;
-    }
-
-    /**
-     * Attempt to authenticate the user via the remember me cookie.
-     *
-     * Returns authenticated user data on success, or null when the
-     * remember me cookie cannot be used.
-     */
-    public function loginFromCookie(): ?array {
+    /** Consume a valid remember credential once and atomically establish its replacement. */
+    public function restoreAndRotate(callable $establishSession): bool {
         // Already logged in
         if (isset($_SESSION['user_id'])) {
-            return null;
+            return false;
         }
 
         // No cookie present
         if (!$this->hasCookie()) {
-            return null;
+            return false;
         }
 
         // Parse and validate cookie format
@@ -72,50 +54,75 @@ class RememberMe {
 
         if ($parts === null) {
             $this->clearCookie();
-            return null;
+            return false;
         }
 
         [$selector, $validator] = $parts;
 
-        // Find the token in database
-        $token = $this->findToken($selector);
+        try {
+            $this->db->beginTransaction();
+            $token = $this->findTokenForUpdate($selector);
 
-        if (!$token) {
-            $this->forget();
-            return null;
+            if ($token === null) {
+                $this->db->commit();
+                $this->clearCookie();
+                return false;
+            }
+
+            if ($this->isTokenExpired($token)) {
+                $this->deleteTokenById((int) $token['id']);
+                $this->db->commit();
+                $this->clearCookie();
+                return false;
+            }
+
+            if (!$this->validateToken($token, $validator)) {
+                $this->handleCompromisedToken($token);
+                $this->db->commit();
+                $this->clearCookie();
+                return false;
+            }
+
+            $linkedSession = $this->findRestorableSession($token);
+
+            if ($linkedSession === null) {
+                $this->deleteTokenById((int) $token['id']);
+                $this->db->commit();
+                $this->clearCookie();
+                return false;
+            }
+
+            $consume = $this->db->prepare('DELETE FROM remember_tokens WHERE id = :id
+                AND validator_hash = :validator_hash AND expires_at > CURRENT_TIMESTAMP');
+            $consume->execute([
+                ':id' => (int) $token['id'],
+                ':validator_hash' => hash('sha256', $validator),
+            ]);
+
+            if ($consume->rowCount() !== 1) {
+                $this->db->rollBack();
+                $this->clearCookie();
+                return false;
+            }
+
+            $userId = (int) $token['user_id'];
+            $loginSessionId = (int) $establishSession($userId);
+
+            if ($loginSessionId < 1) {
+                throw new \RuntimeException('Unable to create remembered login session.');
+            }
+
+            $replacement = $this->generateToken($userId, $loginSessionId);
+            $this->db->commit();
+            $this->setCookie($replacement['selector'], $replacement['validator']);
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            throw $exception;
         }
-
-        // A remember-me credential is only valid while
-        // the login session it belongs to remains active.
-        if ($token['login_session_id'] === null || !$this->isLoginSessionActive(
-                (int) $token['login_session_id'], (int) $token['user_id'])
-        ) {
-            $this->deleteTokenById((int) $token['id']);
-            $this->clearCookie();
-            return null;
-        }
-
-        // Check if token has expired
-        if ($this->isTokenExpired($token)) {
-            $this->deleteTokenById((int) $token['id']);
-            $this->clearCookie();
-            return null;
-        }
-
-        // Verify validator using constant-time comparison
-        if (!$this->validateToken($token, $validator)) {
-            $this->handleCompromisedToken($token);
-            return null;
-        }
-
-        return [
-            'user_id' => (int) $token['user_id'],
-        ];
-    }
-
-    public function rotate(int $tokenId, int $userId, int $loginSessionId): void {
-        $this->deleteTokenById($tokenId);
-        $this->create($userId, $loginSessionId);
     }
 
     /**
@@ -135,9 +142,9 @@ class RememberMe {
     /**
      * Delete all remember me tokens for a user (e.g., on password reset).
      */
-    public function deleteAllForUser(int $userId): void {
+    public function deleteAllForUser(int $userId): bool {
         $stmt = $this->db->prepare("DELETE FROM remember_tokens WHERE user_id = ?");
-        $stmt->execute([$userId]);
+        return $stmt->execute([$userId]);
     }
 
     // =========================================================================
@@ -181,14 +188,35 @@ class RememberMe {
     /**
      * Find a token by its selector.
      */
-    private function findToken(string $selector): ?array {
-        $stmt = $this->db->prepare("SELECT remember_tokens.* FROM remember_tokens
-            WHERE selector = ? LIMIT 1"
-        );
-
+    private function findTokenForUpdate(string $selector): ?array {
+        $stmt = $this->db->prepare('SELECT * FROM remember_tokens WHERE selector = ?
+            LIMIT 1 FOR UPDATE');
         $stmt->execute([$selector]);
         $token = $stmt->fetch(PDO::FETCH_ASSOC);
         return $token ?: null;
+    }
+
+    private function findRestorableSession(array $token): ?array {
+        if ($token['login_session_id'] === null) {
+            return null;
+        }
+
+        $stmt = $this->db->prepare('SELECT ls.id FROM login_sessions ls
+            INNER JOIN users u ON u.id = ls.user_id
+            WHERE ls.id = :session_id AND ls.user_id = :user_id
+                AND ls.revoked_at IS NULL
+                AND ls.auth_session_version = u.auth_session_version
+                AND u.email_verified_at IS NOT NULL
+                AND u.banned_at IS NULL
+                AND (u.suspended_until IS NULL OR u.suspended_until <= CURRENT_TIMESTAMP)
+                AND u.deleted_at IS NULL
+            LIMIT 1 FOR UPDATE');
+        $stmt->execute([
+            ':session_id' => (int) $token['login_session_id'],
+            ':user_id' => (int) $token['user_id'],
+        ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     /**
@@ -211,9 +239,7 @@ class RememberMe {
     // PRIVATE - Token Validation
     // =========================================================================
     
-    /**
-     * Check if a token has expired.
-     */
+    /** Remember-me has a separate 30-day lifetime; normal session idle age does not apply. */
     private function isTokenExpired(array $token): bool {
         return strtotime($token['expires_at']) < time();
     }
@@ -231,19 +257,22 @@ class RememberMe {
     
     /**
      * Handle potentially compromised token (invalid validator).
-     * Deletes the suspicious token and clears the cookie.
+    * Deletes the suspicious token and invalidates existing sessions.
      */
     private function handleCompromisedToken(array $token): void {
         $userId = (int) $token['user_id'];
 
         // Invalidate every remember-me token.
-        $this->deleteAllForUser($userId);
+        $stmt = $this->db->prepare('DELETE FROM remember_tokens WHERE user_id = ?');
+        if (!$stmt->execute([$userId])) {
+            throw new \RuntimeException('Unable to invalidate remember-me credentials.');
+        }
 
         // Invalidate every existing authenticated session.
-        $this->incrementAuthSessionVersion($userId);
+        if (!$this->incrementAuthSessionVersion($userId)) {
+            throw new \RuntimeException('Unable to invalidate authenticated sessions.');
+        }
 
-        // Clear the compromised cookie.
-        $this->clearCookie();
     }
 
     // =========================================================================
@@ -254,7 +283,7 @@ class RememberMe {
      * Check if the remember me cookie exists.
      */
     private function hasCookie(): bool {
-        return !empty($_COOKIE[self::COOKIE_NAME]);
+        return Cookie::get($this->cookieName()) !== null;
     }
 
     /**
@@ -265,7 +294,12 @@ class RememberMe {
             return null;
         }
 
-        $parts = explode(self::COOKIE_SEPARATOR, $_COOKIE[self::COOKIE_NAME], 2);
+        $cookie = Cookie::get($this->cookieName());
+        if ($cookie === null) {
+            return null;
+        }
+
+        $parts = explode(self::COOKIE_SEPARATOR, $cookie, 2);
 
         if (count($parts) !== 2) {
             return null;
@@ -288,46 +322,23 @@ class RememberMe {
      */
     private function setCookie(string $selector, string $validator): void {
         $value = $selector . self::COOKIE_SEPARATOR . $validator;
-        
-        setcookie(
-            self::COOKIE_NAME,
-            $value,
-            [
-                'expires' => time() + self::LIFETIME,
-                'path' => '/',
-                'secure' => true,
-                'httponly' => true,
-                'samesite' => 'Strict',
-            ]
-        );
+
+        Cookie::set($this->cookieName(), $value, self::LIFETIME);
     }
 
     /**
      * Clear the remember me cookie.
      */
     private function clearCookie(): void {
-        setcookie(self::COOKIE_NAME, '',
-            [
-                'expires' => time() - 3600,
-                'path' => '/',
-                'secure' => true,
-                'httponly' => true,
-                'samesite' => 'Strict',
-            ]
-        );
+        Cookie::forget($this->cookieName());
+    }
 
-        unset($_COOKIE[self::COOKIE_NAME]);
+    private function cookieName(): string {
+        return \App\Core\Config::cookieName('REMEMBER_ME_COOKIE');
     }
 
     // =========================================================================
     // PRIVATE - Login Completion
     // =========================================================================
     
-    /**
-     * Rotate a successfully used remember-me token.
-     */
-    private function completeLogin(array $token, int $loginSessionId): void {
-        $this->deleteTokenById((int) $token['id']);
-        $this->create((int) $token['user_id'], $loginSessionId);
-    }
 }

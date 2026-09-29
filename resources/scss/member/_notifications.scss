@@ -1,0 +1,816 @@
+@use '../tokens' as *;
+@use 'sass:color';
+
+// ==========================================
+// ACCENT COLORS
+// ==========================================
+@function akd-notify-accent-color($accent) {
+    @if $accent == 'gold'    { @return $gold; }
+    @if $accent == 'teal'    { @return $accent-teal; }
+    @if $accent == 'violet'  { @return $accent-violet; }
+    @if $accent == 'ember'   { @return $accent-ember; }
+    @if $accent == 'crimson' { @return $accent-crimson; }
+    @return $sakura;
+}
+
+@each $accent in "gold", "teal", "violet", "ember", "crimson" {
+    .akd-notify-icon--#{$accent},
+    .akd-notif-dropdown__icon--#{$accent} {
+        color: akd-notify-accent-color($accent);
+        background: rgba(akd-notify-accent-color($accent), 0.14);
+    }
+}
+
+// ==========================================
+// DESKTOP NOTIFICATION DROPDOWN
+// ==========================================
+.akd-notif {
+    position: relative;
+}
+
+.akd-notif-dropdown {
+    display: none;
+}
+
+@media (min-width: $bp-lg) {
+    .akd-notif-dropdown {
+        display: block;
+        position: absolute;
+        top: calc(100% + #{$space-sm});
+        right: 0;
+        width: 340px;
+        max-width: calc(100vw - #{$space-md} * 2);
+        background: $black-soft;
+        border: 1px solid $black-line;
+        border-radius: $radius-lg;
+        box-shadow: 0 20px 48px rgba($black, 0.5);
+        padding: $space-sm;
+        z-index: 40;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-6px);
+        transition: opacity $transition-base, transform $transition-base,
+            visibility 0s linear $transition-base;
+
+        &.is-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+            transition: opacity $transition-base, transform $transition-base,
+                visibility 0s linear 0s;
+        }
+    }
+}
+
+.akd-notif-dropdown__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-xxs $space-xs $space-sm;
+}
+
+.akd-notif-dropdown__title {
+    margin: 0;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $white;
+}
+
+.akd-notif-dropdown__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+// Structural only: the border-left is reserved (transparent) on every
+// item so an unread item picking it up doesn't shift layout.
+.akd-notif-dropdown__item {
+    border-left: 2px solid transparent;
+    border-radius: $radius-md;
+}
+
+.akd-notif-dropdown__item--unread {
+    border-left-color: rgba($sakura, 0.6);
+
+    .akd-notif-dropdown__item-title {
+        font-weight: $fw-bold;
+
+        // Same convention already used on the dashboard's own
+        // notification preview (_dashboard.scss). Weight + dot + the
+        // left accent above mean unread is never communicated by color
+        // alone.
+        &::after {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin-left: 6px;
+            border-radius: $radius-full;
+            background: $sakura;
+            vertical-align: middle;
+        }
+    }
+}
+
+// The interactive/non-interactive inner wrapper. Only the --link
+// variant gets pointer cursor, hover, and focus treatment, so a
+// notification without a CTA never looks clickable.
+.akd-notif-dropdown__item-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-sm;
+    padding: $space-xs;
+    border-radius: $radius-md;
+    color: inherit;
+    text-decoration: none;
+}
+
+.akd-notif-dropdown__item-inner--link {
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($white, 0.06);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+}
+
+.akd-notif-dropdown__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $fs-xs;
+}
+
+.akd-notif-dropdown__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.akd-notif-dropdown__item-title {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white;
+    line-height: $lh-tight;
+}
+
+.akd-notif-dropdown__item-text {
+    font-size: $fs-xs;
+    color: $white-faint;
+    line-height: $lh-snug;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.akd-notif-dropdown__time {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: $white-faint;
+    margin-top: 2px;
+}
+
+.akd-notif-dropdown__empty {
+    padding: $space-lg $space-sm;
+    text-align: center;
+
+    p {
+        margin: 0 0 4px;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    span {
+        font-size: $fs-xs;
+        color: $white-faint;
+    }
+}
+
+.akd-notif-dropdown__view-all {
+    display: block;
+    margin-top: $space-xxs;
+    padding: $space-xs;
+    text-align: center;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $sakura;
+    text-decoration: none;
+    border-top: 1px solid $black-line;
+    border-radius: 0 0 $radius-md $radius-md;
+    transition: color $transition-fast, background $transition-fast;
+
+    &:hover,
+    &:focus-visible {
+        color: color.adjust($sakura, $lightness: 8%);
+        background: rgba($white, 0.03);
+    }
+}
+
+// ==========================================
+// PAGE SHELL
+// ==========================================
+.akd-notify {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: $space-lg $space-sm $space-md;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+// Desktop header, hidden on mobile since header.php's own
+// .akd-header__mobile-title already shows the page title there (same
+// convention already established by the Gallery page's own intro).
+.akd-notify__intro {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+}
+
+.akd-notify__heading {
+    margin: 0;
+    color: $white;
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+    line-height: $lh-tight;
+}
+
+.akd-notify__subheading {
+    margin: 0;
+    color: $white-muted;
+    font-size: $fs-base;
+    line-height: $lh-normal;
+    max-width: 640px;
+}
+
+@media (max-width: $bp-lg) {
+    .akd-notify__intro {
+        display: none;
+    }
+}
+
+@media (min-width: $bp-lg) {
+    .akd-notify__intro {
+        margin-top: $space-xs;
+    }
+}
+
+// ==========================================
+// TOOLBAR / FILTER
+// ==========================================
+.akd-notify-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-sm;
+    flex-wrap: wrap;
+    min-width: 0; // without this, being a flex item inside the
+                  // column-direction .akd-notify, its full unwrapped
+                  // content width can push the page wider than the
+                  // viewport on mobile
+}
+
+.akd-notify-filter {
+    min-width: 0; // same reasoning, one level deeper
+}
+
+.akd-notify-filter__row {
+    display: flex;
+    align-items: center;
+    gap: $space-xxs;
+}
+
+.akd-notify-filter__scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    gap: $space-xxs;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.akd-notify-filter__pill {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    color: $white-muted;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+
+    &[aria-pressed="true"] {
+        background: $sakura-dim;
+        border-color: rgba($sakura, 0.4);
+        color: $white;
+    }
+
+    &--gold[aria-pressed="true"] {
+        background: $gold-dim;
+        border-color: rgba($gold, 0.45);
+        color: $gold;
+    }
+}
+
+.akd-notify-filter__nav {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    background: rgba($white, 0.02);
+    color: $white-muted;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast, opacity $transition-fast;
+
+    &:hover {
+        background: rgba($white, 0.08);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+@media (min-width: $bp-lg) {
+    .akd-notify-filter__nav:not([hidden]) {
+        display: inline-flex;
+    }
+}
+
+// Redesigned: real control surface instead of plain text, with
+// aria-pressed driving the active state.
+.akd-notify-selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: $space-xxs $space-sm;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.02);
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white-muted;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast;
+
+    i { font-size: 10px; }
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+    }
+
+    &[aria-pressed="true"] {
+        background: $sakura-dim;
+        border-color: rgba($sakura, 0.4);
+        color: $white;
+    }
+}
+
+// ==========================================
+// NOTIFICATION LIST
+// ==========================================
+.akd-notify-group {
+    list-style: none;
+    margin: 0;
+    padding: $space-xs;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+    background: rgba($white, 0.02);
+    border: 1px solid $black-line;
+    border-radius: $radius-lg;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-notify-row {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-sm;
+    padding: $space-md;
+    background: $black-soft;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    transition: opacity 0.15s ease, background $transition-base,
+        border-color $transition-fast, transform 0.18s ease;
+
+    &:hover {
+        background: rgba($white, 0.06);
+    }
+
+    &.is-first-visible {
+        border-top-left-radius: $radius-lg;
+        border-top-right-radius: $radius-lg;
+    }
+
+    &.is-last-visible {
+        border-bottom-left-radius: $radius-lg;
+        border-bottom-right-radius: $radius-lg;
+    }
+
+    &.is-entering {
+        opacity: 0;
+    }
+
+    &.is-selected {
+        border-color: rgba($sakura, 0.4);
+        background: rgba($sakura, 0.05);
+    }
+
+    &.is-removing {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.akd-notify-row__select {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-full;
+    border: 1.5px solid $black-line;
+    background: none;
+    cursor: pointer;
+    transition: border-color $transition-fast, background $transition-fast;
+
+    &:hover,
+    &:focus-visible {
+        border-color: rgba($sakura, 0.6);
+    }
+
+    &[aria-pressed="true"] {
+        border-color: $sakura;
+        background: $sakura;
+
+        .akd-notify-row__select-dot {
+            background: $white;
+        }
+    }
+}
+
+.akd-notify-row__select-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: $radius-full;
+}
+
+.akd-notify-row__icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $fs-sm;
+}
+
+.akd-notify-row__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xxs;
+}
+
+.akd-notify-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    gap: $space-sm;
+}
+
+.akd-notify-row__category {
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $white-muted;
+}
+
+.akd-notify-row__time {
+    flex-shrink: 0;
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-notify-row__title {
+    margin: 0;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $white;
+    line-height: $lh-tight;
+}
+
+.akd-notify-row__excerpt {
+    margin: 0;
+    font-size: $fs-sm;
+    color: $white-faint;
+    line-height: $lh-normal;
+    max-width: 60ch;
+}
+
+.akd-notify-row__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-md;
+    margin-top: $space-xxs;
+}
+
+.akd-notify-row__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $sakura;
+    text-decoration: none;
+    transition: color $transition-fast;
+
+    i {
+        font-size: 10px;
+        transition: transform $transition-fast;
+    }
+
+    &:hover,
+    &:focus-visible {
+        color: color.adjust($sakura, $lightness: 8%);
+
+        i { transform: translateX(2px); }
+    }
+}
+
+// Redesigned: visible pill instead of a bare text link, still
+// secondary to the notification content itself.
+.akd-notify-row__delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    background: rgba($white, 0.03);
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    color: $white-muted;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast,
+        color $transition-fast;
+
+    i { font-size: 11px; }
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($accent-crimson, 0.14);
+        border-color: rgba($accent-crimson, 0.4);
+        color: #ffb4c1;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($accent-crimson, 0.5);
+        outline-offset: 2px;
+    }
+}
+
+// ==========================================
+// BULK ACTION BAR
+// ==========================================
+// Fixed (not sticky): sticky with left/right insets is a no-op since
+// sticky boxes don't stretch via inset, which is why the mobile margins
+// were never actually applying. Fixed makes them real.
+.akd-notify-bulkbar {
+    position: fixed;
+    left: $space-md;
+    right: $space-md;
+    bottom: $space-md;
+    margin: 0 auto;
+    max-width: 420px;
+    z-index: $z-dropdown;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-md;
+    padding: $space-sm $space-md;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    box-shadow: 0 16px 40px rgba($black, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity $transition-base, transform $transition-base,
+        visibility 0s linear $transition-base;
+
+    &.is-visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+        transition: opacity $transition-base, transform $transition-base,
+            visibility 0s linear 0s;
+    }
+}
+
+.akd-notify-bulkbar__count {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $white;
+}
+
+.akd-notify-bulkbar__actions {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+}
+
+.akd-notify-bulkbar__clear,
+.akd-notify-bulkbar__delete {
+    padding: 6px 12px;
+    border-radius: $radius-full;
+    border: 1px solid $black-line;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast;
+}
+
+.akd-notify-bulkbar__clear {
+    background: none;
+    color: $white-muted;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($white, 0.06);
+        color: $white;
+    }
+}
+
+.akd-notify-bulkbar__delete {
+    background: rgba($accent-crimson, 0.14);
+    border-color: rgba($accent-crimson, 0.4);
+    color: #ffb4c1;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($accent-crimson, 0.24);
+    }
+}
+
+// ==========================================
+// EMPTY STATES
+// ==========================================
+.akd-notify-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: $space-xs;
+    padding: $space-xl $space-md;
+    border: 1px dashed $black-line;
+    border-radius: $radius-lg;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-full;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $white-faint;
+        background: rgba($white, 0.03);
+        font-size: $fs-base;
+        margin-bottom: $space-xxs;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: $fs-md;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__text {
+        margin: 0;
+        font-size: $fs-sm;
+        color: $white-faint;
+        max-width: 32ch;
+    }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+@media (max-width: $bp-md) {
+    .akd-notify {
+        padding: $space-md $space-sm $space-md;
+    }
+
+    .akd-notify-row {
+        padding: $space-sm $space-md;
+    }
+
+    .akd-notify-bulkbar {
+        left: $space-sm;
+        right: $space-sm;
+        max-width: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-notify-row,
+    .akd-notif-dropdown,
+    .akd-notify-bulkbar {
+        transition: none !important;
+    }
+}

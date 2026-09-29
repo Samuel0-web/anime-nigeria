@@ -1,5 +1,6 @@
 <?php
 namespace App\Mail;
+use App\Core\Config;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use App\Core\Logger;
@@ -11,21 +12,21 @@ class SmtpMailer implements Mailer {
     public function __construct() {
         $mail = new PHPMailer(true);
         $mail->isSMTP();
-        $mail->Host = $_ENV['MAIL_HOST'];
-        $mail->Port = (int) $_ENV['MAIL_PORT'];
+        $mail->Host = Config::get('MAIL_HOST');
+        $mail->Port = (int) Config::get('MAIL_PORT');
         
-        if (empty($_ENV['MAIL_HOST']) || empty($_ENV['MAIL_PORT']) ||
-            empty($_ENV['MAIL_FROM_ADDRESS'])) {
+        if (empty(Config::get('MAIL_HOST')) || empty(Config::get('MAIL_PORT')) ||
+            empty(Config::get('MAIL_FROM_ADDRESS'))) {
             throw new \RuntimeException('Mail configuration is incomplete.');
         }
 
-        if (!empty($_ENV['MAIL_USERNAME'])) {
+        if (!empty(Config::get('MAIL_USERNAME'))) {
             $mail->SMTPAuth = true;
-            $mail->Username = $_ENV['MAIL_USERNAME'];
-            $mail->Password = $_ENV['MAIL_PASSWORD'];
+            $mail->Username = Config::get('MAIL_USERNAME');
+            $mail->Password = Config::get('MAIL_PASSWORD');
         }
 
-        $mail->SMTPSecure = match ($_ENV['MAIL_ENCRYPTION']) {
+        $mail->SMTPSecure = match (Config::get('MAIL_ENCRYPTION')) {
             'tls' => PHPMailer::ENCRYPTION_STARTTLS,
             'ssl' => PHPMailer::ENCRYPTION_SMTPS,
             default => false,
@@ -33,10 +34,10 @@ class SmtpMailer implements Mailer {
 
         $mail->CharSet = 'UTF-8';
         $mail->Encoding = 'base64';
-        $mail->setFrom($_ENV['MAIL_FROM_ADDRESS'], $_ENV['MAIL_FROM_NAME']);
+        $mail->setFrom(Config::get('MAIL_FROM_ADDRESS'), Config::get('MAIL_FROM_NAME'));
         $mail->isHTML(true);
 
-        if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+        if (Config::bool('APP_DEBUG')) {
             $mail->SMTPDebug = 0;
             $mail->Debugoutput = 'html';
         }

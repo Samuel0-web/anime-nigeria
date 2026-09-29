@@ -73,9 +73,7 @@ function openPasswordConfirmModal(modal, {
         content: buildPasswordView(),
         footer: buildPasswordFooter(),
         className,
-    });
-
-    wirePasswordView();
+    }).then(wirePasswordView);
 
     function buildPasswordView() {
         const wrap = document.createElement('div');
@@ -470,8 +468,7 @@ function init2fa(root, modal, confirmDialog) {
             footer: renderFooter(1),
             className: 'akd-modal--2fa',
             beforeClose: handleBeforeClose,
-        });
-        wireStepEvents(1);
+        }).then(() => wireStepEvents(1));
 
         // ---------------- Close interception (single choke point) ----------------
         async function handleBeforeClose() {
@@ -1129,9 +1126,7 @@ function initSessions(root, modal, confirmDialog) {
             footer: null,
             className: 'akd-modal--sessions',
             size: 'lg',
-        });
-
-        loadSessions();
+        }).then(loadSessions);
     });
 
     // ---------------- Server sync ----------------
@@ -1634,9 +1629,7 @@ function initTimezone(root, modal) {
             content: buildContent(),
             footer: buildFooter(),
             className: 'akd-modal--timezone',
-        });
-
-        wireEvents();
+        }).then(wireEvents);
     });
 
     function buildOptionRow(zone) {

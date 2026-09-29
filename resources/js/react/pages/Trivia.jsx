@@ -1,79 +1,56 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-    PHASES,
-    triviaEvent,
-    currentPlayer,
-    PLAYER_ID,
-    questions,
-    eventTimeline,
-    createInitialLeaderboard,
-    TICK_MS,
-    EVENT_START_OFFSET_MS,
-    LIVE_SOON_THRESHOLD_MS,
-    ENTRY_GRACE_MS,
-    JOINING_READY_THRESHOLD_MS,
-    RESULT_DISPLAY_MS,
+
+import { PHASES, triviaEvent, currentPlayer, PLAYER_ID, questions, eventTimeline,
+    createInitialLeaderboard, TICK_MS, EVENT_START_OFFSET_MS, LIVE_SOON_THRESHOLD_MS,
+    ENTRY_GRACE_MS, JOINING_READY_THRESHOLD_MS, RESULT_DISPLAY_MS, MODE_INTRO_DURATION_MS,
 } from "../data/trivia";
-import {
-    EVENT_STATUS,
-    SEGMENT_TYPE,
-    QUESTION_SUB_PHASE,
-    getEventStatus,
-    getSegmentAtElapsed,
-    getQuestionSegment,
-    getQuestionSubPhase,
-    resolveEntry,
+
+import { EVENT_STATUS, SEGMENT_TYPE, QUESTION_SUB_PHASE, getEventStatus,
+    getSegmentAtElapsed, getQuestionSegment, getQuestionSubPhase, resolveEntry,
 } from "../utils/trivia/eventTimeline";
-import {
-    formatCountdown,
-    resolveQuestionPoints,
-    applyRoundScores,
-    getRankedPlayers,
-    getRankMessage,
-    getFinalRankLabel,
-    isPodiumFinish,
+
+import { formatCountdown, resolveQuestionPoints, applyRoundScores,
+    getRankedPlayers, getRankMessage, getFinalRankLabel, isPodiumFinish,
     getRandomEncouragement,
 } from "../utils/trivia/triviaUtils";
-import useIsMobile from "../hooks/trivia/useIsMobile";
 
+import { getAnswerStyles } from "../utils/trivia/answerColors";
+import useIsMobile from "../hooks/trivia/useIsMobile";
 import EventBanner from "../components/trivia/EventBanner";
-import WaitingRoom from "../components/trivia/WaitingRoom";
-import JoiningState from "../components/trivia/JoiningState";
-import QuestionIntro from "../components/trivia/QuestionIntro";
-import AnswerScreen from "../components/trivia/AnswerScreen";
-import ResultScreen from "../components/trivia/ResultScreen";
-import DoublePoints from "../components/trivia/DoublePoints";
-import FinalResult from "../components/trivia/FinalResult";
-import FullResults from "../components/trivia/FullResults";
-import MobileTriviaPanel from "../components/trivia/MobileTriviaPanel";
+import TriviaPlaySurface from "../components/trivia/TriviaPlaySurface";
 import MobileResultsSummaryCard from "../components/trivia/MobileResultsSummaryCard";
 
 export default function Trivia() {
     const isMobile = useIsMobile();
-
     const [eventStatus, setEventStatus] = useState(EVENT_STATUS.UPCOMING);
     const [countdownSeconds, setCountdownSeconds] = useState(EVENT_START_OFFSET_MS / 1000);
-
     const [hasJoined, setHasJoined] = useState(false);
-    const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+    const [isSurfaceOpen, setIsSurfaceOpen] = useState(false);
     const [localPhase, setLocalPhaseState] = useState(PHASES.WAITING);
     const [joiningReady, setJoiningReady] = useState(false);
-
+    const [activeIntroMode, setActiveIntroMode] = useState(null);
+    const [answerStyles, setAnswerStyles] = useState([]);
     const [reminderSet, setReminderSet] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndexState] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [leaderboard, setLeaderboardState] = useState(createInitialLeaderboard);
     const [answerHistory, setAnswerHistory] = useState([]);
     const [lastResult, setLastResult] = useState(null);
+    // Captured once, when FINAL_RESULT is entered, rather than derived
+    // reactively every render, per the "trigger once per state entry" rule.
+    const [finalConfetti, setFinalConfetti] = useState(false);
 
     // Fixed once per mount, a page refresh is what resets the mock event,
     // tab visibility changes must never touch this.
     const eventStartTimeRef = useRef(Date.now() + EVENT_START_OFFSET_MS);
-
     const localPhaseRef = useRef(localPhase);
     const currentQuestionIndexRef = useRef(currentQuestionIndex);
     const leaderboardRef = useRef(leaderboard);
     const hasJoinedRef = useRef(false);
+    // Becomes true the moment the player ever successfully enters a live
+    // segment. Once true, later transitions must never re-run the late-join
+    // grace check, that check is only for someone who hasn't joined yet.
+    const hasEnteredSessionRef = useRef(false);
     const phaseEndsAtRef = useRef(null);
     const hasTransitionedRef = useRef(false);
     const hasAnsweredRef = useRef(false);
@@ -98,28 +75,55 @@ export default function Trivia() {
     }
 
     // ---- Entry logic, shared by the initial Join click, catching up after
-    // a personal Result screen, and waking up from the Joining state. ----
+    // a personal Result screen, and waking up from Joining/Mode Intro. ----
     function enterSegment(segment, elapsedMs) {
-        setCurrentQuestionIndex(segment.questionIndex);
         hasTransitionedRef.current = false;
+        hasEnteredSessionRef.current = true;
 
-        if (segment.type === SEGMENT_TYPE.DOUBLE_POINTS) {
-            setLocalPhase(PHASES.DOUBLE_POINTS);
-            phaseEndsAtRef.current = eventStartTimeRef.current + segment.endMs;
+        if (segment.type === SEGMENT_TYPE.MODE_INTRO) {
+            setCurrentQuestionIndex(segment.questionIndex);
+            setActiveIntroMode(segment.introMode);
+            setLocalPhase(PHASES.MODE_INTRO);
+            // Always a fresh, full MODE_INTRO_DURATION_MS from the moment
+            // this is actually entered, never a remainder computed from
+            // where the global broadcast happens to be. This is what makes
+            // the intro's 4-second lifecycle authoritative and immune to
+            // drift from earlier phases (see advanceToNextQuestion).
+            phaseEndsAtRef.current = Date.now() + MODE_INTRO_DURATION_MS;
             return;
         }
 
+        setCurrentQuestionIndex(segment.questionIndex);
+        setAnswerStyles(getAnswerStyles(questions[segment.questionIndex]));
         const subPhase = getQuestionSubPhase(segment, elapsedMs);
+
+        // (segment.introEndMs - elapsedMs) / (segment.endMs - elapsedMs) is
+        // the genuinely remaining nominal time from wherever elapsedMs
+        // says we are. For a real-time join this is numerically identical
+        // to the old absolute-timestamp formula (elapsedMs was measured
+        // against the same clock). For the chained post-Mode-Intro case
+        // (advanceFromModeIntro passes elapsedMs = segment.startMs), it
+        // correctly resolves to the full nominal duration rather than a
+        // stale absolute deadline that may already be in the past.
         if (subPhase.phase === QUESTION_SUB_PHASE.INTRO) {
             setSelectedAnswer(null);
             setLocalPhase(PHASES.QUESTION_INTRO);
-            phaseEndsAtRef.current = eventStartTimeRef.current + segment.introEndMs;
+            phaseEndsAtRef.current = Date.now() + (segment.introEndMs - elapsedMs);
         } else {
             hasAnsweredRef.current = false;
             setSelectedAnswer(null);
             setLocalPhase(PHASES.ANSWERING);
-            phaseEndsAtRef.current = eventStartTimeRef.current + segment.endMs;
+            phaseEndsAtRef.current = Date.now() + (segment.endMs - elapsedMs);
         }
+    }
+
+    function enterFinalResult() {
+        hasTransitionedRef.current = false;
+        phaseEndsAtRef.current = null;
+        const ranked = getRankedPlayers(leaderboardRef.current);
+        const entry = ranked.find((p) => p.id === PLAYER_ID);
+        setFinalConfetti(isPodiumFinish(entry?.rank ?? Infinity));
+        setLocalPhase(PHASES.FINAL_RESULT);
     }
 
     function attemptEntry(elapsedMs) {
@@ -127,21 +131,14 @@ export default function Trivia() {
         const status = getEventStatus(now, eventStartTimeRef.current, LIVE_SOON_THRESHOLD_MS, eventTimeline.totalMs);
 
         if (status === EVENT_STATUS.ENDED) {
-            hasTransitionedRef.current = false;
-            phaseEndsAtRef.current = null;
-            setLocalPhase(PHASES.FINAL_RESULT);
+            enterFinalResult();
             return;
         }
 
         const segment = getSegmentAtElapsed(eventTimeline, elapsedMs);
 
         if (!segment) {
-            // Boundary case: elapsed time has run past the final segment in
-            // the same tick that status flips to ENDED. Treat it as ended
-            // instead of computing a deadline from a null boundary.
-            hasTransitionedRef.current = false;
-            phaseEndsAtRef.current = null;
-            setLocalPhase(PHASES.FINAL_RESULT);
+            enterFinalResult();
             return;
         }
 
@@ -157,12 +154,38 @@ export default function Trivia() {
         }
     }
 
+    // Used only when the player is already an active participant (after
+    // their own personal Result screen ends). This deliberately does NOT
+    // resync to "wherever the real broadcast clock currently is" anymore.
+    // RESULT_DISPLAY_MS (5000ms) is longer than MODE_INTRO_DURATION_MS
+    // (4000ms), so a real-clock resync would always land past the next
+    // question's Mode Intro, skipping it, on every question, for every
+    // player. Once joined, question-to-question progression instead
+    // advances deterministically to the next question's own Mode Intro,
+    // guaranteeing every phase gets its full nominal duration. Only the
+    // very first entry (attemptEntry, still real-clock-based) determines
+    // where a player first tunes into the live broadcast.
+    function advanceToNextQuestion() {
+        const nextIndex = currentQuestionIndexRef.current + 1;
+
+        if (nextIndex >= questions.length) {
+            enterFinalResult();
+            return;
+        }
+
+        const nextQuestion = questions[nextIndex];
+        enterSegment({
+            type: SEGMENT_TYPE.MODE_INTRO,
+            introMode: nextQuestion.doublePoints ? "double_points" : nextQuestion.mode,
+            questionIndex: nextIndex,
+        }, 0);
+    }
+
     function handleJoin() {
         hasJoinedRef.current = true;
         setHasJoined(true);
-        if (isMobile) setIsMobilePanelOpen(true);
+        setIsSurfaceOpen(true);
         hasTransitionedRef.current = false;
-
         const now = Date.now();
         const eventStartTime = eventStartTimeRef.current;
 
@@ -177,14 +200,11 @@ export default function Trivia() {
     function handleAnswerLocked(answer) {
         if (hasAnsweredRef.current) return;
         hasAnsweredRef.current = true;
-
         const question = getCurrentQuestion();
         const isTimeout = answer === null;
         const isCorrect = !isTimeout && answer === question.correctAnswer;
         const remainingMs = isTimeout ? 0 : Math.max(0, (phaseEndsAtRef.current ?? 0) - Date.now());
-        const pointsEarned = resolveQuestionPoints({
-            isCorrect,
-            remainingMs,
+        const pointsEarned = resolveQuestionPoints({ isCorrect, remainingMs,
             totalMs: question.answerDuration * 1000,
             isDoublePoints: !!question.doublePoints,
         });
@@ -192,17 +212,16 @@ export default function Trivia() {
         const newLeaderboard = applyRoundScores(leaderboardRef.current, currentQuestionIndexRef.current, pointsEarned);
         const ranked = getRankedPlayers(newLeaderboard);
         const rankInfo = getRankMessage(ranked, PLAYER_ID);
-
         setLeaderboard(newLeaderboard);
+
         setAnswerHistory((prev) => [
             ...prev,
             { questionId: question.id, selectedAnswer: answer, isCorrect, isTimeout, pointsEarned },
         ]);
+
         setSelectedAnswer(answer);
-        setLastResult({
-            isCorrect,
-            isTimeout,
-            pointsEarned,
+
+        setLastResult({ isCorrect, isTimeout, pointsEarned,
             positionLabel: rankInfo.positionLabel,
             gapLabel: rankInfo.gapLabel,
             encouragement: isCorrect ? null : getRandomEncouragement(),
@@ -213,36 +232,36 @@ export default function Trivia() {
         phaseEndsAtRef.current = Date.now() + RESULT_DISPLAY_MS;
     }
 
-    function handleClosePanel() {
-        // Purely a visibility toggle, only reachable from Final/Full Results,
-        // the global event has already finished by then regardless.
-        setIsMobilePanelOpen(false);
+    function handleCloseSurface() {
+        // Purely a visibility toggle, only reachable from Final/Full
+        // Results, so there is no live timer running underneath to protect.
+        setIsSurfaceOpen(false);
     }
 
-    function handleReopenPanel() {
-        setIsMobilePanelOpen(true);
+    function handleReopenSurface() {
+        setIsSurfaceOpen(true);
     }
 
     function handleBackToFinal() {
         setLocalPhase(PHASES.FINAL_RESULT);
     }
 
-    // Single interval for the component's whole lifetime. Everything mutable
-    // it needs lives in a ref, so it never resubscribes and never reads a
-    // stale closure. The same tick also runs immediately on visibilitychange
-    // so returning to a hidden tab reconciles state at once rather than
-    // waiting for the next scheduled tick.
+    // Single interval for the component's whole lifetime, everything
+    // mutable it needs lives in a ref so it never resubscribes or reads a
+    // stale closure. The same tick runs immediately on visibilitychange so
+    // returning to a hidden tab reconciles state at once.
     useEffect(() => {
         function beginAnsweringFromIntro() {
-            const segment = getQuestionSegment(eventTimeline, currentQuestionIndexRef.current);
             hasAnsweredRef.current = false;
             setSelectedAnswer(null);
             setLocalPhase(PHASES.ANSWERING);
-            phaseEndsAtRef.current = eventStartTimeRef.current + segment.endMs;
+            // Fresh full answerDuration from now, chained off whenever
+            // Question Intro actually ended, not a stale absolute offset.
+            phaseEndsAtRef.current = Date.now() + getCurrentQuestion().answerDuration * 1000;
             hasTransitionedRef.current = false;
         }
 
-        function advanceFromDoublePoints() {
+        function advanceFromModeIntro() {
             const segment = getQuestionSegment(eventTimeline, currentQuestionIndexRef.current);
             enterSegment(segment, segment.startMs);
         }
@@ -250,7 +269,6 @@ export default function Trivia() {
         function tick() {
             const now = Date.now();
             const eventStartTime = eventStartTimeRef.current;
-
             const status = getEventStatus(now, eventStartTime, LIVE_SOON_THRESHOLD_MS, eventTimeline.totalMs);
             setEventStatus(status);
 
@@ -267,7 +285,6 @@ export default function Trivia() {
 
             if (!phaseEndsAtRef.current || hasTransitionedRef.current) return;
             if (now < phaseEndsAtRef.current) return;
-
             hasTransitionedRef.current = true;
 
             switch (localPhaseRef.current) {
@@ -277,6 +294,9 @@ export default function Trivia() {
                 case PHASES.JOINING:
                     attemptEntry(now - eventStartTime);
                     break;
+                case PHASES.MODE_INTRO:
+                    advanceFromModeIntro();
+                    break;
                 case PHASES.QUESTION_INTRO:
                     beginAnsweringFromIntro();
                     break;
@@ -284,10 +304,7 @@ export default function Trivia() {
                     handleAnswerLocked(null);
                     break;
                 case PHASES.RESULT:
-                    attemptEntry(now - eventStartTime);
-                    break;
-                case PHASES.DOUBLE_POINTS:
-                    advanceFromDoublePoints();
+                    advanceToNextQuestion();
                     break;
                 default:
                     break;
@@ -307,13 +324,16 @@ export default function Trivia() {
 
     // ---- Derived values ----
     const question = questions[currentQuestionIndex];
+    // The mode indicator shows "Double Points" for a doublePoints-flagged
+    // question even though its underlying mode is still "quiz", the player
+    // just saw the Double Points intro, the indicator should agree with it.
+    const indicatorMode = question.doublePoints ? "double_points" : question.mode;
     const countdownLabel = useMemo(() => formatCountdown(countdownSeconds), [countdownSeconds]);
     const rankedLeaderboard = useMemo(() => getRankedPlayers(leaderboard), [leaderboard]);
     const playerRankEntry = rankedLeaderboard.find((p) => p.id === PLAYER_ID);
     const correctCount = answerHistory.filter((a) => a.isCorrect).length;
     const incorrectCount = answerHistory.length - correctCount;
     const rankLabel = getFinalRankLabel(playerRankEntry?.rank ?? rankedLeaderboard.length);
-    const showConfetti = isPodiumFinish(playerRankEntry?.rank ?? Infinity);
 
     const livePlayer = {
         avatar: currentPlayer.avatar,
@@ -321,115 +341,39 @@ export default function Trivia() {
         points: playerRankEntry?.points ?? 0,
     };
 
-    const showMobileSummary =
-        isMobile &&
-        !isMobilePanelOpen &&
+    const showSummaryCard = hasJoined && !isSurfaceOpen &&
         (localPhase === PHASES.FINAL_RESULT || localPhase === PHASES.FULL_RESULTS);
 
     return (
         <main className="akd-content">
             <div className="akd-trivia">
                 {!hasJoined && (
-                    <EventBanner
-                        event={triviaEvent}
-                        eventStatus={eventStatus}
-                        countdownLabel={countdownLabel}
-                        reminderSet={reminderSet}
-                        onSetReminder={() => setReminderSet(true)}
-                        onJoin={handleJoin}
+                    <EventBanner event={triviaEvent} eventStatus={eventStatus}
+                        countdownLabel={countdownLabel} reminderSet={reminderSet}
+                        onSetReminder={() => setReminderSet(true)} onJoin={handleJoin}
                     />
                 )}
 
-                {!isMobile && hasJoined && localPhase === PHASES.WAITING && (
-                    <WaitingRoom event={triviaEvent} countdownLabel={countdownLabel} />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.JOINING && (
-                    <JoiningState isReady={joiningReady} />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.QUESTION_INTRO && (
-                    <QuestionIntro
-                        questionNumber={currentQuestionIndex + 1}
-                        questionText={question.question}
-                    />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.ANSWERING && (
-                    <AnswerScreen
-                        questionNumber={currentQuestionIndex + 1}
-                        image={question.image}
-                        answers={question.answers}
-                        selectedAnswer={selectedAnswer}
-                        onSelect={handleAnswerLocked}
-                        durationSeconds={question.answerDuration}
-                        player={livePlayer}
-                    />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.RESULT && lastResult && (
-                    <ResultScreen
-                        isCorrect={lastResult.isCorrect}
-                        isTimeout={lastResult.isTimeout}
-                        pointsEarned={lastResult.pointsEarned}
-                        positionLabel={lastResult.positionLabel}
-                        gapLabel={lastResult.gapLabel}
-                        encouragement={lastResult.encouragement}
-                    />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.DOUBLE_POINTS && <DoublePoints />}
-
-                {!isMobile && hasJoined && localPhase === PHASES.FINAL_RESULT && (
-                    <FinalResult
-                        avatar={livePlayer.avatar}
-                        username={livePlayer.username}
-                        rankLabel={rankLabel}
-                        totalPoints={livePlayer.points}
-                        showConfetti={showConfetti}
-                        onViewFullResults={() => setLocalPhase(PHASES.FULL_RESULTS)}
-                    />
-                )}
-
-                {!isMobile && hasJoined && localPhase === PHASES.FULL_RESULTS && (
-                    <FullResults
-                        questions={questions}
-                        answerHistory={answerHistory}
-                        correctCount={correctCount}
-                        incorrectCount={incorrectCount}
-                        totalPoints={livePlayer.points}
-                    />
-                )}
-
-                {showMobileSummary && (
-                    <MobileResultsSummaryCard
-                        avatar={livePlayer.avatar}
-                        username={livePlayer.username}
-                        rankLabel={rankLabel}
-                        totalPoints={livePlayer.points}
-                        onReopen={handleReopenPanel}
+                {showSummaryCard && (
+                    <MobileResultsSummaryCard avatar={livePlayer.avatar}
+                        username={livePlayer.username} rankLabel={rankLabel}
+                        totalPoints={livePlayer.points} onReopen={handleReopenSurface}
                     />
                 )}
             </div>
 
-            {isMobile && hasJoined && (
-                <MobileTriviaPanel
-                    isOpen={isMobilePanelOpen}
-                    phase={localPhase}
-                    event={triviaEvent}
-                    countdownLabel={countdownLabel}
-                    joiningReady={joiningReady}
-                    question={question}
-                    questionNumber={currentQuestionIndex + 1}
-                    selectedAnswer={selectedAnswer}
-                    onSelectAnswer={handleAnswerLocked}
-                    player={livePlayer}
-                    lastResult={lastResult}
-                    showConfetti={showConfetti}
+            {hasJoined && (
+                <TriviaPlaySurface isOpen={isSurfaceOpen} isMobile={isMobile}
+                    phase={localPhase} event={triviaEvent} countdownLabel={countdownLabel}
+                    joiningReady={joiningReady} activeIntroMode={activeIntroMode}
+                    question={question} questionNumber={currentQuestionIndex + 1}
+                    indicatorMode={indicatorMode}
+                    answerStyles={answerStyles} selectedAnswer={selectedAnswer}
+                    onSelectAnswer={handleAnswerLocked} player={livePlayer}
+                    lastResult={lastResult} showConfetti={finalConfetti}
                     resultsProps={{ rankLabel, questions, answerHistory, correctCount, incorrectCount }}
                     onViewFullResults={() => setLocalPhase(PHASES.FULL_RESULTS)}
-                    onBackToFinal={handleBackToFinal}
-                    onClose={handleClosePanel}
+                    onBackToFinal={handleBackToFinal} onClose={handleCloseSurface}
                 />
             )}
         </main>

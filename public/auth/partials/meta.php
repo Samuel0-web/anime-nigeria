@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../../bootstrap.php';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $canonicalPath = rtrim($currentPath, '/') ?: '/';
-$canonicalUrl = rtrim((string) ($_ENV['APP_URL'] ?? 'https://animenigeria.ng'), '/') . $canonicalPath;
+$canonicalUrl = rtrim((string) \App\Core\Config::get('APP_URL'), '/') . $canonicalPath;
 $pageTitle       = $pageTitle       ?? "Anime Nigeria — Nigeria's Home for Otakus";
 $pageDescription = $pageDescription ?? "Sign up or login to use our service.";
 require __DIR__ . '/../../../includes/vite.php';

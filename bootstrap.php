@@ -9,17 +9,30 @@ use GuzzleHttp\Client;
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+$executingScript = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ?: '';
+$routerScript = realpath(__DIR__ . '/public/router.php') ?: '';
+
+if (preg_match('#(?:^|/)api(?:/|$)#', $requestPath)
+    && $executingScript !== $routerScript
+) {
+    http_response_code(404);
+    exit;
+}
+
 if (session_status() === PHP_SESSION_NONE) {
+    session_name(App\Core\Config::sessionName());
+    $sessionCookieOptions = App\Core\Config::cookieOptions();
+    unset($sessionCookieOptions['expires']);
+    $sessionCookieOptions['lifetime'] = (int) App\Core\Config::get('SESSION_COOKIE_LIFETIME', 0);
+    session_set_cookie_params($sessionCookieOptions);
     session_start([
-        'cookie_httponly' => true,
-        'cookie_secure'   => !empty($_SERVER['HTTPS']),
-        'cookie_samesite' => 'Lax',
         'use_strict_mode' => true,
     ]);
 }
 
 $db = App\Database\Database::connection();
-$mail = new App\Mail\Mail(new App\Mail\SmtpMailer(), $_ENV['APP_URL']);
+$mail = new App\Mail\Mail(new App\Mail\SmtpMailer(), App\Core\Config::get('APP_URL'));
 $ipGeolocation = new IpGeolocationService(new Client());
 $auth = new App\Auth\Auth($db, $mail, $ipGeolocation);
 $auth->boot();

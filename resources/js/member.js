@@ -7,6 +7,7 @@ import "@fontsource/jetbrains-mono/500.css";
 import { initPreloader } from "./modules/preloader";
 import { initLogout } from "./modules/logout";
 import { initSidebar } from './member/sidebar';
+import { initNotificationDropdown, initNotificationsPage } from './member/notifications';
 import './member/dashboard';
 import { initProfileModal } from './member/profile-modal';
 import { initAchievementModal } from './member/achievements';
@@ -35,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
         profileBtnId: 'profileDropdownTrigger', dropdownId: 'profileDropdown',
     });
 
+    initNotificationDropdown();
+    initNotificationsPage();
     initProfileModal();
     initAchievementModal();
     initSettingsPage();

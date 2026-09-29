@@ -1,6 +1,8 @@
 <?php
 use App\Database\Database;
 use App\Models\User;
+use App\Models\LoginSession;
+use App\Auth\RememberMe;
 use App\Services\ProfileService;
 
 header('Content-Type: application/json');
@@ -11,7 +13,9 @@ header('Content-Type: application/json');
 |--------------------------------------------------------------------------
 */
 
-if (!isset($_SESSION['user_id'])) {
+$currentLoginSession = $auth->currentLoginSession();
+
+if ($currentLoginSession === null) {
     http_response_code(401);
 
     echo json_encode([
@@ -23,9 +27,16 @@ if (!isset($_SESSION['user_id'])) {
 
 $db = Database::connection();
 $users = new User($db);
-$currentUser = $users->findById($_SESSION['user_id']);
-$service = new ProfileService($users);
-$result = $service->update($currentUser, $_POST, $_FILES);
+$currentUser = $users->findById((int) $auth->id());
+
+if ($currentUser === false) {
+    http_response_code(401);
+    echo json_encode(['message' => 'Unauthorized.']);
+    exit;
+}
+
+$service = new ProfileService($users, $db, new LoginSession($db), new RememberMe($db));
+$result = $service->update($currentUser, $_POST, $_FILES, (int) $currentLoginSession['id']);
 
 if (!$result['success']) {
     http_response_code(422);

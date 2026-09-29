@@ -2,35 +2,41 @@
 // Swap these exports for real API/DB-backed data later, nothing else in the
 // Trivia feature should need to change shape-wise.
 //
-// The Trivia now runs as a background event: eventStartTime is fixed once
-// per page load, and every phase (banner status, question, answer window)
-// is derived from real elapsed time rather than waited for. See
-// utils/trivia/eventTimeline.js for the derivation logic itself.
+// The Trivia runs as a background event: eventStartTime is fixed once per
+// page load, and every phase is derived from real elapsed time. See
+// utils/trivia/eventTimeline.js for the derivation logic.
+//
+// Each question now carries a `mode` ("quiz" or "true_false"). A MODE_INTRO
+// segment is inserted whenever the mode changes between consecutive
+// questions, or whenever a question is flagged `doublePoints` (which always
+// gets its own intro regardless of mode continuity). See
+// utils/trivia/eventTimeline.js for exactly how that's derived.
 
 import { buildEventTimeline } from "../utils/trivia/eventTimeline";
 
 export const PHASES = {
     WAITING: "WAITING",
     JOINING: "JOINING",
+    MODE_INTRO: "MODE_INTRO",
     QUESTION_INTRO: "QUESTION_INTRO",
     ANSWERING: "ANSWERING",
     RESULT: "RESULT",
-    DOUBLE_POINTS: "DOUBLE_POINTS",
     FINAL_RESULT: "FINAL_RESULT",
     FULL_RESULTS: "FULL_RESULTS",
 };
 
 export const TICK_MS = 200;
 
-// Real wall-clock timing. Nothing here is compressed or accelerated, the mock
-// event genuinely takes this long, per instruction.
-export const EVENT_START_OFFSET_MS = 20000; // event goes live 20s after page load
-export const LIVE_SOON_THRESHOLD_MS = 10000; // final 10s of lead-in shows "Live Soon"
-export const ENTRY_GRACE_MS = 2000; // join within 2s of a question starting to enter it directly
-export const JOINING_READY_THRESHOLD_MS = 1200; // "You're in!" appears this close to the next entry point
-export const RESULT_DISPLAY_MS = 5000; // personal, not part of the global timeline
-export const DOUBLE_POINTS_DURATION_MS = 3500;
-
+// Real wall-clock timing, nothing here is compressed or accelerated.
+export const EVENT_START_OFFSET_MS = 20000;
+export const LIVE_SOON_THRESHOLD_MS = 10000;
+export const ENTRY_GRACE_MS = 2000;
+export const JOINING_READY_THRESHOLD_MS = 1200;
+export const RESULT_DISPLAY_MS = 5000;
+// Shared by every mode intro (Quiz, True or False, Double Points alike),
+// see components/trivia/ModeIntro/modeIntroTiming.js for how this splits
+// into entrance/hold/exit.
+export const MODE_INTRO_DURATION_MS = 4000;
 export const PLAYER_ID = "you";
 
 export const triviaEvent = {
@@ -38,7 +44,7 @@ export const triviaEvent = {
     kicker: "Anime Trivia #04",
     title: "The Ultimate Anime Challenge",
     questionCount: 6,
-    estimatedDuration: "Approx. 1 minute",
+    estimatedDuration: "Approx. 1 minute 10 seconds",
     bannerImage: "/uploads/frieren-poster.webp",
 };
 
@@ -48,8 +54,6 @@ export const currentPlayer = {
     avatar: "/uploads/upscalemedia-transformed.png",
 };
 
-// Other "live" participants. roundPoints[i] is what they score on question i+1.
-// Round 6 is the Double Points round, their scores reflect that.
 export const opponents = [
     { id: "p1", username: "GokuSSJ", avatar: "/uploads/logos/upscalemedia-transformed%20(1).png", roundPoints: [820, 750, 900, 680, 790, 1600] },
     { id: "p2", username: "SakuraBloom", avatar: "/uploads/upscalemedia-transformed%20(2).png", roundPoints: [600, 820, 500, 900, 650, 900] },
@@ -66,12 +70,15 @@ export function createInitialLeaderboard() {
     ];
 }
 
-// Six questions. Only Question 5 carries an image. Only Question 6 is
-// flagged doublePoints, the timeline builder reads that flag rather than
-// hardcoding a "last question" assumption.
+// Six questions. Q1, Q2, Q4, Q5 are quiz mode. Q3 is true_false (converted
+// from its original 4-answer form to demonstrate the mode, its underlying
+// anime-trivia content is preserved as a true/false statement instead).
+// Q6 stays quiz-format but is flagged doublePoints, which always gets its
+// own mode intro regardless of the surrounding mode.
 export const questions = [
     {
         id: 1,
+        mode: "quiz",
         question: "What is the name of the Nine-Tails sealed within Naruto Uzumaki?",
         image: null,
         answers: ["Kurama", "Gyuki", "Isobu", "Kokuo"],
@@ -81,6 +88,7 @@ export const questions = [
     },
     {
         id: 2,
+        mode: "quiz",
         question: "What is the name of Monkey D. Luffy's pirate crew?",
         image: null,
         answers: ["Straw Hat Pirates", "Red Hair Pirates", "Heart Pirates", "Whitebeard Pirates"],
@@ -90,15 +98,17 @@ export const questions = [
     },
     {
         id: 3,
-        question: "Which organization does Eren Yeager join to fight Titans beyond the walls?",
+        mode: "true_false",
+        question: "Eren Yeager joins the Survey Corps to fight Titans beyond the walls.",
         image: null,
-        answers: ["Survey Corps", "Military Police", "Garrison Regiment", "Training Corps"],
-        correctAnswer: "Survey Corps",
+        answers: ["True", "False"],
+        correctAnswer: "True",
         questionDuration: 5,
         answerDuration: 5,
     },
     {
         id: 4,
+        mode: "quiz",
         question: "What breathing style does Tanjiro Kamado primarily use?",
         image: null,
         answers: ["Water Breathing", "Flame Breathing", "Thunder Breathing", "Insect Breathing"],
@@ -108,6 +118,7 @@ export const questions = [
     },
     {
         id: 5,
+        mode: "quiz",
         question: "Who is this character?",
         image: "/uploads/frieren-poster.webp",
         answers: ["Frieren", "Fern", "Himmel", "Serie"],
@@ -117,6 +128,7 @@ export const questions = [
     },
     {
         id: 6,
+        mode: "quiz",
         question: "In One Piece, what is the name of the ancient weapon said to be capable of destroying a country?",
         image: null,
         answers: ["Pluton", "Uranus", "Poseidon", "Noah"],
@@ -127,7 +139,4 @@ export const questions = [
     },
 ];
 
-// Precomputed once, the timeline is pure and only depends on the constants
-// above. Swapping to a real backend later means fetching this shape from the
-// server instead of building it locally, nothing downstream needs to change.
-export const eventTimeline = buildEventTimeline(questions, DOUBLE_POINTS_DURATION_MS);
+export const eventTimeline = buildEventTimeline(questions, MODE_INTRO_DURATION_MS);

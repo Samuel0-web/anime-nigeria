@@ -2,6 +2,9 @@ Options -Indexes
 
 RewriteEngine On
 
+# API endpoints must always pass through router.php so CSRF validation runs.
+RewriteRule ^(?:.*/)?api(?:/|$) router.php [QSA,L]
+
 # If the requested file or folder exists, serve it normally
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

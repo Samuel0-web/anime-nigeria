@@ -26,8 +26,7 @@ function vite_is_dev(): bool {
     static $isDev = null;
     if ($isDev !== null) return $isDev;
 
-    $appEnv = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV']
-           ?? (getenv('APP_ENV') !== false ? getenv('APP_ENV') : null) ?? 'production';
+    $appEnv = \App\Core\Config::get('APP_ENV', 'production');
 
     return $isDev = in_array($appEnv, ['local', 'development', 'dev', 'testing'], true);
 }

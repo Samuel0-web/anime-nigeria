@@ -54,7 +54,7 @@ $navGroups = [
 
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $canonicalPath = rtrim($currentPath, '/') ?: '/';
-$canonicalUrl = rtrim((string) ($_ENV['APP_URL'] ?? 'https://animenigeria.ng'), '/') . $canonicalPath;
+$canonicalUrl = rtrim((string) \App\Core\Config::get('APP_URL'), '/') . $canonicalPath;
 ?>
 <!DOCTYPE html>
 <html lang="en">

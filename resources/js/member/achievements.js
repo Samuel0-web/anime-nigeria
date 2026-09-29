@@ -49,17 +49,24 @@ function buildModal() {
  * this class shows up later. No IDs, no per-page re-binding.
  */
 export function initAchievementModal() {
-    const refs = buildModal();
-    const { overlay, modal, closeBtn } = refs;
-
-    const focusableSelector = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+    let refs = null;
     let lastFocusedEl = null;
+    const focusableSelector = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
     function getFocusable() {
-        return Array.from(modal.querySelectorAll(focusableSelector));
+        return Array.from(refs.modal.querySelectorAll(focusableSelector));
     }
 
     function openAchievementModal(trigger) {
+        if (!refs) {
+            refs = buildModal();
+            refs.closeBtn.addEventListener('click', closeAchievementModal);
+            refs.overlay.addEventListener('click', (e) => {
+                if (e.target === refs.overlay) closeAchievementModal();
+            });
+        }
+
+        const { overlay, modal } = refs;
         lastFocusedEl = trigger;
 
         refs.titleEl.textContent = trigger.dataset.achievementName;
@@ -76,6 +83,8 @@ export function initAchievementModal() {
     }
 
     function closeAchievementModal() {
+        if (!refs) return;
+        const { overlay } = refs;
         overlay.classList.remove('is-open');
         document.body.style.overflow = '';
         document.removeEventListener('keydown', handleKeydown);
@@ -83,6 +92,7 @@ export function initAchievementModal() {
     }
 
     function handleKeydown(e) {
+        if (!refs) return;
         if (e.key === 'Escape') {
             e.preventDefault();
             closeAchievementModal();
@@ -108,10 +118,5 @@ export function initAchievementModal() {
     document.addEventListener('click', (e) => {
         const trigger = e.target.closest('.akd-achievement-card');
         if (trigger) openAchievementModal(trigger);
-    });
-
-    closeBtn.addEventListener('click', closeAchievementModal);
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeAchievementModal();
     });
 }

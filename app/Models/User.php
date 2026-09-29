@@ -325,4 +325,5 @@ class User {
         $stmt->execute([$userId]);
         return $stmt->rowCount() > 0;
     }
+
 }

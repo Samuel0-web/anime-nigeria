@@ -1,6 +1,7 @@
 <?php
 namespace App\Auth;
 
+use App\Core\Config;
 use GuzzleHttp\Client;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
@@ -32,9 +33,9 @@ class GoogleClient {
             'http_errors' => false,
         ]);
 
-        $this->clientId = $_ENV['GOOGLE_CLIENT_ID'];
-        $this->clientSecret = $_ENV['GOOGLE_CLIENT_SECRET'];
-        $this->redirectUri = $_ENV['GOOGLE_REDIRECT_URI'];
+        $this->clientId = Config::get('GOOGLE_CLIENT_ID');
+        $this->clientSecret = Config::get('GOOGLE_CLIENT_SECRET');
+        $this->redirectUri = Config::get('GOOGLE_REDIRECT_URI');
     }
 
     // =========================================================================

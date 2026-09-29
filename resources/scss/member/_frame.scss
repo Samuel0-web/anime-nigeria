@@ -1085,7 +1085,7 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
 // ==========================================
 .akd-content {
     flex: 1;
-    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md;
+    margin-top: $dashboard-pad + $header-height + $content-margin - $space-md + $space-sm;
 
     margin-left: calc(#{$dashboard-pad} + var(--sidebar-width, #{$sidebar-width}) +
         #{$content-margin}

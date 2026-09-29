@@ -41,6 +41,8 @@ class Auth {
     private const PASSWORD_RESET_RESEND_AFTER = 60;
     private const VERIFICATION_RESEND_AFTER = 60;
     private const LOGIN_SESSION_TOUCH_INTERVAL = 300; // 5 minutes
+    private const LOGIN_SESSION_IDLE_TIMEOUT = 1800; // 30 minutes
+    private const LOGIN_SESSION_MAX_LIFETIME = 2592000; // 30 days
     private const TWO_FACTOR_TIMEOUT = 600; // 10 minutes
 
     private User $users;
@@ -131,27 +133,18 @@ class Auth {
             return;
         }
 
-        $remembered = $this->rememberMe->loginFromCookie();
-
-        if ($remembered === null) {
-            return;
-        }
-
-        $user = $this->users->findById($remembered['user_id']);
-
-        if ($user === false) {
-            $this->rememberMe->forget();
-            return;
-        }
-
         try {
-            $loginSessionId = $this->establishAuthenticatedSession($user);
+            $this->rememberMe->restoreAndRotate(function (int $userId): int {
+                $user = $this->users->findById($userId);
 
-            $this->rememberMe->rotate((int) $remembered['token_id'], (int) $user['id'],
-                $loginSessionId
-            );
+                if ($user === false) {
+                    throw new \RuntimeException('Unable to restore authenticated session.');
+                }
 
-            $this->users->updateLastLogin((int) $user['id']);
+                $loginSessionId = $this->establishAuthenticatedSession($user);
+                $this->users->updateLastLogin($userId);
+                return $loginSessionId;
+            });
         } catch (\Throwable) {
             $this->rememberMe->forget();
             unset($_SESSION['user_id'], $_SESSION['role']);
@@ -186,6 +179,19 @@ class Auth {
         }
 
         if ($loginSession['revoked_at'] !== null) {
+            $this->clearAuthenticatedState();
+            return false;
+        }
+
+        $createdAt = strtotime((string) ($loginSession['created_at'] ?? ''));
+        $lastActivityAt = strtotime((string) ($loginSession['last_activity_at'] ?? ''));
+        $now = time();
+
+        if (($createdAt !== false && $createdAt <= $now - self::LOGIN_SESSION_MAX_LIFETIME)
+            || ($lastActivityAt !== false
+                && $lastActivityAt <= $now - self::LOGIN_SESSION_IDLE_TIMEOUT)
+        ) {
+            $this->loginSessions->revoke((int) $loginSession['id'], (int) $_SESSION['user_id']);
             $this->clearAuthenticatedState();
             return false;
         }
@@ -354,18 +360,7 @@ class Auth {
         $_SESSION = [];
 
         if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-
-            setcookie(session_name(), '',
-                [
-                    'expires' => time() - 3600,
-                    'path' => $params['path'],
-                    'domain' => $params['domain'],
-                    'secure' => $params['secure'],
-                    'httponly' => $params['httponly'],
-                    'samesite' => $params['samesite'] ?? 'Strict',
-                ]
-            );
+            \App\Security\Cookie::forget(session_name());
         }
 
         session_destroy();
@@ -1081,7 +1076,9 @@ class Auth {
             }
 
             $this->passwordResetTokens->delete($recordId);
-            $this->rememberMe->deleteAllForUser($userId);
+            if (!$this->rememberMe->deleteAllForUser($userId)) {
+                throw new \RuntimeException('Unable to invalidate remember-me credentials.');
+            }
             unset($_SESSION['password_reset_email']);
             $this->db->commit();
             return true;

@@ -1,13 +1,13 @@
 <?php
 namespace App\Security;
 
+use App\Core\Config;
 use App\Security\Nonce;
 
 class Headers {
     public static function send(): void {
         // Dev detection: matches vite_is_dev() in includes/vite.php
-        $appEnv = $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV']
-            ?? (getenv('APP_ENV') !== false ? getenv('APP_ENV') : null) ?? 'production';
+        $appEnv = Config::get('APP_ENV', 'production');
 
         $isDev  = in_array($appEnv, ['local', 'development', 'dev', 'testing'], true);
 
@@ -68,7 +68,7 @@ class Headers {
             . "img-src 'self' data: blob: https:; "
 
             // AJAX / Fetch / WebSocket
-            . "connect-src 'self' " . $viteHttp . $viteWs . "; "
+            . "connect-src 'self' " . $viteHttp . ' ' . $viteWs . "; "
 
             // No iframes are ever embedded on this site
             . "frame-src 'none'; "

@@ -1,3 +1,5 @@
+import { loadPhpComponent } from './load-php-component.js';
+
 let instance = null;
 
 export function useConfirmDialog() {
@@ -5,43 +7,14 @@ export function useConfirmDialog() {
         return instance;
     }
 
-    let overlay = document.getElementById("akdConfirmOverlay");
-
-    if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.id = "akdConfirmOverlay";
-        overlay.className = "akd-confirm-overlay";
-
-        overlay.innerHTML = `
-            <div class="akd-confirm" id="akdConfirmDialog" role="alertdialog"
-                aria-modal="true" aria-labelledby="akdConfirmTitle"
-                aria-describedby="akdConfirmMessage" tabindex="-1"
-            >
-                <div class="akd-confirm__content">
-                    <h2 class="akd-confirm__title" id="akdConfirmTitle"></h2>
-                    <p class="akd-confirm__message" id="akdConfirmMessage"></p>
-                </div>
-
-                <div class="akd-confirm__actions">
-                    <button type="button" class="akd-btn akd-btn--secondary"
-                        data-confirm-cancel
-                    ></button>
-
-                    <button type="button" class="akd-btn akd-btn--primary"
-                        data-confirm-accept
-                    ></button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-    }
-
-    const dialog = overlay.querySelector(".akd-confirm");
-    const titleEl = overlay.querySelector("#akdConfirmTitle");
-    const messageEl = overlay.querySelector("#akdConfirmMessage");
-    const cancelBtn = overlay.querySelector("[data-confirm-cancel]");
-    const acceptBtn = overlay.querySelector("[data-confirm-accept]");
+    let overlay = null;
+    let dialog = null;
+    let titleEl = null;
+    let messageEl = null;
+    let cancelBtn = null;
+    let acceptBtn = null;
+    let componentPromise = null;
+    let isAsking = false;
 
     const focusableSelector = [
         "button:not([disabled])",
@@ -56,6 +29,33 @@ export function useConfirmDialog() {
     let lastFocusedEl = null;
     let previousBodyOverflow = "";
     let previousBodyPaddingRight = "";
+
+    function ensureComponent() {
+        if (overlay) return Promise.resolve(overlay);
+        if (componentPromise) return componentPromise;
+
+        componentPromise = loadPhpComponent('/components/confirm-dialog').then((component) => {
+            overlay = component;
+            dialog = overlay.querySelector(".akd-confirm");
+            titleEl = overlay.querySelector("#akdConfirmTitle");
+            messageEl = overlay.querySelector("#akdConfirmMessage");
+            cancelBtn = overlay.querySelector("[data-confirm-cancel]");
+            acceptBtn = overlay.querySelector("[data-confirm-accept]");
+            document.body.appendChild(overlay);
+
+            cancelBtn.addEventListener("click", () => settle(false));
+            acceptBtn.addEventListener("click", () => settle(true));
+            overlay.addEventListener("click", (event) => {
+                if (event.target === overlay) settle(false);
+            });
+
+            return overlay;
+        }).finally(() => {
+            componentPromise = null;
+        });
+
+        return componentPromise;
+    }
 
     function getFocusable() {
         return Array.from(dialog.querySelectorAll(focusableSelector)).filter((el) => {
@@ -164,41 +164,35 @@ export function useConfirmDialog() {
         destructive = false,
     }) {
         // Prevent two unresolved dialogs from sharing the same resolver.
-        if (isOpen()) {
+        if (isAsking || isOpen()) {
             return Promise.resolve(false);
         }
 
+        isAsking = true;
         lastFocusedEl = document.activeElement;
-        titleEl.textContent = title ?? "";
-        messageEl.textContent = message ?? "";
-        acceptBtn.textContent = confirmLabel;
-        cancelBtn.textContent = cancelLabel;
-        acceptBtn.classList.toggle("akd-btn--danger", destructive);
-        acceptBtn.classList.toggle("akd-btn--primary", !destructive);
+        return ensureComponent().then(() => {
+            titleEl.textContent = title ?? "";
+            messageEl.textContent = message ?? "";
+            acceptBtn.textContent = confirmLabel;
+            cancelBtn.textContent = cancelLabel;
+            acceptBtn.classList.toggle("akd-btn--danger", destructive);
+            acceptBtn.classList.toggle("akd-btn--primary", !destructive);
 
-        return new Promise((resolve) => {
-            resolvePromise = resolve;
-            open();
+            return new Promise((resolve) => {
+                resolvePromise = resolve;
+                isAsking = false;
+                open();
+            });
+        }).catch((error) => {
+            isAsking = false;
+            lastFocusedEl = null;
+            throw error;
         });
     }
 
     function isOpen() {
-        return overlay.classList.contains("is-open");
+        return overlay?.classList.contains("is-open") ?? false;
     }
-
-    cancelBtn.addEventListener("click", () => {
-        settle(false);
-    });
-
-    acceptBtn.addEventListener("click", () => {
-        settle(true);
-    });
-
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            settle(false);
-        }
-    });
 
     instance = { ask, isOpen, };
     return instance;

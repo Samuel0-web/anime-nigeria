@@ -1,26 +1,20 @@
-import { motion } from "motion/react";
 import QuestionNumberBadge from "./QuestionNumberBadge";
 import PlayerBadge from "./PlayerBadge";
+import AnswerOptionCard from "./AnswerOptionCard";
+import ModeIndicator from "./ModeIndicator";
 
-export default function AnswerScreen({
-    questionNumber,
-    image,
-    answers,
-    selectedAnswer,
-    onSelect,
-    durationSeconds,
-    player,
+export default function AnswerScreen({questionNumber, image, answers, answerStyles,
+    indicatorMode, selectedAnswer, onSelect, durationSeconds, player,
 }) {
     return (
         <section className="akd-trivia-answer">
-            <div
-                key={questionNumber}
-                className="akd-trivia-answer__timerbar"
+            <div key={questionNumber} className="akd-trivia-answer__timerbar"
                 style={{ "--duration": `${durationSeconds}s` }}
             />
 
-            <div className="akd-trivia-answer__top">
+            <div className="akd-trivia-answer__top akd-trivia-header-row">
                 <QuestionNumberBadge number={questionNumber} />
+                <ModeIndicator mode={indicatorMode} />
             </div>
 
             {image && (
@@ -30,18 +24,15 @@ export default function AnswerScreen({
             )}
 
             <div className="akd-trivia-answer__grid">
-                {answers.map((answer) => {
-                    const isSelected = selectedAnswer === answer;
+                {answers.map((answer, i) => {
+                    const style = answerStyles[i];
+
                     return (
-                        <motion.button
-                            key={answer}
-                            className={`akd-trivia-answer__option ${isSelected ? "is-selected" : ""}`}
-                            onClick={() => onSelect(answer)}
+                        <AnswerOptionCard key={answer} label={answer} color={style.color}
+                            shape={style.shape} isSelected={selectedAnswer === answer}
                             disabled={selectedAnswer !== null}
-                            whileTap={{ scale: 0.97 }}
-                        >
-                            {answer}
-                        </motion.button>
+                            onClick={() => onSelect(answer)}
+                        />
                     );
                 })}
             </div>

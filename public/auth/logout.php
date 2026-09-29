@@ -6,6 +6,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+\App\Http\Middleware\VerifyCsrf::handle();
+
 $auth->logout();
 header('Location: /login');
 exit;

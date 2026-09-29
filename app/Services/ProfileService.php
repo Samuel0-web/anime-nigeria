@@ -1,7 +1,10 @@
 <?php
 namespace App\Services;
+use App\Auth\RememberMe;
+use App\Models\LoginSession;
 use App\Models\User;
 use App\Support\Avatar;
+use PDO;
 
 class ProfileService {
     private const ALLOWED_IMAGE_TYPES = [
@@ -10,9 +13,16 @@ class ProfileService {
     ];
 
     private const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-    public function __construct(private User $users) { }
+    public function __construct(
+        private User $users,
+        private PDO $db,
+        private LoginSession $loginSessions,
+        private RememberMe $rememberMe
+    ) { }
 
-    public function update(array $currentUser, array $data, array $files): array {
+    public function update(array $currentUser, array $data, array $files,
+        int $currentLoginSessionId
+    ): array {
         $errors = [];
         $profile = $this->validateProfile($currentUser, $data, $errors);
         $passwordHash = $this->validatePassword($currentUser, $data, $errors);
@@ -33,17 +43,65 @@ class ProfileService {
 
         $removeAvatar = ($data['removeAvatar'] ?? '0') === '1';
 
-        $updated = $this->users->updateProfile($currentUser['id'], $profile['fullname'],
-            $profile['username'], $passwordHash, $avatar['publicPath'] ?? null, $removeAvatar
-        );
+        $updated = false;
+
+        if ($passwordHash === null) {
+            $updated = $this->users->updateProfile($currentUser['id'], $profile['fullname'],
+                $profile['username'], null, $avatar['publicPath'] ?? null, $removeAvatar
+            );
+        } else {
+            $this->db->beginTransaction();
+
+            try {
+                $updated = $this->users->updateProfile($currentUser['id'], $profile['fullname'],
+                    $profile['username'], $passwordHash, $avatar['publicPath'] ?? null,
+                    $removeAvatar
+                );
+
+                if (!$updated || !$this->users->incrementAuthSessionVersion((int) $currentUser['id'])) {
+                    throw new \RuntimeException('Unable to update password security state.');
+                }
+
+                $updatedUser = $this->users->findById((int) $currentUser['id']);
+                $newSessionVersion = $updatedUser === false
+                    ? false
+                    : (int) $updatedUser['auth_session_version'];
+
+                if ($newSessionVersion === false
+                    || !$this->loginSessions->updateAuthSessionVersion(
+                        $currentLoginSessionId,
+                        (int) $currentUser['id'],
+                        $newSessionVersion
+                    )
+                    || !$this->loginSessions->revokeOthersById(
+                        (int) $currentUser['id'],
+                        $currentLoginSessionId
+                    )
+                    || !$this->rememberMe->deleteAllForUser((int) $currentUser['id'])
+                ) {
+                    throw new \RuntimeException('Unable to invalidate other authentication sessions.');
+                }
+
+                $this->db->commit();
+            } catch (\Throwable) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+
+                $this->deleteUploadedAvatar($avatar);
+
+                return [
+                    'success' => false,
+                    'message' => 'Profile update failed.',
+                ];
+            }
+        }
 
         if (!$updated) {
 
             // Rollback uploaded file
             if ($avatar !== null) {
-                if (is_file($avatar['absolutePath'])) {
-                    unlink($avatar['absolutePath']);
-                }
+                $this->deleteUploadedAvatar($avatar);
             }
 
             return [
@@ -77,6 +135,12 @@ class ProfileService {
                 ),
             ],
         ];
+    }
+
+    private function deleteUploadedAvatar(?array $avatar): void {
+        if ($avatar !== null && is_file($avatar['absolutePath'])) {
+            unlink($avatar['absolutePath']);
+        }
     }
 
     private function validateProfile(array $currentUser, array $data, array &$errors): array {

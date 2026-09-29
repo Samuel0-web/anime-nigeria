@@ -225,4 +225,29 @@ class LoginSession {
             ':session_id_hash' => $currentSessionHash,
         ]);
     }
+
+    public function updateAuthSessionVersion(int $sessionId, int $userId,
+        int $authSessionVersion
+    ): bool {
+        $stmt = $this->db->prepare('UPDATE login_sessions SET auth_session_version = :version
+            WHERE id = :id AND user_id = :user_id AND revoked_at IS NULL');
+
+        $stmt->execute([
+            ':version' => $authSessionVersion,
+            ':id' => $sessionId,
+            ':user_id' => $userId,
+        ]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    public function revokeOthersById(int $userId, int $currentSessionId): bool {
+        $stmt = $this->db->prepare('UPDATE login_sessions SET revoked_at = CURRENT_TIMESTAMP
+            WHERE user_id = :user_id AND id != :current_session_id AND revoked_at IS NULL');
+
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':current_session_id' => $currentSessionId,
+        ]);
+    }
 }

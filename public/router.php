@@ -157,6 +157,8 @@ if ($apiIndex !== false) {
 
 $routes = [
     '/'                                      => 'index.php',
+    '/components/modal'                      => '../resources/components/modal.php',
+    '/components/confirm-dialog'             => '../resources/components/confirm-dialog.php',
     '/test'                                  => 'test.php',
     '/privacy'                               => 'privacy-policy.php',
     '/terms'                                 => 'terms-of-use.php',
@@ -196,6 +198,7 @@ $routes = [
     '/contact'                               => 'contact.php',
 
     '/dashboard'                             => 'member/dashboard.php',
+    '/member/notifications'                  => 'member/notifications.php',
     '/member/profile'                        => 'member/profile.php',
     '/member/player/{username}'              => 'member/player.php',
     '/member/player/{username}/achievements' => 'member/player-achievements.php',

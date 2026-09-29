@@ -1,6 +1,8 @@
 // resources/js/modules/modal.js
 // Generic, reusable modal shell. Knows nothing about any specific page's content.
 
+import { loadPhpComponent } from './load-php-component.js';
+
 let instance = null;
 let uid = 0;
 
@@ -13,50 +15,21 @@ const FOCUSABLE_SELECTOR = [
     '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
-function createModalShell() {
+async function createModalShell() {
     const id = `akd-modal-${++uid}`;
-    const overlay = document.createElement('div');
-    overlay.className = 'akd-modal-overlay';
-    overlay.setAttribute('data-modal-overlay', '');
-    const modal = document.createElement('div');
-    modal.className = 'akd-modal';
+    const overlay = await loadPhpComponent('/components/modal');
+    const modal = overlay.querySelector('.akd-modal');
     modal.id = id;
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('tabindex', '-1');
-    const top = document.createElement('div');
-    top.className = 'akd-modal__top';
-    const dragHandle = document.createElement('div');
-    dragHandle.className = 'akd-modal__drag-handle';
-    dragHandle.setAttribute('aria-hidden', 'true');
-    const header = document.createElement('div');
-    header.className = 'akd-modal__header';
-    const headerText = document.createElement('div');
-    headerText.className = 'akd-modal__header-text';
-    const title = document.createElement('h2');
-    title.className = 'akd-modal__title';
+    const top = modal.querySelector('.akd-modal__top');
+    const dragHandle = modal.querySelector('.akd-modal__drag-handle');
+    const header = modal.querySelector('.akd-modal__header');
+    const title = modal.querySelector('.akd-modal__title');
     title.id = `${id}-title`;
-    const subtitle = document.createElement('p');
-    subtitle.className = 'akd-modal__subtitle';
+    const subtitle = modal.querySelector('.akd-modal__subtitle');
     subtitle.id = `${id}-subtitle`;
-    const closeButton = document.createElement('button');
-    closeButton.type = 'button';
-    closeButton.className = 'akd-modal__close';
-    closeButton.setAttribute('data-modal-close', '');
-    closeButton.setAttribute('aria-label', 'Close');
-    closeButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
-    headerText.append(title, subtitle);
-    header.append(headerText, closeButton);
-    top.append(dragHandle, header);
-    const body = document.createElement('div');
-    body.className = 'akd-modal__body';
-    body.setAttribute('data-modal-body', '');
-    const footer = document.createElement('div');
-    footer.className = 'akd-modal__footer';
-    footer.setAttribute('data-modal-footer', '');
-    footer.hidden = true;
-    modal.append(top, body, footer);
-    overlay.appendChild(modal);
+    const closeButton = modal.querySelector('[data-modal-close]');
+    const body = modal.querySelector('[data-modal-body]');
+    const footer = modal.querySelector('[data-modal-footer]');
 
     return { id, overlay, modal, top, dragHandle, header, title, subtitle, closeButton,
         body, footer
@@ -70,12 +43,37 @@ function getFocusable(modal) {
 
 export function useModal() {
     if (instance) return instance.api;
-    const el = createModalShell();
-    document.body.appendChild(el.overlay);
+    let el = null;
+    let shellPromise = null;
     let isOpen = false;
+    let openVersion = 0;
     let lastFocusedEl = null;
     let closeHandler = null;
     let closeRequest = null;
+
+    function ensureShell() {
+        if (el) return Promise.resolve(el);
+        if (shellPromise) return shellPromise;
+
+        shellPromise = createModalShell().then((shell) => {
+            el = shell;
+            el.closeButton.addEventListener('click', requestClose);
+            el.overlay.addEventListener('click', (event) => {
+                if (event.target === el.overlay) requestClose();
+            });
+            return el;
+        }).finally(() => {
+            shellPromise = null;
+        });
+
+        return shellPromise;
+    }
+
+    function restoreFocus() {
+        const toFocus = lastFocusedEl;
+        lastFocusedEl = null;
+        toFocus?.focus();
+    }
 
     function handleKeydown(event) {
         if (!isOpen) return;
@@ -173,6 +171,7 @@ export function useModal() {
     }
 
     function cleanup() {
+        if (!el) return;
         el.body.replaceChildren();
         el.footer.replaceChildren();
         el.footer.hidden = true;
@@ -185,14 +184,13 @@ export function useModal() {
     function reallyClose() {
         if (!isOpen) return;
         isOpen = false;
-        el.overlay.classList.remove('is-open');
+        openVersion += 1;
+        el?.overlay.classList.remove('is-open');
         document.body.style.overflow = '';
         document.removeEventListener('keydown', handleKeydown);
         closeHandler = null;
         cleanup();
-        const toFocus = lastFocusedEl;
-        lastFocusedEl = null;
-        toFocus?.focus();
+        restoreFocus();
     }
 
     // Single source of truth for "can this modal close?". Escape, backdrop
@@ -208,7 +206,15 @@ export function useModal() {
                 if (result === false || !isOpen) return;
             }
 
-            reallyClose();
+            if (el) {
+                reallyClose();
+                return;
+            }
+
+            isOpen = false;
+            openVersion += 1;
+            closeHandler = null;
+            restoreFocus();
         })();
 
         closeRequest = request;
@@ -223,29 +229,54 @@ export function useModal() {
     function open({ title = '', subtitle = '', content = null, footer = null, 
         size = 'default', className = '', beforeClose = null, initialFocus = null,
     } = {}) {
-        if (isOpen) reallyClose();
+        if (isOpen) {
+            if (el) {
+                reallyClose();
+            } else {
+                isOpen = false;
+                openVersion += 1;
+                closeHandler = null;
+                restoreFocus();
+            }
+        }
+
+        const version = ++openVersion;
         closeRequest = null;
         lastFocusedEl = document.activeElement;
-        setTitle(title);
-        setSubtitle(subtitle);
-        setContent(content);
-        setFooter(footer);
-        setSize(size);
-        setClassName(className);
         closeHandler = beforeClose;
         isOpen = true;
-        el.overlay.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-        document.addEventListener('keydown', handleKeydown);
 
-        requestAnimationFrame(() => {
-            if (initialFocus instanceof HTMLElement) {
-                initialFocus.focus();
-                return;
+        return ensureShell().then(() => {
+            if (!isOpen || version !== openVersion) return;
+
+            document.body.appendChild(el.overlay);
+            setTitle(title);
+            setSubtitle(subtitle);
+            setContent(content);
+            setFooter(footer);
+            setSize(size);
+            setClassName(className);
+            el.overlay.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', handleKeydown);
+
+            requestAnimationFrame(() => {
+                if (!isOpen || version !== openVersion) return;
+                if (initialFocus instanceof HTMLElement) {
+                    initialFocus.focus();
+                    return;
+                }
+
+                const first = getFocusable(el.modal)[0];
+                (first || el.modal).focus();
+            });
+        }).catch((error) => {
+            if (version === openVersion) {
+                isOpen = false;
+                closeHandler = null;
+                restoreFocus();
             }
-
-            const first = getFocusable(el.modal)[0];
-            (first || el.modal).focus();
+            console.error(error);
         });
     }
 
@@ -253,22 +284,16 @@ export function useModal() {
         return isOpen;
     }
 
-    el.closeButton.addEventListener('click', requestClose);
-
-    el.overlay.addEventListener('click', (event) => {
-        if (event.target === el.overlay) requestClose();
-    });
-
     instance = {
-        elements: el,
+        get elements() { return el; },
         api: {
             open,
             close: requestClose, // was reallyClose — bypassed beforeClose
             isOpen: isModalOpen,
-            getBody: () => el.body,
-            getFooter: () => el.footer,
-            getModal: () => el.modal,
-            getOverlay: () => el.overlay,
+            getBody: () => el?.body ?? null,
+            getFooter: () => el?.footer ?? null,
+            getModal: () => el?.modal ?? null,
+            getOverlay: () => el?.overlay ?? null,
         },
     };
 

@@ -12,6 +12,7 @@ $auth->requireAuth();
 </head>
 <body>
     <form action="/logout" method="POST">
+        <input type="hidden" name="_token" value="<?= htmlspecialchars(\App\Security\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
         <button type="submit">Logout</button>
     </form>
 </body>
