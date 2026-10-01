@@ -530,6 +530,10 @@
 
 .akd-help-panel__body {
     flex: 1;
+    // A flex item defaults to min-height: auto, which lets the form expand
+    // past the drawer instead of becoming its scrollable region. Permit it
+    // to shrink so long bug-report forms remain scrollable.
+    min-height: 0;
     overflow-y: auto;
     padding: $space-md;
     -webkit-overflow-scrolling: touch;
