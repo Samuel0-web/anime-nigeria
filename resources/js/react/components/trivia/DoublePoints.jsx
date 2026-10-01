@@ -14,7 +14,10 @@ const INK_IMPACT_FRACTION = 220 / 300; // travels for ~220ms of its 300ms, then 
 const X2_REVEAL_DELAY_MS = INK_ENTER_DELAY_MS + 270;
 const X2_REVEAL_MS = 150;
 const RING_DELAY_MS = X2_REVEAL_DELAY_MS + X2_REVEAL_MS;
-const RING_MS = 380;
+// Was 380ms, finished almost immediately after X2 formed and then sat
+// static for most of the remaining hold. Slowed down so the ring itself
+// uses a meaningfully larger share of the presentation time.
+const RING_MS = 2200;
 const RADIUS = 54;
 
 export default function DoublePoints() {

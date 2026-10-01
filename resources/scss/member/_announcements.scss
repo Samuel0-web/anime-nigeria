@@ -1,13 +1,25 @@
 @use '../tokens' as *;
 @use 'sass:color';
 
+// Minimum card width. The grid derives 1 / 2 / 3 columns from the space
+// actually available, so it stays correct next to the member sidebar.
+$announce-card-min: 17.5rem;
+
+// Shimmer: the highlight pattern repeats every $announce-shimmer-tile and
+// is translated by exactly one tile, so the loop has no visible reset.
+$announce-shimmer-tile: 16rem;
+
+// Longest a card may stay in its loading state. After this, plain CSS
+// reveals the real card even if JS never runs or an image stalls.
+$announce-loading-max: 4s;
+
 // ==========================================
 // PAGE SHELL
 // ==========================================
 .akd-announce {
-    max-width: 720px;
+    max-width: $container-narrow;
     margin: 0 auto;
-    padding: $space-lg $space-sm $space-xxl;
+    padding: 0 $space-sm $space-xxl;
     display: flex;
     flex-direction: column;
     gap: $space-md;
@@ -16,6 +28,99 @@
 @keyframes akd-announce-fade-in {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
+}
+
+// Moves the pattern by exactly one tile. Because the gradient is periodic
+// with that same period, the last frame is identical to the first.
+@keyframes akd-announce-shimmer {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(calc(-1 * #{$announce-shimmer-tile}), 0, 0); }
+}
+
+// No-JS / stalled-image failsafe (see $announce-loading-max).
+@keyframes akd-announce-loading-show {
+    to { opacity: 1; visibility: visible; }
+}
+
+@keyframes akd-announce-loading-hide {
+    to { opacity: 0; visibility: hidden; }
+}
+
+// Quiet base surface plus a soft highlight that sweeps left to right.
+// The overlay is wider than the element by one tile so it always covers it.
+@mixin akd-announce-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba($white, 0.05);
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: calc(100% + #{$announce-shimmer-tile});
+        background-image: repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            rgba($white, 0.07) calc(#{$announce-shimmer-tile} / 2),
+            transparent $announce-shimmer-tile
+        );
+        animation: akd-announce-shimmer 1.6s linear infinite;
+        animation-play-state: var(--akd-announce-shimmer-state, running);
+        pointer-events: none;
+    }
+}
+
+// The raised state shared by hover and keyboard focus.
+@mixin akd-announce-card-raised {
+    transform: translateY(-3px);
+    border-color: rgba($white, 0.16);
+    box-shadow: 0 6px 16px rgba($black, 0.3);
+
+    .akd-announce-row__image {
+        transform: scale(1.04);
+    }
+
+    .akd-announce-row__cta {
+        color: $sakura;
+
+        i { transform: translateX(2px); }
+    }
+
+    .akd-announce-row__cta--gold {
+        color: color.adjust($gold, $lightness: 10%);
+    }
+}
+
+// ==========================================
+// PAGE HEADER
+// ==========================================
+// Desktop only. display: none also removes it from the flex gap of
+// .akd-announce, so mobile has no leftover vertical spacing.
+.akd-announce-header {
+    display: none;
+    animation: akd-announce-fade-in $transition-slow $ease-standard both;
+
+    @media (min-width: $bp-lg) {
+        display: block;
+    }
+}
+
+.akd-announce-header__title {
+    margin: 0;
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+    line-height: $lh-tight;
+    letter-spacing: -0.01em;
+    color: $white;
+}
+
+.akd-announce-header__subtitle {
+    margin: $space-xxs 0 0;
+    font-size: $fs-base;
+    line-height: $lh-normal;
+    color: $white-muted;
 }
 
 // ==========================================
@@ -125,8 +230,8 @@
     }
 
     // Compound selector, so it reliably wins over the plain class above
-    // regardless of source order. See note below on .akd-announce-row
-    // for why the plain [hidden] attribute alone isn't enough here.
+    // regardless of source order. A component's own display value would
+    // otherwise override the browser's default [hidden] behavior.
     &[hidden] {
         display: none;
     }
@@ -139,77 +244,202 @@
 }
 
 // ==========================================
-// ANNOUNCEMENT LIST
+// ANNOUNCEMENT GRID
 // ==========================================
-// The parent now owns the surface (background, border, outer radius) —
-// this is the "one cohesive list" container. Rows sit inset from its
-// edges via padding, with a very small gap and their own tiny radius,
-// so they read as list items rather than separate floating cards.
+// Hidden rows are display: none, so they leave the grid and the rest
+// reflow into the filtered result.
 .akd-announce-group {
     list-style: none;
     margin: 0;
-    padding: $space-xs;
-    display: flex;
-    flex-direction: column;
-    gap: $space-xxs;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$announce-card-min}), 1fr));
+    gap: $space-sm;
     animation: akd-announce-fade-in $transition-slow $ease-standard both;
     animation-delay: 60ms;
 
     &[hidden] {
         display: none;
     }
+
+    @media (min-width: $bp-md) {
+        gap: $space-md;
+    }
 }
 
+// ==========================================
+// ANNOUNCEMENT CARD
+// ==========================================
+// The <li> is the grid cell and the positioning context for the loading
+// skeleton. The <a> inside it is the visible card surface.
 .akd-announce-row {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    gap: $space-xxs;
-    padding: $space-md;
-    background: $black-soft;
-    border-radius: 5px;
-    transition: opacity 0.15s ease, background $transition-base;
+    transition: opacity 0.15s ease;
 
-    &:hover {
-        background: rgba($white, 0.06);
-    }
-
-    // Applied by JS to whichever rows are actually visible after the
-    // current filter, not by DOM position. Non-matching rows stay in
-    // the markup as [hidden] rather than being removed, so :first-child
-    // and :last-child would keep pointing at the original dataset order
-    // instead of the filtered one.
-    &.is-first-visible {
-        border-top-left-radius: $radius-lg;
-        border-top-right-radius: $radius-lg;
-    }
-
-    &.is-last-visible {
-        border-bottom-left-radius: $radius-lg;
-        border-bottom-right-radius: $radius-lg;
-    }
-
-    // A row that just became visible fades in at its already-correct
-    // position. No transform is involved, so there's nothing to travel
-    // from: the row is placed in its final spot the instant the filter
-    // is applied, and only its opacity animates.
+    // A card that just became visible fades in at its already-correct
+    // position. Only opacity animates, so there is nothing to travel from.
     &.is-entering {
         opacity: 0;
     }
+
+    // Needed because display: flex above overrides the browser's default
+    // [hidden] behavior. The filter JS relies on this.
+    &[hidden] {
+        display: none;
+    }
+}
+
+// The whole card is this one link. It has no interactive descendants.
+.akd-announce-row__link {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity $transition-base, visibility 0s,
+        transform $transition-base, border-color $transition-base,
+        box-shadow $transition-base;
+
+    // Keyboard focus gets the same raised state as hover, plus a ring.
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: 2px;
+
+        @include akd-announce-card-raised;
+    }
+
+    // Hover only where a real hover exists, so touch devices never get a
+    // stuck raised card after a tap.
+    @media (hover: hover) {
+        &:hover {
+            @include akd-announce-card-raised;
+        }
+    }
+}
+
+// ==========================================
+// CARD MEDIA
+// ==========================================
+// A fixed ratio plus object-fit keeps every card the same height whatever
+// the source image size is, and prevents layout shift while images load.
+// overflow: hidden clips the zoomed image to the rounded container;
+// isolation keeps that clip reliable in Safari while the image transforms.
+.akd-announce-row__media,
+.akd-announce-skeleton__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(#{$radius-md} - 1px) calc(#{$radius-md} - 1px) 0 0;
+    background: rgba($white, 0.03);
+}
+
+.akd-announce-row__media {
+    // Shown when an announcement has no usable image.
+    &--placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $white-faint;
+        font-size: $fs-xl;
+    }
+}
+
+.akd-announce-row__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+    transform-origin: center;
+    transition: transform $transition-slow;
 
     &[hidden] {
         display: none;
     }
 }
 
+// Compact "Featured" marker over the image. It has text and an icon, so
+// the state is never carried by color alone.
+.akd-announce-row__badge {
+    position: absolute;
+    right: $space-xs;
+    bottom: $space-xs;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px $space-xs;
+    border: 1px solid $black-line;
+    border-radius: $radius-full;
+    background: rgba($black, 0.75);
+    color: $white;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    line-height: $lh-normal;
+
+    i {
+        font-size: 10px;
+        color: $sakura;
+    }
+}
+
+// ==========================================
+// CARD CONTENT
+// ==========================================
+.akd-announce-row__content,
+.akd-announce-skeleton__content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    padding: $space-md;
+}
+
 .akd-announce-row__top {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
-    row-gap: 4px;
-    gap: $space-sm;
+    column-gap: $space-xxs;
+    row-gap: 2px;
+    line-height: $lh-normal;
 }
 
+.akd-announce-row__title {
+    margin: 0;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $white;
+    line-height: $lh-snug;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+// Clamped so cards in the same grid row stay balanced and the
+// announcement stays concise.
+.akd-announce-row__excerpt {
+    margin: 0;
+    font-size: $fs-sm;
+    color: $white-muted;
+    line-height: $lh-normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+// ==========================================
+// CATEGORY + DATE
+// ==========================================
 .akd-announce-row__category {
     font-size: $fs-xs;
     font-weight: $fw-bold;
@@ -223,38 +453,33 @@
     &--crimson { color: $accent-crimson; }
 }
 
-.akd-announce-row__date {
-    flex-shrink: 0;
+.akd-announce-row__sep {
     font-size: $fs-xs;
     color: $white-faint;
 }
 
-.akd-announce-row__title {
-    margin: 0;
-    font-size: $fs-md;
-    font-weight: $fw-semibold;
-    color: $white;
-    line-height: $lh-tight;
+.akd-announce-row__date {
+    font-size: $fs-xs;
+    color: $white-muted;
 }
 
-.akd-announce-row__excerpt {
-    margin: 0;
-    font-size: $fs-sm;
-    color: $white-faint;
-    line-height: $lh-normal;
-    max-width: 60ch;
-}
-
+// ==========================================
+// CTA
+// ==========================================
+// A visual action inside the card link, not a link of its own. Its hover
+// and focus colors come from the raised state on the parent link.
+// Pinned to the bottom so CTAs line up across a grid row.
 .akd-announce-row__cta {
     align-self: flex-start;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: $space-xxs;
+    margin-top: auto;
+    padding: $space-xxs 0;
     font-size: $fs-sm;
     font-weight: $fw-semibold;
+    line-height: $lh-normal;
     color: $white-muted;
-    text-decoration: none;
     transition: color $transition-fast;
 
     i {
@@ -262,27 +487,104 @@
         transition: transform $transition-fast;
     }
 
-    &:hover,
-    &:focus-visible {
-        color: $sakura;
-
-        i { transform: translateX(2px); }
-    }
-
-    &:focus-visible {
-        outline: 2px solid rgba($sakura, 0.6);
-        outline-offset: 2px;
-        border-radius: $radius-sm;
-    }
-
     &--gold {
         color: $gold;
-
-        &:hover,
-        &:focus-visible {
-            color: color.adjust($gold, $lightness: 10%);
-        }
     }
+}
+
+// ==========================================
+// CARD LOADING STATE
+// ==========================================
+// A card with an image starts as .is-loading: the skeleton is shown and the
+// real card is hidden (it still occupies its layout space). announcements.js
+// removes .is-loading when the image has loaded or failed, and the two
+// cross-fade. The CSS animations at the end of this block are a failsafe,
+// so a card can never stay in its loading state past $announce-loading-max.
+.akd-announce-skeleton {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    --akd-announce-shimmer-state: paused;
+    transition: opacity $transition-base, visibility 0s linear $transition-base;
+}
+
+.akd-announce-row.is-loading {
+    .akd-announce-skeleton {
+        opacity: 1;
+        visibility: visible;
+        --akd-announce-shimmer-state: running;
+        transition: none;
+        animation: akd-announce-loading-hide 0.01s linear $announce-loading-max forwards;
+    }
+
+    .akd-announce-row__link {
+        opacity: 0;
+        visibility: hidden;
+        animation: akd-announce-loading-show 0.01s linear $announce-loading-max forwards;
+    }
+}
+
+// ==========================================
+// SKELETON PARTS
+// ==========================================
+// Mirrors the real card's structure, spacing and line boxes.
+.akd-announce-skeleton__media {
+    @include akd-announce-shimmer;
+}
+
+.akd-announce-skeleton__lines {
+    display: flex;
+    flex-direction: column;
+}
+
+// Each line box has the height of a real line of text. The bar fills the
+// middle 60% of it; the remaining 40% is split into top and bottom margins.
+.akd-announce-skeleton__line {
+    --line-height: 1rem;
+    --line-width: 100%;
+
+    display: block;
+    width: var(--line-width);
+    height: calc(var(--line-height) * 0.6);
+    margin-block: calc(var(--line-height) * 0.2);
+    border-radius: $radius-sm;
+    @include akd-announce-shimmer;
+
+    &--meta {
+        --line-height: calc(#{$fs-xs} * #{$lh-normal});
+        --line-width: 55%;
+    }
+
+    &--title {
+        --line-height: calc(#{$fs-md} * #{$lh-snug});
+    }
+
+    &--text {
+        --line-height: calc(#{$fs-sm} * #{$lh-normal});
+    }
+
+    &--cta {
+        --line-height: calc(#{$fs-sm} * #{$lh-normal});
+        --line-width: 6rem;
+    }
+
+    &--short {
+        --line-width: 60%;
+    }
+}
+
+.akd-announce-skeleton__cta {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding: $space-xxs 0;
 }
 
 // ==========================================
@@ -295,25 +597,25 @@
     text-align: center;
     gap: $space-xs;
     padding: $space-xl $space-md;
+    background: $black-soft;
     border: 1px dashed $black-line;
-    border-radius: $radius-lg;
+    border-radius: $radius-md;
 
-    // Same fix as .akd-announce-row: without this, the empty state's
-    // own `display: flex` overrode [hidden]'s default, so it rendered
-    // visible on every page load regardless of whether content existed.
+    // Without this, the empty state's own display: flex overrides
+    // [hidden]'s default and it renders on every page load.
     &[hidden] {
         display: none;
     }
 
     &__icon {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         border-radius: $radius-full;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: $white-faint;
-        background: rgba($white, 0.03);
+        color: $white-muted;
+        background: rgba($white, 0.04);
         font-size: $fs-base;
         margin-bottom: $space-xxs;
     }
@@ -328,7 +630,7 @@
     &__text {
         margin: 0;
         font-size: $fs-sm;
-        color: $white-faint;
+        color: $white-muted;
         max-width: 32ch;
     }
 }
@@ -338,21 +640,53 @@
 // ==========================================
 @media (max-width: $bp-md) {
     .akd-announce {
-        padding: $space-md $space-sm $space-xl;
+        padding: 0 $space-sm $space-xl;
     }
 
-    .akd-announce-row {
-        padding: $space-sm $space-md;
+    .akd-announce-row__content,
+    .akd-announce-skeleton__content {
+        padding: $space-sm;
     }
 }
 
+// ==========================================
+// REDUCED MOTION
+// ==========================================
+// No lift, no zoom, no arrow nudge, no shimmer. Skeletons become static
+// quiet blocks and swap with the real card instantly. The border and focus
+// ring still change so hover and focus remain visible. The loading failsafe
+// animations are not motion and are intentionally left alone.
 @media (prefers-reduced-motion: reduce) {
+    .akd-announce-header,
     .akd-announce-filter,
     .akd-announce-group {
         animation: none !important;
     }
 
-    .akd-announce-row {
+    .akd-announce-skeleton__media::after,
+    .akd-announce-skeleton__line::after {
+        display: none;
+    }
+
+    .akd-announce-row,
+    .akd-announce-row__link,
+    .akd-announce-row__image,
+    .akd-announce-row__cta,
+    .akd-announce-row__cta i,
+    .akd-announce-skeleton {
         transition: none !important;
+    }
+
+    .akd-announce-row__link:hover,
+    .akd-announce-row__link:focus-visible {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .akd-announce-row__link:hover .akd-announce-row__image,
+    .akd-announce-row__link:focus-visible .akd-announce-row__image,
+    .akd-announce-row__link:hover .akd-announce-row__cta i,
+    .akd-announce-row__link:focus-visible .akd-announce-row__cta i {
+        transform: none !important;
     }
 }

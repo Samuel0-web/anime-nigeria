@@ -1056,8 +1056,7 @@ $tf-purple: #8B5CF6;
             align-items: center;
         }
 
-        .akd-mode-intro__quiz-card { max-width: 13rem; }
-        .akd-mode-intro__shape-card { width: 5.5rem; height: 5.5rem; }
+        .akd-mode-intro__quiz-card { max-width: 15rem; }
         .akd-mode-intro__quiz-title { font-size: $fs-xl; }
         .akd-mode-intro__tf-composition { max-width: 18rem; }
         .akd-mode-intro__tf-card { width: 6rem; }
@@ -1144,7 +1143,35 @@ $tf-purple: #8B5CF6;
     align-items: center;
     gap: $space-sm;
     width: 100%;
-    max-width: 14rem;
+    max-width: 10rem;
+}
+
+// Quiz gets its own true grid: zero gap, portrait 3:4 overall, so each of
+// the four cells is itself a vertical rectangle rather than four
+// independently positioned cards. Identical on desktop and mobile, only
+// max-width (below, under .is-desktop) changes the overall scale.
+.akd-mode-intro--quiz .akd-mode-intro__stage {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: $radius-sm;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    background: $white;
+}
+
+.akd-mode-intro--quiz .akd-mode-intro__shape-card {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white;
 }
 
 // Base is now a single horizontal row, Quiz's four boxes side by side.
@@ -1243,12 +1270,23 @@ $tf-purple: #8B5CF6;
         justify-content: center;
         gap: 3px;
 
+        // Same literal grid as the actual Quiz intro composition, zero
+        // gap, scaled down, not a separate arrangement.
         &--grid {
             display: inline-grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 2px;
-            justify-items: center;
+            gap: 0;
+            width: 18px;
+            aspect-ratio: 3 / 4;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        &--grid &__chip {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
         }
     }
 

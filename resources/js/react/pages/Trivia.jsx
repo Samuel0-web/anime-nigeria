@@ -6,7 +6,7 @@ import { PHASES, triviaEvent, currentPlayer, PLAYER_ID, questions, eventTimeline
 } from "../data/trivia";
 
 import { EVENT_STATUS, SEGMENT_TYPE, QUESTION_SUB_PHASE, getEventStatus,
-    getSegmentAtElapsed, getQuestionSegment, getQuestionSubPhase, resolveEntry,
+    getSegmentAtElapsed, getQuestionSegment, getModeIntroSegment, getQuestionSubPhase, resolveEntry,
 } from "../utils/trivia/eventTimeline";
 
 import { formatCountdown, resolveQuestionPoints, applyRoundScores,
@@ -84,12 +84,17 @@ export default function Trivia() {
             setCurrentQuestionIndex(segment.questionIndex);
             setActiveIntroMode(segment.introMode);
             setLocalPhase(PHASES.MODE_INTRO);
-            // Always a fresh, full MODE_INTRO_DURATION_MS from the moment
-            // this is actually entered, never a remainder computed from
-            // where the global broadcast happens to be. This is what makes
-            // the intro's 4-second lifecycle authoritative and immune to
-            // drift from earlier phases (see advanceToNextQuestion).
-            phaseEndsAtRef.current = Date.now() + MODE_INTRO_DURATION_MS;
+            // Remaining time within this segment's real startMs..endMs
+            // window, same formula as Question Intro/Answering below. A
+            // genuine first/late join (attemptEntry passes the real global
+            // elapsedMs) correctly gets only what's left of the broadcast's
+            // current Mode Intro, punishing late arrival as intended. The
+            // post-join chained case (advanceToNextQuestion passes
+            // elapsedMs = segment.startMs against the real next segment)
+            // resolves to the full nominal duration, since entering exactly
+            // at a segment's start always has its whole window ahead of it.
+            // One formula, two call sites, no separate "give it fresh" path.
+            phaseEndsAtRef.current = Date.now() + (segment.endMs - elapsedMs);
             return;
         }
 
@@ -155,16 +160,16 @@ export default function Trivia() {
     }
 
     // Used only when the player is already an active participant (after
-    // their own personal Result screen ends). This deliberately does NOT
-    // resync to "wherever the real broadcast clock currently is" anymore.
-    // RESULT_DISPLAY_MS (5000ms) is longer than MODE_INTRO_DURATION_MS
-    // (4000ms), so a real-clock resync would always land past the next
-    // question's Mode Intro, skipping it, on every question, for every
-    // player. Once joined, question-to-question progression instead
-    // advances deterministically to the next question's own Mode Intro,
-    // guaranteeing every phase gets its full nominal duration. Only the
-    // very first entry (attemptEntry, still real-clock-based) determines
-    // where a player first tunes into the live broadcast.
+    // their own personal Result screen ends). This is the "post-join local
+    // lifecycle" half of the two-track model: it deliberately does not ask
+    // "where is the real broadcast clock right now," RESULT_DISPLAY_MS
+    // (5000ms) is longer than MODE_INTRO_DURATION_MS (4000ms), so that
+    // question would always land past the next Mode Intro's end. Instead
+    // it looks up the real next Mode Intro segment and enters it "at its
+    // start," which resolves to a full nominal duration via the same
+    // formula enterSegment always uses. The global clock's only remaining
+    // job is establishing where a player first joins (attemptEntry); once
+    // joined, progression is chained locally from here on.
     function advanceToNextQuestion() {
         const nextIndex = currentQuestionIndexRef.current + 1;
 
@@ -173,12 +178,8 @@ export default function Trivia() {
             return;
         }
 
-        const nextQuestion = questions[nextIndex];
-        enterSegment({
-            type: SEGMENT_TYPE.MODE_INTRO,
-            introMode: nextQuestion.doublePoints ? "double_points" : nextQuestion.mode,
-            questionIndex: nextIndex,
-        }, 0);
+        const segment = getModeIntroSegment(eventTimeline, nextIndex);
+        enterSegment(segment, segment.startMs);
     }
 
     function handleJoin() {

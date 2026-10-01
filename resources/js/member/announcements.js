@@ -5,36 +5,6 @@ function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-// Marks whichever currently-visible rows are first/last so their outer
-// corners can pick up the group's rounded treatment. Driven by which
-// rows are actually visible after filtering, not DOM position, since
-// non-matching rows stay in the markup as [hidden] rather than being
-// removed outright.
-function updateEdgeClasses(rows) {
-    let first = null;
-    let last = null;
-
-    rows.forEach((row) => {
-        row.classList.remove('is-first-visible', 'is-last-visible');
-
-        if (row.hidden) {
-            return;
-        }
-
-        if (!first) {
-            first = row;
-        }
-        last = row;
-    });
-
-    if (first) {
-        first.classList.add('is-first-visible');
-    }
-    if (last) {
-        last.classList.add('is-last-visible');
-    }
-}
-
 function initFilterSelection() {
     const root = document.querySelector('[data-announce-filter]');
     const group = document.querySelector('[data-announce-group]');
@@ -53,8 +23,6 @@ function initFilterSelection() {
     }
 
     const reduceMotion = prefersReducedMotion();
-
-    updateEdgeClasses(rows);
 
     buttons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -77,9 +45,8 @@ function initFilterSelection() {
 
                 if (!matches) {
                     // Removed from layout immediately: the filtered result
-                    // is established at once, so a surviving row is never
-                    // seen sitting at its old position before the layout
-                    // catches up.
+                    // is established at once, so a surviving card is never
+                    // seen sitting at its old grid position.
                     row.hidden = true;
                     row.classList.remove('is-entering');
                     return;
@@ -95,8 +62,7 @@ function initFilterSelection() {
                 }
 
                 // Already in its final layout position the moment it
-                // becomes visible; only opacity animates, so there's
-                // nothing to travel from.
+                // becomes visible; only opacity animates.
                 row.classList.add('is-entering');
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
@@ -104,8 +70,6 @@ function initFilterSelection() {
                     });
                 });
             });
-
-            updateEdgeClasses(rows);
 
             group.hidden = visibleCount === 0;
 
@@ -172,7 +136,50 @@ function initFilterOverflowNav() {
     updateNavState();
 }
 
+// Card loading state. PHP renders every card that has an image as
+// .is-loading, which shows that card's skeleton. The real asynchronous
+// step is the image (lazy loading included), so the state ends the moment
+// the image has loaded or failed: no timers and no artificial delay.
+// If this never runs, a CSS failsafe in _announcements.scss reveals the card.
+function initCardLoading() {
+    const rows = document.querySelectorAll('[data-announce-group] .akd-announce-row.is-loading');
+
+    rows.forEach((row) => {
+        const img = row.querySelector('.akd-announce-row__image');
+
+        const markReady = () => {
+            row.classList.remove('is-loading');
+        };
+
+        if (!img) {
+            markReady();
+            return;
+        }
+
+        // A broken image is hidden so no broken-image icon shows; the card
+        // still reveals, and the image area keeps its quiet surface.
+        const markError = () => {
+            img.hidden = true;
+            markReady();
+        };
+
+        // Already finished (cached, or loaded before this script ran).
+        if (img.complete) {
+            if (img.naturalWidth > 0) {
+                markReady();
+            } else {
+                markError();
+            }
+            return;
+        }
+
+        img.addEventListener('load', markReady, { once: true });
+        img.addEventListener('error', markError, { once: true });
+    });
+}
+
 export function initAnnouncementsFilter() {
     initFilterSelection();
     initFilterOverflowNav();
+    initCardLoading();
 }

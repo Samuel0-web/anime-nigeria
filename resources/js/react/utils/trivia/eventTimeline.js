@@ -79,6 +79,12 @@ export function getQuestionSegment(timeline, questionIndex) {
     );
 }
 
+export function getModeIntroSegment(timeline, questionIndex) {
+    return timeline.segments.find(
+        (s) => s.type === SEGMENT_TYPE.MODE_INTRO && s.questionIndex === questionIndex
+    );
+}
+
 export function getQuestionSubPhase(segment, elapsedMs) {
     if (elapsedMs < segment.introEndMs) {
         return { phase: QUESTION_SUB_PHASE.INTRO, endsAtMs: segment.introEndMs };
