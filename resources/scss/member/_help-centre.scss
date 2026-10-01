@@ -20,7 +20,8 @@
     font-weight: $fw-semibold;
     border: 1px solid transparent;
     cursor: pointer;
-    transition: background $transition-fast, border-color $transition-fast, opacity $transition-fast;
+    transition: background $transition-fast, border-color $transition-fast, 
+        opacity $transition-fast;
 
     &:disabled {
         opacity: 0.5;
@@ -766,6 +767,7 @@
         color: $white;
     }
 
+    input[type="text"],
     textarea {
         width: 100%;
         background: $input-bg;
@@ -797,6 +799,11 @@
         color: $accent-crimson;
         font-weight: $fw-semibold;
     }
+}
+
+.akd-bug-report__hint {
+    font-size: $fs-xs;
+    color: $white-faint;
 }
 
 .akd-bug-report__error {

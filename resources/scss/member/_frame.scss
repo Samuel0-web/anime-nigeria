@@ -1053,6 +1053,41 @@ $header-height: 7.25rem;    // reserved space for the taller two-line header
     }
 }
 
+.akd-footer {
+    border-top: 1px solid $black-line;
+    margin: 0 0 0 calc(#{$dashboard-pad} + var(--sidebar-width, #{$sidebar-width}));
+    padding: 20px;
+
+    @media (max-width: $bp-lg) {
+        margin-left: 0;
+    }
+}
+
+.akd-footer__nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+}
+
+.akd-footer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-xs;
+}
+
+.akd-footer .akd-help__footer a {
+    color: $white;
+}
+
+@media (min-width: $bp-md) {
+    .akd-footer__nav {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .akd-header,
     .akd-sidebar,

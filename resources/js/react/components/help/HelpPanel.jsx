@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
 import useFocusTrap from "../../hooks/help/useFocusTrap";
-import useBodyScrollLock from "../../hooks/help/useBodyScrollLock";
 
 const EXIT_DURATION = 280;
 const DRAG_CLOSE_THRESHOLD = 120;
@@ -26,7 +25,6 @@ export default function HelpPanel({ open, onClose, title, children }) {
     // gating on `open` alone would fire this effect a render too early,
     // before panelRef has any content to focus.
     useFocusTrap(panelRef, mounted && open);
-    useBodyScrollLock(mounted);
 
     useEffect(() => {
         let openFrame;

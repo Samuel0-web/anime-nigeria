@@ -139,7 +139,7 @@ $dashboardData = [
     'quickActions' => [
         ['icon' => 'fa-user',            'label' => 'Profile',       'text' => 'View and edit your profile',        'url' => '/member/profile'],
         ['icon' => 'fa-medal',           'label' => 'Achievements',  'text' => "See everything you've unlocked",    'url' => '/member/achievements'],
-        ['icon' => 'fa-circle-question', 'label' => 'Help Centre',   'text' => 'Guides, FAQs and support',          'url' => '/member/help-centre'],
+        ['icon' => 'fa-circle-question', 'label' => 'Help Centre',   'text' => 'Guides, FAQs and support',          'url' => '/member/help'],
     ],
 
 ];

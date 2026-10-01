@@ -6,8 +6,10 @@ import { submitBugReport } from "../../utils/help/submitBugReport";
 const MAX_DESCRIPTION = 3000;
 const MIN_DESCRIPTION = 10;
 const NEAR_LIMIT_THRESHOLD = 200;
+const MAX_PAGE_LENGTH = 500;
 
-export default function BugReportForm({ onDone }) {
+export default function BugReportForm({ onDone, initialPage = "" }) {
+    const [pageUrl, setPageUrl] = useState(initialPage);
     const [description, setDescription] = useState("");
     const [images, setImages] = useState([]);
     const [imageError, setImageError] = useState("");
@@ -40,6 +42,7 @@ export default function BugReportForm({ onDone }) {
 
         try {
             const payload = {
+                page: pageUrl.trim(),
                 description: description.trim(),
                 images: images.map((image) => image.file),
                 context: getAutoBugContext(),
@@ -71,20 +74,29 @@ export default function BugReportForm({ onDone }) {
     return (
         <form className="akd-bug-report" onSubmit={handleSubmit}>
             <p className="akd-bug-report__intro">
-                Tell us what happened. We&rsquo;ll automatically include the page and device
+                Tell us what happened. We&rsquo;ll automatically include the device
                 details to help us investigate.
             </p>
 
             <div className="akd-bug-report__field">
+                <label htmlFor="bug-page">Page where you encountered the issue</label>
+                <input id="bug-page" type="text" inputMode="url" autoComplete="off"
+                    value={pageUrl}
+                    onChange={(event) => setPageUrl(event.target.value.slice(0, MAX_PAGE_LENGTH))}
+                    placeholder="e.g. /member/profile" maxLength={MAX_PAGE_LENGTH}
+                    aria-describedby="bug-page-hint"
+                />
+                <span id="bug-page-hint" className="akd-bug-report__hint">
+                    Optional. The page address or path where it happened.
+                </span>
+            </div>
+
+            <div className="akd-bug-report__field">
                 <label htmlFor="bug-description">Bug description</label>
-                <textarea
-                    id="bug-description"
-                    value={description}
+                <textarea id="bug-description" value={description}
                     onChange={handleDescriptionChange}
                     placeholder="What happened? What did you expect to happen instead?"
-                    rows={6}
-                    maxLength={MAX_DESCRIPTION}
-                    required
+                    rows={6} maxLength={MAX_DESCRIPTION} required
                     aria-describedby="bug-description-counter"
                 />
                 <span

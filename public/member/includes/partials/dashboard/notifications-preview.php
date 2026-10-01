@@ -2,7 +2,7 @@
 <section class="akd-dash-card akd-dash-notif" aria-labelledby="dash-notif-heading">
     <div class="akd-dash-section__header">
         <h2 class="akd-dash-section__title" id="dash-notif-heading">Notifications</h2>
-        <a class="akd-dash-section__action" href="#"><!-- TODO: link to full notifications page --> View all</a>
+        <a class="akd-dash-section__action" href="/member/notifications"> View all</a>
     </div>
 
     <ul class="akd-dash-notif__list" role="list">

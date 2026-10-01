@@ -2,7 +2,7 @@
 <section class="akd-dash-card akd-dash-announce" aria-labelledby="dash-announce-heading">
     <div class="akd-dash-section__header">
         <h2 class="akd-dash-section__title" id="dash-announce-heading">Announcements</h2>
-        <a class="akd-dash-section__action" href="#"><!-- TODO: link to full announcements page --> View all</a>
+        <a class="akd-dash-section__action" href="/member/announcements">View all</a>
     </div>
 
     <ul class="akd-dash-announce__list" role="list">

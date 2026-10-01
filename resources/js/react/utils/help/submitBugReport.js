@@ -6,7 +6,7 @@
  * of this function for a real API call (e.g. via the existing `api.js`
  * module) once an endpoint is available — callers don't need to change.
  *
- * @param {{ description: string, images: File[], context: object }} payload
+ * @param {{ description: string, page: string, images: File[], context: object }} payload
  * @returns {Promise<{ ok: boolean }>}
  */
 export async function submitBugReport(payload) {
