@@ -438,6 +438,10 @@
 // Help panel (right-side drawer on desktop, bottom sheet on mobile)
 // ---------------------------------------------------------------------------
 
+body.akd-help-panel-open {
+    overflow: hidden;
+}
+
 .akd-help-panel-layer {
     position: fixed;
     inset: 0;

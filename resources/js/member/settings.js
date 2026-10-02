@@ -874,7 +874,7 @@ function init2fa(root, modal, confirmDialog) {
                     );
                 }
 
-                applyTwoFactorState(response.data['2fa']);
+                applyTwoFactorState(response.data);
             },
         });
     }

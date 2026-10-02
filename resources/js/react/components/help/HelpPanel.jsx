@@ -27,6 +27,13 @@ export default function HelpPanel({ open, onClose, title, children }) {
     useFocusTrap(panelRef, mounted && open);
 
     useEffect(() => {
+        if (!open) return undefined;
+
+        document.body.classList.add("akd-help-panel-open");
+        return () => document.body.classList.remove("akd-help-panel-open");
+    }, [open]);
+
+    useEffect(() => {
         let openFrame;
         let openFrame2;
         let closeTimer;

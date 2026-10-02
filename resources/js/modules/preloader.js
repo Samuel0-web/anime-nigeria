@@ -64,7 +64,7 @@ export function initPreloader() {
 
     document.addEventListener("click", (event) => {
         const link = event.target.closest("a");
-        if (!link) return;
+        if (!link || link.hasAttribute("data-preloader-ignore")) return;
 
         if (link.target === "_blank" || link.hasAttribute("download") ||
             link.href.startsWith("javascript:") || link.origin !== window.location.origin ||

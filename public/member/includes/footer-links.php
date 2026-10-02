@@ -69,6 +69,7 @@ if (!function_exists('akd_member_footer_links')) {
                 // The Help Centre is never treated as the page with the bug.
                 'href'     => akd_bug_report_url($onHelpPage ? null : $requestUri),
                 'external' => false,
+                'intercepted' => $onHelpPage,
             ],
             'privacy' => [
                 'label'    => 'Privacy Policy',

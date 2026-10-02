@@ -15,7 +15,7 @@ $akdExternalAttrs = static fn (array $link): string =>
             </a>
 
             <a href="<?= htmlspecialchars($akdFooterLinks['bug']['href']) ?>"
-               class="akd-help-btn akd-help-btn--ghost" data-bug-report-link>
+                class="akd-help-btn akd-help-btn--ghost" data-bug-report-link<?= !empty($akdFooterLinks['bug']['intercepted']) ? ' data-preloader-ignore' : '' ?>>
                 <?= htmlspecialchars($akdFooterLinks['bug']['label']) ?>
             </a>
         </div>
