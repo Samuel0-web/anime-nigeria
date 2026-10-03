@@ -227,6 +227,7 @@ $routes = [
     '/member/help'                           => 'member/help-centre.php',
 
     '/home'                                  => 'admin/index.php',
+    '/admin/profile'                         => 'admin/profile.php',
 ];
 
 /*

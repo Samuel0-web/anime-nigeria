@@ -182,7 +182,10 @@ export function initTwoFactor() {
 
         clearFormMessage(totpForm);
         clearError(otpField);
+        const switchWasDisabled = switchButton.disabled;
+        switchButton.disabled = true;
         setLoading(totpSubmit, "Verifying...");
+        let shouldRefocus = false;
 
         try {
             const formData = new FormData();
@@ -200,7 +203,7 @@ export function initTwoFactor() {
                     field: otpField,
                     onFieldError: () => {
                         clearOtpInputs();
-                        focusFirstOtpInput();
+                        shouldRefocus = true;
                     },
                 });
                 return;
@@ -210,6 +213,8 @@ export function initTwoFactor() {
         } finally {
             clearLoading(totpSubmit);
             updateTotpButtonState();
+            switchButton.disabled = switchWasDisabled;
+            if (shouldRefocus) focusFirstOtpInput();
         }
     });
 
@@ -221,7 +226,10 @@ export function initTwoFactor() {
         if (recoverySubmit.disabled) return;
         clearFormMessage(recoveryForm);
         clearError(recoveryField);
+        const switchWasDisabled = switchButton.disabled;
+        switchButton.disabled = true;
         setLoading(recoverySubmit, "Verifying...");
+        let shouldRefocus = false;
 
         try {
             const formData = new FormData();
@@ -240,7 +248,7 @@ export function initTwoFactor() {
                     onFieldError: () => {
                         recoveryInput.value = "";
                         updateRecoveryButtonState();
-                        recoveryInput.focus();
+                        shouldRefocus = true;
                     },
                 });
                 return;
@@ -250,6 +258,8 @@ export function initTwoFactor() {
         } finally {
             clearLoading(recoverySubmit);
             updateRecoveryButtonState();
+            switchButton.disabled = switchWasDisabled;
+            if (shouldRefocus) recoveryInput.focus();
         }
     });
 

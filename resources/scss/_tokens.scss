@@ -80,3 +80,23 @@ $accent-teal:        #6bbfba;
 $accent-teal-dim:    rgba(107, 191, 186, 0.14);
 $accent-crimson:     #d73b5d;
 $accent-crimson-dim: rgba(214, 102, 127, 0.14);
+
+// -----------------------------------------------------------------------------
+// Admin layer tokens
+// shell     = the underlying environment (body, top bar, sidebar)
+// content   = the foreground page surface that sits above the shell
+// elevated  = panels / inputs / table headers inside the content
+// Topbar and sidebar default to the shell colour so the page reads as one
+// continuous environment behind it. The pinned corner mask in
+// admin/_frame.scss paints with $admin-sidebar, so if you ever give the
+// topbar and sidebar different colours, pick the one you want the corner to blend into.
+// -----------------------------------------------------------------------------
+$admin-shell:          #09090b;
+$admin-topbar:         $admin-shell;
+$admin-sidebar:        $admin-shell;
+$admin-content:        #131317;
+$admin-elevated:       #1a1a20;
+$admin-elevated-hover: #212128;
+$admin-border:         rgba(255, 255, 255, 0.07);
+$admin-border-strong:  rgba(255, 255, 255, 0.13);
+$admin-muted:          #8f8f98;

@@ -7,6 +7,7 @@ import { useConfirmDialog } from '../modules/confirm-dialog';
 import { api, handleApiError } from '../modules/api';
 import { success } from '../modules/toast';
 import { useModal } from '../modules/modal';
+import { setControlsDisabled } from '../modules/loading-state';
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const AVATAR_ALLOWED_TYPES = ['image/png', 'image/jpeg'];
@@ -573,6 +574,7 @@ export function initProfileModal({ triggerSelector = '[data-modal-open="edit-pro
         }
 
         state = 'loading';
+        setControlsDisabled(form, true);
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="akd-spinner"></span> Saving...';
         setBanner(null);
@@ -653,6 +655,8 @@ export function initProfileModal({ triggerSelector = '[data-modal-open="edit-pro
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save Changes';
             handleApiError(err);
+        } finally {
+            setControlsDisabled(form, false);
         }
     });
 

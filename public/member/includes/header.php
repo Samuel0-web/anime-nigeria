@@ -1,4 +1,5 @@
 <?php
+//member header
 require_once __DIR__ . '/../../../bootstrap.php';
 require __DIR__ . '/../../../includes/vite.php';
 
@@ -19,6 +20,11 @@ $notifPreview     = akd_notify_preview($notifications, 4);
 if ($user === null) {
     $auth->logout();
     header('Location: /login');
+    exit;
+}
+
+if (in_array($user['role'] ?? null, ['admin', 'moderator'], true)) {
+    header('Location: /home');
     exit;
 }
 

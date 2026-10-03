@@ -11,7 +11,7 @@ require_once __DIR__ . "/partials/meta.php";
 
         <section class="an-auth__card">
             <a href="/" class="an-auth__logo" aria-label="Anime Nigeria Home">
-                <img src="/uploads/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
+                <img src="/uploads/logos/Landscape-Anime-Nigeria-Logo.png" alt="Anime Nigeria">
             </a>
 
             <div class="an-auth__intro">

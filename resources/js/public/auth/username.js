@@ -1,6 +1,7 @@
 import { setError, clearError, resetField } from "./helpers.js";
 import { success } from "../../modules/toast.js";
 import { api, handleApiError } from "../../modules/api.js";
+import { setLoading, clearLoading } from "../../modules/loading-state.js";
 
 export function initUsername(form, updateButtons) {
     const input = form.querySelector("#username");
@@ -114,7 +115,7 @@ export function initUsername(form, updateButtons) {
         }
 
         const button = form.querySelector("button");
-        button.disabled = true;
+        setLoading(button, "Creating account...");
 
         try {
             const result = await api("/auth/api/complete-registration", {
@@ -123,8 +124,6 @@ export function initUsername(form, updateButtons) {
                     username,
                 },
             });
-
-            button.disabled = false;
 
             if (result.success) {
                 success("Account created successfully.")
@@ -138,7 +137,8 @@ export function initUsername(form, updateButtons) {
         } catch (e) {
             handleApiError(e);
         } finally {
-            button.disabled = false;
+            clearLoading(button);
+            updateButtons();
         }
     });
 }

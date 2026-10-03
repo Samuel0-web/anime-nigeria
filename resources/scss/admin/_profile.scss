@@ -1,0 +1,529 @@
+@use '../tokens' as *;
+@use 'sass:color';
+
+// =============================================================================
+// ADMIN PROFILE PAGE
+// The page itself is the surface. Sections are separated by hairlines rather
+// than cards. Layout reacts to the width the page actually has (container
+// queries), so it adapts correctly whether the sidebar is shown or hidden.
+// =============================================================================
+
+$profile-grid-width: 34rem;   // form fields go two-up
+$profile-split-width: 52rem;  // section intro moves beside its form
+
+@keyframes akd-admin-fade-in {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.akd-admin-profile {
+    container-type: inline-size;
+    container-name: admin-profile;
+    max-width: 62rem;
+
+    // Author display rules would otherwise beat the UA [hidden] rule.
+    [hidden] { display: none !important; }
+}
+
+// -----------------------------------------------------------------------------
+// Buttons: states used by this page
+// -----------------------------------------------------------------------------
+.akd-admin-profile .akd-admin-btn { min-height: 2.75rem; }
+
+.akd-admin-btn {
+    .spinner { margin-right: 0; }
+
+    &:disabled,
+    &:disabled:hover {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    &:disabled:hover { background-color: $admin-elevated; }
+
+    // While a request is running the button is disabled but should read as busy.
+    &:disabled:has(.spinner),
+    &:disabled:has(.spinner):hover {
+        opacity: 0.85;
+        cursor: progress;
+    }
+
+    &--primary:disabled:hover { background-color: $white; }
+
+    &--ghost {
+        background-color: transparent;
+        border-color: transparent;
+        color: $white-muted;
+
+        &:hover {
+            background-color: rgba($white, 0.05);
+            color: $white;
+        }
+
+        &:disabled:hover { background-color: transparent; }
+    }
+
+    &--danger {
+        color: color.adjust($accent-crimson, $lightness: 12%);
+
+        &:hover {
+            background-color: $accent-crimson-dim;
+            color: color.adjust($accent-crimson, $lightness: 18%);
+        }
+
+        &:disabled:hover { background-color: transparent; }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Avatar (extends .akd-admin-avatar from _frame.scss)
+// -----------------------------------------------------------------------------
+.akd-admin-avatar {
+    &--xl {
+        --avatar-size: 5rem;
+        box-shadow: 0 0 0 1px $admin-border-strong;
+    }
+
+    &__link {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: zoom-in;
+
+        .akd-admin-avatar__img {
+            transition: transform $transition-base;
+        }
+
+        &:hover .akd-admin-avatar__img { transform: scale(1.05); }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Identity
+// -----------------------------------------------------------------------------
+.akd-admin-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-md;
+    padding-bottom: $space-lg;
+
+    &__avatar-wrap {
+        position: relative;
+        display: grid;
+        flex-shrink: 0;
+    }
+
+    &__avatar-busy {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        border-radius: $radius-full;
+        background-color: rgba($admin-content, 0.72);
+        color: $white;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity $transition-fast;
+    }
+
+    &__avatar-wrap.is-busy &__avatar-busy {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    &__body {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    &__title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.375rem 0.75rem;
+    }
+
+    &__name {
+        font-size: $fs-lg;
+        line-height: $lh-tight;
+        overflow-wrap: anywhere;
+    }
+
+    &__handle {
+        font-family: $font-mono;
+        font-size: $fs-sm;
+        color: $admin-muted;
+    }
+
+    &__email {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.375rem 0.625rem;
+        margin-top: 0.25rem;
+        font-size: $fs-sm;
+        color: $white-muted;
+        overflow-wrap: anywhere;
+
+        > i { color: $admin-muted; }
+    }
+
+    &__verified {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: $fs-xs;
+        color: $accent-teal;
+    }
+
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem 1.25rem;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: $fs-xs;
+        color: $admin-muted;
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        i {
+            width: 1em;
+            text-align: center;
+            opacity: 0.85;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: $space-xs;
+        margin-top: $space-sm;
+    }
+
+    &__hint,
+    &__error {
+        flex-basis: 100%;
+        font-size: $fs-xs;
+    }
+
+    &__hint { color: $admin-muted; }
+
+    &__error {
+        color: color.adjust($accent-crimson, $lightness: 14%);
+
+        &:empty { display: none; }
+        &:not(:empty) { animation: akd-admin-fade-in 0.2s ease; }
+    }
+}
+
+.akd-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border: 1px solid $admin-border-strong;
+    border-radius: $radius-full;
+    background-color: rgba($white, 0.04);
+    color: $white-muted;
+    font-family: $font-mono;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    &--admin {
+        color: $sakura;
+        background-color: $sakura-dim;
+        border-color: rgba($sakura, 0.3);
+    }
+
+    &--moderator {
+        color: $accent-teal;
+        background-color: $accent-teal-dim;
+        border-color: rgba($accent-teal, 0.3);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Sections
+// -----------------------------------------------------------------------------
+.akd-admin-section {
+    display: grid;
+    gap: $space-md;
+    padding-block: $space-lg;
+    border-top: 1px solid $admin-border;
+
+    &__title { font-size: $fs-md; }
+
+    &__desc {
+        margin-top: 0.375rem;
+        max-width: 26rem;
+        font-size: $fs-sm;
+        color: $admin-muted;
+    }
+}
+
+.akd-admin-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    max-width: 38rem;
+    padding: $space-sm;
+    background-color: rgba($white, 0.03);
+    border: 1px solid $admin-border;
+    border-radius: $radius-md;
+    font-size: $fs-sm;
+    color: $white-muted;
+
+    i {
+        margin-top: 0.2rem;
+        color: $admin-muted;
+    }
+
+    p { color: inherit; }
+}
+
+// -----------------------------------------------------------------------------
+// Forms
+// -----------------------------------------------------------------------------
+.akd-admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    max-width: 38rem;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: $space-md;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: $space-xs $space-sm;
+        padding-top: $space-xs;
+    }
+
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: $fs-xs;
+        color: $admin-muted;
+
+        &:empty { display: none; }
+
+        &:not(:empty) {
+            animation: akd-admin-fade-in 0.2s ease;
+
+            &::before {
+                content: '';
+                width: 6px;
+                height: 6px;
+                border-radius: $radius-full;
+                background-color: $gold;
+            }
+        }
+    }
+}
+
+.akd-admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+
+    &--wide { grid-column: 1 / -1; }
+
+    &__label {
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        color: $white;
+    }
+
+    &__control {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    &__input {
+        width: 100%;
+        height: 2.75rem;
+        padding: 0 0.875rem;
+        background-color: $admin-elevated;
+        border: 1px solid $admin-border-strong;
+        border-radius: $radius-sm;
+        color: $white;
+        font: inherit;
+        font-size: $fs-base; // 16px: stops iOS zooming on focus
+        transition: border-color $transition-fast, box-shadow $transition-fast,
+            background-color $transition-fast;
+
+        &::placeholder { color: $white-faint; }
+
+        &:hover:not(:disabled):not([readonly]) { border-color: rgba($white, 0.22); }
+
+        &:focus {
+            outline: none;
+            border-color: rgba($sakura, 0.7);
+            box-shadow: 0 0 0 3px $sakura-dim;
+        }
+
+        &[aria-invalid="true"] {
+            border-color: $accent-crimson;
+
+            &:focus { box-shadow: 0 0 0 3px $accent-crimson-dim; }
+        }
+
+        &[readonly] {
+            padding-right: 2.5rem;
+            background-color: transparent;
+            border-style: dashed;
+            color: $admin-muted;
+            cursor: default;
+
+            &:focus {
+                border-color: rgba($white, 0.3);
+                box-shadow: none;
+            }
+        }
+
+        &--affix { padding-left: 1.9rem; }
+        &--toggle { padding-right: 2.9rem; }
+    }
+
+    &__affix {
+        position: absolute;
+        left: 0.875rem;
+        color: $white-faint;
+        pointer-events: none;
+    }
+
+    &__lock {
+        position: absolute;
+        right: 0.875rem;
+        font-size: $fs-xs;
+        color: $white-faint;
+        pointer-events: none;
+    }
+
+    &__toggle {
+        position: absolute;
+        right: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: $radius-sm;
+        color: $admin-muted;
+        transition: background-color $transition-fast, color $transition-fast;
+
+        &:hover {
+            background-color: rgba($white, 0.06);
+            color: $white;
+        }
+    }
+
+    &__hint {
+        font-size: $fs-xs;
+        line-height: $lh-snug;
+        color: $admin-muted;
+    }
+
+    // Reserved collapsed so an error appearing never makes the form jump.
+    &__error {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        font-size: $fs-xs;
+        line-height: $lh-snug;
+        color: color.adjust($accent-crimson, $lightness: 14%);
+        transition: max-height $transition-base, opacity $transition-fast;
+    }
+
+    &--error &__error {
+        max-height: 4rem;
+        opacity: 1;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Live password requirements (revealed on focus or once typing starts)
+// -----------------------------------------------------------------------------
+.akd-admin-rules {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.25s $ease-standard, opacity $transition-fast;
+
+    &.is-visible {
+        grid-template-rows: 1fr;
+        opacity: 1;
+    }
+
+    &__list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+        gap: 0.375rem 0.75rem;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        list-style: none;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: $fs-xs;
+            color: $admin-muted;
+            transition: color $transition-fast;
+
+            i {
+                width: 0.75rem;
+                font-size: 0.5rem;
+                text-align: center;
+                transition: color $transition-fast;
+            }
+
+            &.is-met {
+                color: $white;
+
+                i {
+                    font-size: 0.75rem;
+                    color: $accent-teal;
+                }
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Container queries (top level on purpose, so each rule is plain CSS)
+// -----------------------------------------------------------------------------
+@container admin-profile (min-width: #{$profile-grid-width}) {
+    .akd-admin-avatar--xl { --avatar-size: 6.5rem; }
+
+    .akd-admin-identity { gap: $space-md + 0.5rem; }
+
+    .akd-admin-form__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container admin-profile (min-width: #{$profile-split-width}) {
+    .akd-admin-section {
+        grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+        gap: $space-lg;
+    }
+}

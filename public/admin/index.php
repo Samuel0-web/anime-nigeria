@@ -1,19 +1,24 @@
 <?php
-require_once __DIR__ . '/../../bootstrap.php';
+$page_title       = 'Dashboard';
+$page_description = 'Overview of the Anime Nigeria admin area.';
 
-$auth->requireAuth();
+$breadcrumbs = [
+    ['label' => 'Dashboard', 'url' => null],
+];
+
+$pageActions = [
+    ['label' => 'Create User', 'url' => '/admin/users/create', 'primary' => true],
+];
+
+require_once __DIR__ . '/partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <form action="/logout" method="POST">
-        <input type="hidden" name="_token" value="<?= htmlspecialchars(\App\Security\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
-        <button type="submit">Logout</button>
-    </form>
-</body>
-</html>
+
+<main class="akd-content">
+    <?php require __DIR__ . '/partials/page-header.php'; ?>
+
+    <div class="akd-admin-panel">
+        <p>Page content goes here.</p>
+    </div>
+</main>
+
+<?php require_once __DIR__ . '/partials/footer.php'; ?>
