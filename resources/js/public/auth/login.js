@@ -26,12 +26,13 @@ export function initLogin(form, updateButtons) {
         clearFormMessage(form);
         clearError(emailField);
         clearError(passwordField);
+        const formData = new FormData(form);
         setLoading(button, "Signing in...");
 
         try {
             const response = await api("/auth/api/login", {
                 method: "POST",
-                body: new FormData(form)
+                body: formData
             });
 
             if (!response.success) {

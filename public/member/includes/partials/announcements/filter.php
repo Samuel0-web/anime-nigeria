@@ -1,14 +1,11 @@
 <?php
 /**
- * @var array<int, array{id:string,category:string,accent:string,date:string,title:string,excerpt:string,cta:string,url:string,featured:bool}> $announcements
+ * Category tabs. Only categories that currently have announcements are
+ * passed in (AnnouncementService::memberCategories), so an empty category
+ * never appears. The value of each tab is the category ID.
+ *
+ * @var array<int, array{id:int,name:string,accent:string,count:int}> $announceCategories
  */
-
-$categoryAccents = [];
-foreach ($announcements as $announcement) {
-    if (!isset($categoryAccents[$announcement['category']])) {
-        $categoryAccents[$announcement['category']] = $announcement['accent'];
-    }
-}
 ?>
 <div class="akd-announce-filter" role="group" aria-label="Filter announcements by category" data-announce-filter>
     <div class="akd-announce-filter__row">
@@ -22,14 +19,14 @@ foreach ($announcements as $announcement) {
             <button type="button" class="akd-announce-filter__pill" data-filter-value="all" aria-pressed="true">
                 All
             </button>
-            <?php foreach ($categoryAccents as $category => $accent): ?>
-                <?php $isAward = $accent === 'gold'; ?>
+            <?php foreach ($announceCategories as $category): ?>
+                <?php $isAward = $category['accent'] === 'gold'; ?>
                 <button type="button"
                     class="akd-announce-filter__pill<?= $isAward ? ' akd-announce-filter__pill--gold' : '' ?>"
-                    data-filter-value="<?= htmlspecialchars(akd_announce_slug($category)) ?>"
+                    data-filter-value="<?= (int) $category['id'] ?>"
                     aria-pressed="false"
                 >
-                    <?= htmlspecialchars($category) ?>
+                    <?= htmlspecialchars($category['name']) ?>
                 </button>
             <?php endforeach; ?>
         </div>

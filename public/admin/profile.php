@@ -16,6 +16,10 @@ $username   = (string) ($user['username'] ?? '');
 $email      = (string) ($user['email'] ?? '');
 $role       = (string) ($user['role'] ?? 'admin');
 $roleClass  = preg_replace('/[^a-z]/', '', strtolower($role));
+$roleLabel  = [
+    'admin' => 'Student Council President',
+    'moderator' => 'Student Council Member',
+][$role] ?? ucfirst($role);
 $avatarUrl  = !empty($user['avatar']) ? (string) $user['avatar'] : null;
 $isGoogle   = ($user['auth_provider'] ?? 'local') === 'google';
 $isVerified = !empty($user['email_verified_at']);
@@ -123,7 +127,7 @@ if (!$isGoogle) {
             <div class="akd-admin-identity__body">
                 <div class="akd-admin-identity__title-row">
                     <h2 class="akd-admin-identity__name" id="adminIdentityName" data-user-fullname><?= htmlspecialchars($fullname) ?></h2>
-                    <span class="akd-admin-badge akd-admin-badge--<?= htmlspecialchars($roleClass) ?>"><?= htmlspecialchars(ucfirst($role)) ?></span>
+                    <span class="akd-admin-badge akd-admin-badge--<?= htmlspecialchars($roleClass) ?>"><?= htmlspecialchars($roleLabel) ?></span>
                 </div>
 
                 <p class="akd-admin-identity__handle" data-user-username>@<?= htmlspecialchars($username) ?></p>

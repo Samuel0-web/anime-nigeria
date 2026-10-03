@@ -1,8 +1,8 @@
 <?php
 /**
- * @var array{id:string,category:string,accent:string,date:string,title:string,excerpt:string,cta:string,url:string,featured:bool,image?:?string,image_alt?:?string} $item
- * @var string $slug
- * @var int    $index Position in the full list, set by the page loop. Optional.
+ * @var array{id:string,category_id:int,category:string,accent:string,date:string,title:string,excerpt:string,cta:string,url:string,featured:bool,image?:?string,image_alt?:?string} $item
+ * @var int    $index Position in the list, set by the page loop. Optional; when
+ *                    absent (batches loaded by the API) images load lazily.
  */
 
 $isAward    = $item['accent'] === 'gold';
@@ -25,7 +25,9 @@ $priority = $position === 0;
 $timestamp = strtotime($item['date']);
 $dateLabel = date(date('Y', $timestamp) === date('Y') ? 'M j' : 'M j, Y', $timestamp);
 ?>
-<li class="<?= $rowClass ?>" data-announce-row="<?= htmlspecialchars($slug) ?>">
+<li class="<?= $rowClass ?>" data-announce-id="<?= htmlspecialchars($item['id']) ?>"
+    data-announce-category="<?= (int) ($item['category_id'] ?? 0) ?>"
+>
     <?php // The whole card is one link. It contains no other interactive elements. ?>
     <a class="akd-announce-row__link" href="<?= htmlspecialchars($item['url']) ?>">
         <div class="<?= $mediaClass ?>">

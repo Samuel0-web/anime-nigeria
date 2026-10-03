@@ -228,6 +228,7 @@ $routes = [
 
     '/home'                                  => 'admin/index.php',
     '/admin/profile'                         => 'admin/profile.php',
+    '/admin/announcements'                   => 'admin/announcements.php',
 ];
 
 /*

@@ -451,6 +451,11 @@ $announce-loading-max: 4s;
     &--violet  { color: $accent-violet; }
     &--ember   { color: $accent-ember; }
     &--crimson { color: $accent-crimson; }
+    &--sakura  { color: $sakura; }
+    &--sky     { color: #6AA9E0; }
+    &--lime    { color: #9AC96B; }
+    &--indigo  { color: #7D86E8; }
+    &--slate   { color: #8F9AA8; }
 }
 
 .akd-announce-row__sep {
@@ -585,6 +590,86 @@ $announce-loading-max: 4s;
     align-items: center;
     margin-top: auto;
     padding: $space-xxs 0;
+}
+
+// ==========================================
+// SEE MORE + BATCH PLACEHOLDERS
+// ==========================================
+.akd-announce-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-xs;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &__error {
+        margin: 0;
+        text-align: center;
+        font-size: $fs-sm;
+        color: #ffb4c1;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    // Same control language as the filter pills, a little larger.
+    &__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: $space-xxs;
+        padding: $space-xs $space-md;
+        border-radius: $radius-full;
+        border: 1px solid $black-line;
+        background: rgba($white, 0.02);
+        color: $white-muted;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background $transition-fast, border-color $transition-fast,
+            color $transition-fast;
+
+        &:hover {
+            background: rgba($white, 0.06);
+            color: $white;
+        }
+
+        &:focus-visible {
+            outline: 2px solid rgba($sakura, 0.6);
+            outline-offset: 2px;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .spinner {
+            margin-right: 0;
+        }
+    }
+}
+
+// A skeleton card shown while a category's first batch loads. It sits in
+// normal flow (not overlaid on a real card), so it takes its own natural
+// height from the skeleton's structure.
+.akd-announce-row--placeholder {
+    .akd-announce-skeleton {
+        position: relative;
+        inset: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+        opacity: 1;
+        visibility: visible;
+        --akd-announce-shimmer-state: running;
+        transition: none;
+    }
 }
 
 // ==========================================
