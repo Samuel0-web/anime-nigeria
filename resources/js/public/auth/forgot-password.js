@@ -19,12 +19,13 @@ export function initForgotPassword(form) {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn.disabled) return;
         clearError(email.closest(".an-auth__field"));
+        const formData = new FormData(form);
         setLoading(submitBtn, "Sending...");
         
         try {
             const result = await api("/auth/api/forgot-password", {
                 method: "POST",
-                body: new FormData(form)
+                body: formData
             });
 
             if (!result.success) {

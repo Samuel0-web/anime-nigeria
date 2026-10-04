@@ -13,7 +13,7 @@ class Announcement {
 
     public function list(int $offset, int $limit): array {
         $stmt = $this->db->prepare(self::SELECT
-            . " ORDER BY a.`date` DESC, a.id DESC LIMIT :limit OFFSET :offset");
+            . " ORDER BY a.featured DESC, a.`date` DESC, a.id DESC LIMIT :limit OFFSET :offset");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -21,9 +21,10 @@ class Announcement {
     }
 
     /**
-     * Keyset page, newest first, ties broken by id so the order is total.
-     * $after = ['date' => 'Y-m-d', 'id' => int] resumes strictly after that
-     * row, so inserts and deletes between batches can never repeat or skip a row.
+     * Keyset page with featured announcements first, then by newest date and id.
+     * $after = ['featured' => bool, 'date' => 'Y-m-d', 'id' => int] resumes
+     * strictly after that row so inserts and deletes between batches can never
+     * repeat or skip a row.
      */
     public function keyset(?int $categoryId, ?array $after, int $limit): array {
         $where = [];
@@ -35,15 +36,17 @@ class Announcement {
         }
 
         if ($after !== null) {
-            // Native prepares cannot reuse a named placeholder, hence two date names.
-            $where[] = '(a.`date` < :after_date OR (a.`date` = :after_date_eq AND a.id < :after_id))';
+            // Native prepares cannot reuse a named placeholder, hence repeated names.
+            $where[] = '(a.featured < :after_featured OR (a.featured = :after_featured_eq AND (a.`date` < :after_date OR (a.`date` = :after_date_eq AND a.id < :after_id))))';
+            $params[':after_featured'] = (int) $after['featured'];
+            $params[':after_featured_eq'] = (int) $after['featured'];
             $params[':after_date'] = $after['date'];
             $params[':after_date_eq'] = $after['date'];
             $params[':after_id'] = $after['id'];
         }
 
         $sql = self::SELECT . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-            . ' ORDER BY a.`date` DESC, a.id DESC LIMIT :limit';
+            . ' ORDER BY a.featured DESC, a.`date` DESC, a.id DESC LIMIT :limit';
 
         $stmt = $this->db->prepare($sql);
 
@@ -59,6 +62,11 @@ class Announcement {
 
     public function count(): int {
         return (int) $this->db->query("SELECT COUNT(*) FROM announcements")->fetchColumn();
+    }
+
+    public function countFeatured(): int {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM announcements WHERE featured = 1");
+        return (int) $stmt->fetchColumn();
     }
 
     public function findById(int $id): array|false {

@@ -152,7 +152,12 @@ class Auth {
         }
     }
 
-    public function check(): bool {
+    /**
+     * @param bool $touchActivity Pass false for background requests (the unread
+     *        event stream) so they validate the session without renewing its
+     *        idle timer.
+     */
+    public function check(bool $touchActivity = true): bool {
         if (!isset($_SESSION['user_id'])) {
             return false;
         }
@@ -216,7 +221,7 @@ class Auth {
         $shouldTouch = $lastActivityAt === null
             || strtotime($lastActivityAt) <= time() - self::LOGIN_SESSION_TOUCH_INTERVAL;
 
-        if ($shouldTouch) {
+        if ($touchActivity && $shouldTouch) {
             $this->loginSessions->touch((int) $loginSession['id']);
         }
 

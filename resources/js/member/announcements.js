@@ -80,10 +80,15 @@ function watchCardImages(rows) {
             return;
         }
 
-        // A broken image is hidden so no broken-image icon shows; the card
-        // still reveals, and the image area keeps its quiet surface.
+        // // A broken image becomes the standard icon; the card still reveals.
         const markError = () => {
-            img.hidden = true;
+            // Same icon the server renders for cards without artwork.
+            const media = img.closest('.akd-announce-row__media');
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-bullhorn';
+            icon.setAttribute('aria-hidden', 'true');
+            img.replaceWith(icon);
+            media?.classList.add('akd-announce-row__media--placeholder');
             markReady();
         };
 

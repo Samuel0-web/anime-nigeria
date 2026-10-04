@@ -45,7 +45,11 @@ if ($cursor !== null && (!is_string($cursor) || AnnouncementService::parseCursor
 $bufferLevel = ob_get_level();
 
 try {
-    $batch = AnnouncementService::make()->memberBatch($categoryId, $cursor);
+    $service = AnnouncementService::make();
+    $batch = $service->memberBatch($categoryId, $cursor);
+
+    // Lets you confirm cache behaviour in the Network tab (hit = no database query).
+    header('X-Announcements-Cache: ' . implode(', ', $service->cacheTrace()));
 
     require_once PUBLIC_PATH . '/member/includes/data/announcements-support.php';
 

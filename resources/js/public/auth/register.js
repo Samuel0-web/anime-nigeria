@@ -19,12 +19,13 @@ export function initRegister(form, updateButtons) {
         clearFormMessage(form);
         form.querySelectorAll(".an-auth__field").forEach(clearError);
         form.querySelector(".an-auth__checkbox-error").textContent = "";
+        const formData = new FormData(form);
         setLoading(submitBtn, "Creating account...");
 
         try {
             const result = await api("/auth/api/register", {
                 method: "POST",
-                body: new FormData(form)
+                body: formData
             });
 
             if (!result.success) {

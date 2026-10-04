@@ -29,16 +29,16 @@ final class FileCache {
     private array $versions = [];
     private bool $reported = false;
 
+    /** @var list<string> "key=hit|miss|bypass|off" for the current request. */
+    private array $trace = [];
+
     public function __construct(private string $baseDir) {}
 
-    /**
-     * Return the cached value for $key, or compute, store and return it.
-     * Exceptions thrown by $compute propagate; cache I/O failures never do.
-     */
     public function remember(string $namespace, string $key, int $ttl, callable $compute): mixed {
         $version = $this->version($namespace);
 
         if ($version === null) {
+            $this->note($key, 'off'); // cache unavailable: straight to the database
             return $compute();
         }
 
@@ -46,13 +46,25 @@ final class FileCache {
         $hit = $this->read($path, $key);
 
         if ($hit !== null) {
+            $this->note($key, 'hit');
             return $hit['value'];
         }
 
+        $this->note($key, 'miss');
         $value = $compute();
         $this->write($namespace, $path, $key, $value, $ttl);
 
         return $value;
+    }
+
+    /** Diagnostics only. */
+    public function note(string $key, string $result): void {
+        $this->trace[] = preg_replace('/[^A-Za-z0-9:_.-]/', '', $key) . '=' . $result;
+    }
+
+    /** @return list<string> */
+    public function trace(): array {
+        return $this->trace;
     }
 
     /** Make every entry in the namespace unreachable and remove the files. */

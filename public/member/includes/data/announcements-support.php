@@ -22,44 +22,27 @@ if (!function_exists('akd_announce_image')) {
     /**
      * Resolve an announcement's image for rendering.
      *
-     * Returns null when the announcement has no image, or when a local
-     * (root-relative) image path does not exist on disk. The card then
-     * renders its neutral placeholder instead of a broken <img>.
+     * Delegates to AnnouncementService::resolveImageUrl(), the same resolver
+     * the admin uses, so there is one definition of "usable image":
+     * absolute http(s) URLs pass through, root-relative paths must exist under
+     * the public root, anything else is null. (The previous realpath()
+     * containment check rejected files served through the public/storage link,
+     * so every uploaded image fell back to the icon.)
      *
-     * Absolute http(s) URLs are passed through untouched, so a future
-     * repository/service can return CDN URLs without changes here.
-     *
-     * Alt text comes from the optional `image_alt` field and falls back
-     * to the announcement title, so it is never empty.
+     * Returns null when there is no usable image; row.php then renders the
+     * existing icon. Alt text falls back to the title, so it is never empty.
      *
      * @param array<string, mixed> $item
      * @return array{src: string, alt: string}|null
      */
     function akd_announce_image(array $item): ?array
     {
-        $src = trim((string) ($item['image'] ?? ''));
+        $src = \App\Services\AnnouncementService::resolveImageUrl(
+            isset($item['image']) ? (string) $item['image'] : null
+        );
 
-        if ($src === '') {
+        if ($src === null) {
             return null;
-        }
-
-        if (!preg_match('#^https?://#i', $src)) {
-            // Root-relative paths only. Rejects "//host/..." and relative paths.
-            if ($src[0] !== '/' || str_starts_with($src, '//')) {
-                return null;
-            }
-
-            // dirname(__DIR__, 3): includes/data -> includes -> member -> public
-            $publicRoot = realpath(dirname(__DIR__, 3));
-            $file       = $publicRoot !== false ? realpath($publicRoot . $src) : false;
-
-            if (
-                $file === false
-                || !str_starts_with($file, $publicRoot . DIRECTORY_SEPARATOR)
-                || !is_file($file)
-            ) {
-                return null;
-            }
         }
 
         $alt = trim((string) ($item['image_alt'] ?? ''));

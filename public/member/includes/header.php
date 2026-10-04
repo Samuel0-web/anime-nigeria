@@ -28,6 +28,39 @@ if (in_array($user['role'] ?? null, ['admin', 'moderator'], true)) {
     exit;
 }
 
+// ---- Announcements: unread state (member specific, never cached) ------------
+// A page may set $markAnnouncementsRead = true before including this header.
+// The mark happens here, BEFORE the count is read and the sidebar is rendered,
+// so the page that clears the badge never renders a stale one.
+$announceUnread = 0;
+$announceUnreadAt = (int) round(microtime(true) * 1000);
+
+try {
+    $announceReads = \App\Services\AnnouncementReadService::make();
+
+    if (!empty($markAnnouncementsRead)) {
+        $announceReads->markAllRead((int) $user['id']);
+    }
+
+    $announceUnread = $announceReads->unreadCount((int) $user['id']);
+    // Stamped AFTER the count: the live stream ignores events computed earlier.
+    $announceUnreadAt = (int) round(microtime(true) * 1000);
+} catch (\Throwable $e) {
+    \App\Core\Logger::error($e);
+}
+
+$announceNavItem = [
+    'label' => 'Announcements',
+    'icon'  => 'fa-solid fa-bullhorn',
+    'url'   => '/member/announcements',
+];
+
+if ($announceUnread > 0) {
+    $announceNavItem['badge'] = $announceUnread > 99 ? '99+' : (string) $announceUnread;
+    $announceNavItem['badge_label'] = $announceUnread . ' new announcement'
+        . ($announceUnread === 1 ? '' : 's');
+}
+
 $page_title = $page_title ?? 'Member Dashboard';
 $navTitle = $navTitle ?? $page_title;
 $page_description = $page_description ?? 'Anime Nigeria Member Dashboard';
@@ -63,7 +96,7 @@ $navGroups = [
                 ['label' => 'Winners', 'url' => '/member/awards/winners'],
             ],
         ],
-        ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/member/announcements', 'badge' => '3', 'badge_label' => '3 new announcements'],
+        $announceNavItem,
     ],
     'Community' => [
         ['label' => 'Trivia', 'icon' => 'fa-solid fa-brain', 'url' => '/member/trivia', 'badge' => 'Live', 'badge_label' => 'Live'],
@@ -471,7 +504,9 @@ $todayDate = date('l, F jS');
     <div class="akd-overlay" id="akdOverlay"></div>
 
     <!-- Sidebar -->
-    <nav class="akd-sidebar" id="akdSidebar" data-user-id="<?= (int) $user['id'] ?>" aria-label="Main Navigation">
+    <nav class="akd-sidebar" id="akdSidebar" data-user-id="<?= (int) $user['id'] ?>"
+        data-unread-at="<?= (int) $announceUnreadAt ?>" aria-label="Main Navigation"
+    >
         <div class="akd-sidebar__header">
             <div class="akd-sidebar__brand-row">
                 <a href="/dashboard" class="akd-sidebar__brand" aria-label="Anime Nigeria — Dashboard">

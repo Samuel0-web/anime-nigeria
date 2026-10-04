@@ -15,6 +15,7 @@ import './member/awards-overview.js';
 import './member/awards-nominations.js';
 import './member/awards-voting.js';
 import { initAnnouncementsFilter } from './member/announcements';
+import { initAnnouncementUnread } from './member/announcement-unread';
 import './member/challenges.js';
 import './member/community-awards-nominations.js';
 import './member/community-awards-voting.js';
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initNotificationDropdown();
+    initAnnouncementUnread();
     initNotificationsPage();
     initProfileModal();
     initAchievementModal();

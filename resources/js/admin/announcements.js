@@ -20,6 +20,7 @@ const API = '/admin/api/announcements';
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const EXCERPT_MAX = 150;
+const MAX_FEATURED = 5;
 const FALLBACK_HEX = '#8f8f98';
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
@@ -83,6 +84,7 @@ export function initAdminAnnouncements() {
             loading: false, error: Boolean(boot.loadError), seq: 0,
         },
         selected: { announcements: new Set(), categories: new Set() },
+        lastSelected: { announcements: null, categories: null },
     };
 
     const tabButtons = Array.from(root.querySelectorAll('[data-ann-tab]'));
@@ -569,6 +571,7 @@ export function initAdminAnnouncements() {
                     ${escapeHtml(category.name)}
                 </span>
             </label>`).join('');
+        const featuredLimitReached = !isEdit && state.announcements.items.filter((announcement) => announcement.featured).length >= MAX_FEATURED;
 
         const template = document.createElement('template');
         template.innerHTML = `
@@ -611,10 +614,11 @@ export function initAdminAnnouncements() {
                     <div class="akd-admin-field">
                         <span class="akd-admin-field__label" id="annFeaturedLabel">Featured</span>
                         <label class="akd-ann-switch">
-                            <input type="checkbox" name="featured" role="switch" aria-labelledby="annFeaturedLabel" ${v.featured ? 'checked' : ''}>
+                            <input type="checkbox" name="featured" role="switch" aria-labelledby="annFeaturedLabel" ${v.featured ? 'checked' : ''} ${featuredLimitReached && !v.featured ? 'disabled' : ''}>
                             <span class="akd-ann-switch__track" aria-hidden="true"></span>
                             <span class="akd-ann-switch__text">Show a Featured badge</span>
                         </label>
+                        ${featuredLimitReached && !v.featured ? '<p class="akd-admin-field__hint">Only 5 announcements can be featured at once.</p>' : ''}
                     </div>
                 </div>
 
@@ -1248,6 +1252,35 @@ export function initAdminAnnouncements() {
     // Delegated events
     // =====================================================================
     root.addEventListener('click', (event) => {
+        const checkbox = event.target.closest('input[data-select-row]');
+
+        if (checkbox) {
+            const kind = checkbox.closest('[data-ann-panel]')?.dataset.annPanel;
+            if (!kind) return;
+
+            const set = state.selected[kind];
+            const id = Number(checkbox.closest('[data-id]')?.dataset.id);
+
+            if (event.shiftKey && state.lastSelected[kind] !== null && state.lastSelected[kind] !== id) {
+                const items = state[kind].items;
+                const currentIndex = items.findIndex((item) => item.id === id);
+                const lastIndex = items.findIndex((item) => item.id === state.lastSelected[kind]);
+
+                if (currentIndex !== -1 && lastIndex !== -1) {
+                    const [start, end] = [currentIndex, lastIndex].sort((a, b) => a - b);
+                    items.slice(start, end + 1).forEach((item) => set.add(item.id));
+                }
+            } else if (checkbox.checked) {
+                set.add(id);
+            } else {
+                set.delete(id);
+            }
+
+            state.lastSelected[kind] = id;
+            updateSelection(kind);
+            return;
+        }
+
         const trigger = event.target.closest('[data-action], [data-empty-action]');
         if (!trigger || !root.contains(trigger)) return;
 
@@ -1294,17 +1327,32 @@ export function initAdminAnnouncements() {
     root.addEventListener('change', (event) => {
         const input = event.target;
         if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox') return;
-
         const kind = input.closest('[data-ann-panel]')?.dataset.annPanel;
         if (!kind) return;
-
         const set = state.selected[kind];
 
         if (input.hasAttribute('data-select-all')) {
             state[kind].items.forEach((item) => (input.checked ? set.add(item.id) : set.delete(item.id)));
+            state.lastSelected[kind] = null;
         } else if (input.hasAttribute('data-select-row')) {
             const id = Number(input.closest('[data-id]')?.dataset.id);
-            if (input.checked) set.add(id); else set.delete(id);
+
+            if (event.shiftKey && state.lastSelected[kind] !== null && state.lastSelected[kind] !== id) {
+                const items = state[kind].items;
+                const currentIndex = items.findIndex((item) => item.id === id);
+                const lastIndex = items.findIndex((item) => item.id === state.lastSelected[kind]);
+
+                if (currentIndex !== -1 && lastIndex !== -1) {
+                    const [start, end] = [currentIndex, lastIndex].sort((a, b) => a - b);
+                    items.slice(start, end + 1).forEach((item) => set.add(item.id));
+                }
+            } else if (input.checked) {
+                set.add(id);
+            } else {
+                set.delete(id);
+            }
+
+            state.lastSelected[kind] = id;
         } else {
             return;
         }
@@ -1319,6 +1367,7 @@ export function initAdminAnnouncements() {
 
             if (button.dataset.bulkAction === 'clear') {
                 state.selected[kind].clear();
+                state.lastSelected[kind] = null;
                 updateSelection(kind);
                 return;
             }

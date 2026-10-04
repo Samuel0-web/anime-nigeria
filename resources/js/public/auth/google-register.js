@@ -10,12 +10,13 @@ export function initGoogleRegister(form) {
         e.preventDefault();
         if (submitBtn.disabled) return;
         form.querySelector(".an-auth__checkbox-error").textContent = "";
+        const formData = new FormData(form);
         setLoading(submitBtn, "Creating account...");
 
         try {
             const result = await api("/auth/api/google-register", {
                 method: "POST",
-                body: new FormData(form),
+                body: formData,
             });
 
             if (!result.success) {

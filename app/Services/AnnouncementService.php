@@ -12,6 +12,7 @@ use PDO;
 final class AnnouncementService {
     public const EXCERPT_MAX = 150;
     public const MEMBER_PAGE_SIZE = 20;
+    public const MAX_FEATURED = 5;
 
     private const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
     private const MAX_BULK = 500;
@@ -125,11 +126,15 @@ final class AnnouncementService {
             return [
                 'items' => array_map([$this, 'memberShape'], $rows),
                 'has_more' => $hasMore,
-                'next_cursor' => $hasMore && $last !== null ? $last['date'] . '_' . $last['id'] : null,
+                'next_cursor' => $hasMore && $last !== null
+                    ? ((int) $last['featured']) . '_' . $last['date'] . '_' . $last['id']
+                    : null,
             ];
         };
 
         if ($after !== null) {
+            // Deeper pages are never cached (see notes): always the database.
+            $this->cache->note(sprintf('batch:%s:cursor', $categoryId ?? 'all'), 'bypass');
             return $load();
         }
 
@@ -137,22 +142,29 @@ final class AnnouncementService {
     }
 
     /**
-     * Cursor format: "{Y-m-d}_{id}" (the last row of the previous batch).
+     * Cursor format: "{featured}_{Y-m-d}_{id}" (the last row of the previous batch).
+     * For backward compatibility, the legacy "{Y-m-d}_{id}" format is also accepted.
      *
-     * @return array{date: string, id: int}|false|null  null = no cursor, false = malformed
+     * @return array{featured: bool, date: string, id: int}|false|null  null = no cursor, false = malformed
      */
     public static function parseCursor(?string $cursor): array|false|null {
         if ($cursor === null || $cursor === '') {
             return null;
         }
 
-        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})_(\d{1,18})$/', $cursor, $m)
-            || !checkdate((int) $m[2], (int) $m[3], (int) $m[1])
+        if (preg_match('/^(0|1)_(\d{4})-(\d{2})-(\d{2})_(\d{1,18})$/', $cursor, $m)
+            && checkdate((int) $m[3], (int) $m[4], (int) $m[2])
         ) {
-            return false;
+            return ['featured' => (bool) (int) $m[1], 'date' => "{$m[2]}-{$m[3]}-{$m[4]}", 'id' => (int) $m[5]];
         }
 
-        return ['date' => "{$m[1]}-{$m[2]}-{$m[3]}", 'id' => (int) $m[4]];
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})_(\d{1,18})$/', $cursor, $m)
+            && checkdate((int) $m[2], (int) $m[3], (int) $m[1])
+        ) {
+            return ['featured' => false, 'date' => "{$m[1]}-{$m[2]}-{$m[3]}", 'id' => (int) $m[4]];
+        }
+
+        return false;
     }
 
     /** The row shape the member partials already consume (plus category_id). */
@@ -171,6 +183,11 @@ final class AnnouncementService {
             'image' => $row['image'] ?: null,
             'image_alt' => $row['image_alt'] ?: null,
         ];
+    }
+
+    /** What the cache did during this request: hit, miss (DB queried then stored), bypass, off. */
+    public function cacheTrace(): array {
+        return $this->cache->trace();
     }
 
     private function cached(string $key, callable $compute): mixed {
@@ -234,7 +251,7 @@ final class AnnouncementService {
             return $this->fail('That announcement no longer exists.', 404);
         }
 
-        [$data, $errors] = $this->validateAnnouncement($input, $files);
+        [$data, $errors] = $this->validateAnnouncement($input, $files, $id);
 
         if ($errors) {
             return ['success' => false, 'errors' => $errors];
@@ -477,7 +494,7 @@ final class AnnouncementService {
      * root-relative paths must exist locally, anything else renders the
      * neutral placeholder (null).
      */
-    public function resolveImageUrl(?string $image): ?string {
+    public static function resolveImageUrl(?string $image): ?string {
         $image = trim((string) $image);
 
         if ($image === '') {
@@ -501,7 +518,7 @@ final class AnnouncementService {
     // =========================================================================
     // VALIDATION
     // =========================================================================
-    private function validateAnnouncement(array $input, array $files): array {
+    private function validateAnnouncement(array $input, array $files, ?int $existingId = null): array {
         $errors = [];
         $title = $this->clean($input['title'] ?? '');
         $excerpt = $this->clean($input['excerpt'] ?? '');
@@ -513,6 +530,20 @@ final class AnnouncementService {
         $categoryId = filter_var($input['category_id'] ?? null, FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 1]]
         );
+
+        if ($featured) {
+            $currentFeatured = (int) $this->announcements->countFeatured();
+            $alreadyFeatured = false;
+
+            if ($existingId !== null) {
+                $current = $this->announcements->findById($existingId);
+                $alreadyFeatured = $current !== false && !empty($current['featured']);
+            }
+
+            if ($currentFeatured >= self::MAX_FEATURED && !$alreadyFeatured) {
+                $errors['featured'] = 'Only ' . self::MAX_FEATURED . ' announcements can be featured at a time.';
+            }
+        }
 
         if ($categoryId === false) {
             $errors['category_id'] = 'Choose a category.';

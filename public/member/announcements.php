@@ -7,6 +7,8 @@ $breadcrumbs = [
     ['label' => 'Announcements', 'url' => null],
 ];
 
+$markAnnouncementsRead = true; // header.php clears this member's unread announcements
+
 require_once __DIR__ . '/includes/header.php';
 require __DIR__ . '/includes/data/announcements-support.php';
 require __DIR__ . '/includes/data/announcements-data.php';

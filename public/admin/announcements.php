@@ -13,6 +13,8 @@ require_once __DIR__ . '/partials/header.php';
 $canDelete = ($user['role'] ?? '') === 'admin';
 $pageSize  = 20;
 
+use App\Security\Nonce;
+
 $annBootstrap = [
     'canDelete'     => $canDelete,
     'pageSize'      => $pageSize,
@@ -148,11 +150,13 @@ if (!function_exists('akd_admin_render_ann_panel')) {
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <script type="application/json" id="akdAnnouncementsData"><?= json_encode(
+<script type="application/json" id="akdAnnouncementsData"<?= Nonce::attr() ?>>
+    <?= json_encode(
         $annBootstrap,
         JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
             | JSON_INVALID_UTF8_SUBSTITUTE
-    ) ?></script>
+    ) ?>
+</script>
 </main>
 
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

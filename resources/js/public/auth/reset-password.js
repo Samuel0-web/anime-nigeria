@@ -16,12 +16,13 @@ export function initResetPassword(form) {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn.disabled) return;
         form.querySelectorAll(".an-auth__field").forEach(clearError);
+        const formData = new FormData(form);
         setLoading(submitBtn, "Updating password...");
 
         try {
             const result = await api("/auth/api/reset-password", {
                 method: "POST",
-                body: new FormData(form)
+                body: formData
             });
 
             if (!result.success) {

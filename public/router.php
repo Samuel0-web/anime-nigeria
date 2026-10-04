@@ -151,6 +151,51 @@ if ($apiIndex !== false) {
 
 /*
 |--------------------------------------------------------------------------
+| Stream Routing
+|--------------------------------------------------------------------------
+*/
+$streamIndex = array_search('stream', $pathSegments, true);
+
+if ($streamIndex !== false) {
+    $directory = array_slice($pathSegments, 0, $streamIndex);
+    $endpoint = array_slice($pathSegments, $streamIndex + 1);
+
+    if (empty($endpoint)) {
+        http_response_code(404);
+        exit;
+    }
+
+    foreach ($directory as $segment) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $segment)) {
+            http_response_code(400);
+            exit;
+        }
+    }
+
+    foreach ($endpoint as $segment) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $segment)) {
+            http_response_code(400);
+            exit;
+        }
+    }
+
+    $lastEndpointIndex = count($endpoint) - 1;
+    $endpoint[$lastEndpointIndex] .= '.php';
+
+    $streamFile = __DIR__ . '/' . implode('/', $directory) . '/stream/'
+        . implode('/', $endpoint);
+
+    if (!is_file($streamFile)) {
+        http_response_code(404);
+        exit;
+    }
+
+    require $streamFile;
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
 | Routes
 |--------------------------------------------------------------------------
 */

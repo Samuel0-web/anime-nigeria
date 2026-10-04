@@ -184,13 +184,13 @@ export function initTwoFactor() {
         clearError(otpField);
         const switchWasDisabled = switchButton.disabled;
         switchButton.disabled = true;
+        const formData = new FormData();
+        formData.append("method", "totp");
+        formData.append("code", getOtpValue());
         setLoading(totpSubmit, "Verifying...");
         let shouldRefocus = false;
 
         try {
-            const formData = new FormData();
-            formData.append("method", "totp");
-            formData.append("code", getOtpValue());
 
             const response = await api("/auth/api/verify-2fa", {
                 method: "POST",
@@ -228,13 +228,13 @@ export function initTwoFactor() {
         clearError(recoveryField);
         const switchWasDisabled = switchButton.disabled;
         switchButton.disabled = true;
+        const formData = new FormData();
+        formData.append("method", "recovery");
+        formData.append("code", recoveryInput.value.trim());
         setLoading(recoverySubmit, "Verifying...");
         let shouldRefocus = false;
 
         try {
-            const formData = new FormData();
-            formData.append("method", "recovery");
-            formData.append("code", recoveryInput.value.trim());
 
             const response = await api("/auth/api/verify-2fa", {
                 method: "POST",

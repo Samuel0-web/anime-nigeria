@@ -110,23 +110,7 @@ $dashboardData = [
         ],
     ],
 
-    'announcements' => [
-        [
-            'title' => 'Community Awards nominations open soon',
-            'text'  => 'Get ready to nominate your favourite creators and moments.',
-            'date'  => 'Aug 14',
-        ],
-        [
-            'title' => 'Trivia Night starts this Saturday',
-            'text'  => 'A new season of weekly trivia kicks off this weekend.',
-            'date'  => 'Aug 16',
-        ],
-        [
-            'title' => 'New achievement badges added',
-            'text'  => 'Five new badges just joined the achievements catalog.',
-            'date'  => 'Aug 20',
-        ],
-    ],
+    'announcements' => [], // filled from the database below
 
     'majorEvent' => [
         'title'  => 'Community Awards 2026',
@@ -143,3 +127,24 @@ $dashboardData = [
     ],
 
 ];
+
+// ---- Announcements preview ---------------------------------------------------
+// Same source of truth and cache as /member/announcements: the newest three
+// announcements, adapted to the title/text/date shape the dashboard partial
+// renders. On any failure the card simply shows its empty state.
+try {
+    $dashboardData['announcements'] = array_map(
+        static function (array $item): array {
+            $timestamp = strtotime($item['date']);
+
+            return [
+                'title' => $item['title'],
+                'text'  => $item['excerpt'],
+                'date'  => date(date('Y', $timestamp) === date('Y') ? 'M j' : 'M j, Y', $timestamp),
+            ];
+        },
+        \App\Services\AnnouncementService::make()->memberBatch(null, null, 4)['items']
+    );
+} catch (\Throwable $e) {
+    \App\Core\Logger::error($e);
+}
