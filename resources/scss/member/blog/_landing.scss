@@ -539,6 +539,7 @@
 .akd-blog__grid {
     display: grid;
     gap: $space-md;
+    margin-top: $space-sm;
 
     &--latest {
         grid-template-columns: repeat(2, 1fr);
@@ -728,4 +729,50 @@
     .akd-blog-pagination__page {
         transition-duration: 0.001ms !important;
     }
+}
+
+// Instant search dropdown items (rendered by member/blog-search.js)
+.akd-blog-search__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    color: $white;
+    text-decoration: none;
+    transition: background $transition-fast;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba($white, 0.06);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($sakura, 0.6);
+        outline-offset: -2px;
+    }
+
+    &--all {
+        color: $sakura;
+        font-size: $fs-sm;
+        font-weight: $fw-semibold;
+    }
+}
+
+.akd-blog-search__item-title {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    line-height: $lh-snug;
+}
+
+.akd-blog-search__item-meta {
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+.akd-blog-search__empty {
+    margin: 0;
+    padding: $space-sm;
+    font-size: $fs-sm;
+    color: $white-muted;
 }

@@ -36,6 +36,8 @@ function isInsideHorizontalScroller(target) {
     let el = target;
 
     while (el && el !== document.body && el.nodeType === 1) {
+        if (el.hasAttribute('data-no-sidebar-swipe')) return true;
+
         if (el.scrollWidth > el.clientWidth + 1) {
             const overflowX = window.getComputedStyle(el).overflowX;
             if (overflowX === 'auto' || overflowX === 'scroll') return true;

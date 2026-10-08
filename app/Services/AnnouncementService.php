@@ -7,22 +7,20 @@ use App\Models\Announcement;
 use App\Models\AnnouncementCategory;
 use App\Support\FileCache;
 use App\Support\ImageUpload;
+use App\Models\BlogArticle;
+use App\Support\BlogTitle;
 use PDO;
 
 final class AnnouncementService {
     public const EXCERPT_MAX = 150;
     public const MEMBER_PAGE_SIZE = 20;
     public const MAX_FEATURED = 5;
+    public const CACHE_NAMESPACE = 'announcements';
 
     private const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
     private const MAX_BULK = 500;
     private const CATEGORY_NAME_PATTERN = '/^[\p{L}\p{N}][\p{L}\p{N} &\'’().,\/-]*$/u';
-
-    // Invalidation is explicit (see invalidateMemberCache); the TTL only bounds
-    // staleness if an invalidation ever fails.
-    private const CACHE_NAMESPACE = 'announcements';
     private const CACHE_TTL = 300;
-
     private static ?array $accents = null;
 
     public function __construct(
@@ -178,7 +176,7 @@ final class AnnouncementService {
             'title' => $row['title'],
             'excerpt' => $row['excerpt'],
             'cta' => $row['cta'],
-            'url' => $row['url'],
+            'url' => $this->destinationUrl($row),
             'featured' => (bool) $row['featured'],
             'image' => $row['image'] ?: null,
             'image_alt' => $row['image_alt'] ?: null,
@@ -468,7 +466,12 @@ final class AnnouncementService {
             'title' => $row['title'],
             'excerpt' => $row['excerpt'],
             'cta' => $row['cta'],
-            'url' => $row['url'],
+            'url' => $this->destinationUrl($row),
+            'blog_article' => !empty($row['blog_article_id']) ? [
+                'id' => (int) $row['blog_article_id'],
+                'title' => $row['blog_title'] !== null ? BlogTitle::plain((string) $row['blog_title']) : null,
+                'is_public' => (bool) $row['blog_is_public'],
+            ] : null,
             'featured' => (bool) $row['featured'],
             'image' => $image,
             'image_url' => $this->resolveImageUrl($image),
@@ -512,7 +515,11 @@ final class AnnouncementService {
             return null;
         }
 
-        return is_file(PUBLIC_PATH . $image) ? $image : null;
+        $file = str_starts_with($image, '/storage/')
+            ? STORAGE_PATH . substr($image, strlen('/storage'))
+            : PUBLIC_PATH . $image;
+
+        return is_file($file) ? $image : null;
     }
 
     // =========================================================================
@@ -542,6 +549,31 @@ final class AnnouncementService {
 
             if ($currentFeatured >= self::MAX_FEATURED && !$alreadyFeatured) {
                 $errors['featured'] = 'Only ' . self::MAX_FEATURED . ' announcements can be featured at a time.';
+            }
+        }
+
+        $blogArticleId = null;
+        $rawArticle = $input['blog_article_id'] ?? '';
+
+        if ($rawArticle !== '' && $rawArticle !== null) {
+            $linkId = filter_var($rawArticle, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+            if ($linkId === false) {
+                $errors['blog_article_id'] = 'Choose a valid article.';
+            } else {
+                $link = (new BlogArticle($this->db))->findPublicLink($linkId);
+                $current = $existingId !== null ? $this->announcements->findById($existingId) : false;
+                $unchanged = $current !== false && (int) $current['blog_article_id'] === $linkId;
+
+                if ($link !== false) {
+                    $blogArticleId = $linkId;
+                    $url = BlogService::articleUrl($link); // snapshot: the fallback if the article goes away
+                } elseif ($unchanged) {
+                    $blogArticleId = $linkId;             // already linked, now unpublished: keep as is
+                    $url = (string) $current['url'];
+                } else {
+                    $errors['blog_article_id'] = 'Choose a published article.';
+                }
             }
         }
 
@@ -599,6 +631,7 @@ final class AnnouncementService {
             'category_id' => $categoryId === false ? null : $categoryId,
             'title' => $title,
             'excerpt' => $excerpt,
+            'blog_article_id' => $blogArticleId,
             'cta' => $cta,
             'url' => $url,
             'featured' => $featured,
@@ -659,6 +692,15 @@ final class AnnouncementService {
     // =========================================================================
     private function clean(mixed $value): string {
         return trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+    }
+
+    /** A linked, currently public article wins (so renamed slugs follow); otherwise the stored URL. */
+    private function destinationUrl(array $row): string {
+        if (!empty($row['blog_article_id']) && !empty($row['blog_is_public']) && !empty($row['blog_slug'])) {
+            return BlogService::articleUrl(['slug' => $row['blog_slug'], 'public_id' => $row['blog_public_id']]);
+        }
+
+        return (string) $row['url'];
     }
 
     /** @return int[] */

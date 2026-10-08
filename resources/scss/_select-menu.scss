@@ -1,0 +1,149 @@
+@use 'tokens' as *;
+
+// Trigger: reuses .akd-admin-field__input for height, border, colour and focus ring, so it always
+// matches the neighbouring inputs. Radius is inherited; a page can override it (see _blog.scss).
+.akd-select { position: relative; min-width: 0; }
+
+.akd-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+
+    &[aria-expanded='true'] { border-color: rgba($sakura, 0.5); }
+    &:disabled { cursor: not-allowed; opacity: 0.55; }
+}
+
+.akd-select__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .is-placeholder & { color: $white-faint; }
+}
+
+.akd-select__chevron {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    color: $white-faint;
+    transition: transform $transition-fast;
+
+    [aria-expanded='true'] > & { transform: rotate(180deg); }
+}
+
+// Overlay: transparent click-catcher on desktop, dimmed backdrop for the bottom sheet.
+.akd-select-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: $z-confirm; // above the modal, so selects work inside modals
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity $transition-fast, visibility $transition-fast;
+
+    &.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    &[data-mode='sheet'] {
+        background: rgba(0, 0, 0, 0.58);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+}
+
+.akd-select-panel {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: $black-soft;
+    border: 1px solid $black-line;
+    border-radius: $radius-md;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.18);
+    outline: none;
+    transform: translateY(-4px);
+    transition: transform $transition-fast;
+
+    &[data-placement='top'] { transform: translateY(4px); }
+    .akd-select-overlay.is-open & { transform: none; }
+
+    &__handle { display: none; }
+
+    &__title {
+        padding: 0.5rem 1rem 0.25rem;
+        font-family: $font-mono;
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $white-faint;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0.375rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
+
+.akd-select-option {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: $radius-sm;
+    color: $white-muted;
+    font-size: $fs-sm;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background-color $transition-fast, color $transition-fast;
+
+    &.is-active { background: rgba($white, 0.07); color: $white; }
+    &[aria-selected='true'] { color: $white; font-weight: $fw-semibold; }
+
+    &__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    &__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &__desc { font-size: $fs-xs; font-weight: $fw-regular; color: $white-faint; }
+    &__check { flex-shrink: 0; font-size: 0.75rem; color: $sakura; opacity: 0; }
+    &[aria-selected='true'] &__check { opacity: 1; }
+
+    @media (pointer: coarse) { min-height: 3rem; }
+}
+
+// Narrow screens: bottom sheet, like the modal. JS clears the desktop inline positioning.
+.akd-select-overlay[data-mode='sheet'] {
+    .akd-select-panel {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: min(70vh, 28rem);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        border-bottom: 0;
+        border-radius: $radius-lg $radius-lg 0 0;
+        transform: translateY(100%);
+        transition: transform $transition-base;
+    }
+
+    &.is-open .akd-select-panel { transform: none; }
+
+    .akd-select-panel__handle {
+        display: block;
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 0.25rem;
+        margin: 0.5rem auto 0.25rem;
+        border-radius: $radius-full;
+        background: rgba($white, 0.2);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .akd-select-overlay, .akd-select-panel, .akd-select__chevron { transition: none; }
+}

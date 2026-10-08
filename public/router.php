@@ -204,6 +204,7 @@ $routes = [
     '/'                                      => 'index.php',
     '/components/modal'                      => '../resources/components/modal.php',
     '/components/confirm-dialog'             => '../resources/components/confirm-dialog.php',
+    '/components/select-menu'                => '../resources/components/select-menu.php',
     '/test'                                  => 'test.php',
     '/privacy'                               => 'privacy-policy.php',
     '/terms'                                 => 'terms-of-use.php',
@@ -274,6 +275,7 @@ $routes = [
     '/home'                                  => 'admin/index.php',
     '/admin/profile'                         => 'admin/profile.php',
     '/admin/announcements'                   => 'admin/announcements.php',
+    '/admin/blog'                            => 'admin/blog.php',
 ];
 
 /*

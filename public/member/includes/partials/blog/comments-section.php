@@ -1,6 +1,9 @@
 <?php
 /**
- * @var array<int,array<string,mixed>> $hydratedComments
+ * @var array<int,array<string,mixed>> $hydratedComments first page of threads from BlogCommentService
+ * @var array{items:array,has_more:bool,next_cursor:?int,total:int} $commentsPage
+ * @var string $commentsArticleId public ID: the only article identifier the browser ever sends
+ * @var bool $commentsLoadError
  * @var array<string,mixed> $user
  * @var string $avatarColor
  * @var string $userInitials
@@ -12,7 +15,9 @@
     <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
 </button>
 
-<section class="akd-post-comments" id="comments" aria-labelledby="akdCommentsHeading">
+<section class="akd-post-comments" id="comments" aria-labelledby="akdCommentsHeading"
+    data-article="<?= htmlspecialchars($commentsArticleId) ?>" data-total="<?= (int) $totalCommentCount ?>"
+>
     <h2 class="akd-post-comments__heading" id="akdCommentsHeading">
         Comments <span class="akd-post-comments__count" data-comments-heading-count>&middot; <?= (int) $totalCommentCount ?></span>
     </h2>
@@ -39,7 +44,15 @@
     </form>
 
     <div class="akd-comment-list" data-comment-list>
-        <?php if (empty($hydratedComments)): ?>
+        <?php if (!empty($commentsLoadError)): ?>
+            <div class="akd-blog-empty akd-comment-empty">
+                <span class="akd-comment-empty__icon" aria-hidden="true">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </span>
+                <p class="akd-blog-empty__title">Comments couldn't be loaded.</p>
+                <p class="akd-blog-empty__body">Refresh the page to try again.</p>
+            </div>
+        <?php elseif (empty($hydratedComments)): ?>
             <div class="akd-blog-empty akd-comment-empty" data-comment-empty>
                 <span class="akd-comment-empty__icon" aria-hidden="true">
                     <i class="fa-regular fa-comments"></i>
@@ -51,6 +64,15 @@
             <?php foreach ($hydratedComments as $comment): ?>
                 <?php require __DIR__ . '/comment-item.php'; ?>
             <?php endforeach; ?>
+
+            <?php if (!empty($commentsPage['has_more'])): ?>
+                <div class="akd-comment-more" data-comments-more data-next-cursor="<?= (int) $commentsPage['next_cursor'] ?>">
+                    <button type="button" class="akd-comment-replies__toggle" data-comments-more-btn>
+                        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                        <span data-comments-more-label>Show more comments</span>
+                    </button>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </section>

@@ -2,15 +2,14 @@
 /**
  * Renders one article card.
  *
- * @var array<string,mixed> $article
+ * @var array<string,mixed> $article  a BlogService::card()
  * @var string|null $cardVariant
  */
 $cardVariant ??= 'grid';
-$articleUrl = '/member/blog/post/' . rawurlencode($article['slug']);
 $hasImage = !empty($article['image']);
 ?>
 <article class="akd-blog-card akd-blog-card--<?= htmlspecialchars($cardVariant) ?>">
-    <a href="<?= htmlspecialchars($articleUrl) ?>" class="akd-blog-card__link">
+    <a href="<?= htmlspecialchars($article['url']) ?>" class="akd-blog-card__link">
         <div class="akd-blog-card__media">
             <span class="akd-blog-card__placeholder" aria-hidden="true">
                 <i class="fa-solid fa-newspaper"></i>
@@ -28,7 +27,8 @@ $hasImage = !empty($article['image']);
 
         <div class="akd-blog-card__body">
             <span class="akd-blog-card__category"><?= htmlspecialchars(strtoupper($article['category'])) ?></span>
-            <h3 class="akd-blog-card__title"><?= htmlspecialchars($article['title']) ?></h3>
+            <?php /* title_html is escaped by BlogTitle::html(); the only markup is <em> */ ?>
+            <h3 class="akd-blog-card__title"><?= $article['title_html'] ?></h3>
             <p class="akd-blog-card__excerpt"><?= htmlspecialchars($article['excerpt']) ?></p>
 
             <div class="akd-blog-card__meta">

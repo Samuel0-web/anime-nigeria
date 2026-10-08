@@ -1,35 +1,33 @@
 <?php
 /**
+ * One thread: a top-level comment from BlogCommentService. `replies` holds its first batch (oldest
+ * first) and `reply_count` all the replies in the database. The rest load on demand.
+ *
  * @var array<string,mixed> $comment
  * @var array<string,mixed> $user
+ * @var string $avatarColor
+ * @var string $userInitials
  */
-$flatReplies = akd_blog_flatten_replies($comment['replies'] ?? []);
-
-usort($flatReplies, static function (array $a, array $b): int {
-    return strtotime($a['created_at']) <=> strtotime($b['created_at']);
-});
-
-$totalReplies = count($flatReplies);
-$initialVisible = min(2, $totalReplies);
-$nestedReplyTargetIds = [];
-
-foreach ($flatReplies as $flatReply) {
-    if (!empty($flatReply['reply_to_id'])) {
-        $nestedReplyTargetIds[(string) $flatReply['reply_to_id']] = true;
-    }
-}
+$replies = array_values($comment['replies'] ?? []);
+$loadedReplies = count($replies);
+$totalReplies = max((int) ($comment['reply_count'] ?? 0), $loadedReplies);
+$initialVisible = min(2, $loadedReplies);
+$repliesAfter = $loadedReplies ? (int) $replies[$loadedReplies - 1]['id'] : 0;
+$repliesMore = $totalReplies > $loadedReplies;
 
 $currentUsername = $user['username'] ?? '';
 $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $currentUsername) === 0;
+$commentColor = $isOwnComment ? $avatarColor : $comment['avatar_color'];
+$commentInitials = $isOwnComment ? $userInitials : $comment['initials'];
 ?>
 <article class="akd-comment akd-comment-thread" data-comment-id="<?= (int) $comment['id'] ?>">
     <?php if ($isOwnComment): ?>
-        <span class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($comment['avatar_color']) ?>;" aria-hidden="true">
-            <?= htmlspecialchars($comment['initials']) ?>
+        <span class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($commentColor) ?>;" aria-hidden="true">
+            <?= htmlspecialchars($commentInitials) ?>
         </span>
     <?php else: ?>
-        <a class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($comment['avatar_color']) ?>;" href="/member/player/<?= htmlspecialchars($comment['username']) ?>" aria-hidden="true">
-            <?= htmlspecialchars($comment['initials']) ?>
+        <a class="akd-comment-avatar" style="background-color: <?= htmlspecialchars($commentColor) ?>;" href="/member/player/<?= htmlspecialchars($comment['username']) ?>" aria-hidden="true">
+            <?= htmlspecialchars($commentInitials) ?>
         </a>
     <?php endif; ?>
     <div class="akd-comment__body" data-comment-tap-target>
@@ -48,7 +46,7 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
         </div>
         <p class="akd-comment__text"><?= nl2br(htmlspecialchars($comment['content'])) ?></p>
         <div class="akd-comment__actions">
-            <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($comment['created_at'])) ?></span>
+            <span class="akd-comment__time" data-time="<?= htmlspecialchars($comment['created_at']) ?>"><?= htmlspecialchars(akd_blog_relative_time($comment['created_at'])) ?></span>
             <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
             <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($comment['fullname']) ?>" data-reply-username="<?= htmlspecialchars($comment['username']) ?>">Reply</button>
             <?php if ($isOwnComment): ?>
@@ -78,11 +76,18 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
         </div>
 
         <?php if ($totalReplies > 0): ?>
-            <div class="akd-comment-replies" data-reply-list data-total-replies="<?= $totalReplies ?>" data-visible-replies="<?= $initialVisible ?>">
-                <?php foreach ($flatReplies as $index => $reply): ?>
-                    <?php $isOwnReply = $currentUsername !== '' && strcasecmp($reply['username'], $currentUsername) === 0; ?>
+            <div class="akd-comment-replies" data-reply-list
+                data-total-replies="<?= $totalReplies ?>" data-visible-replies="<?= $initialVisible ?>"
+                data-replies-after="<?= $repliesAfter ?>" data-replies-more="<?= $repliesMore ? '1' : '0' ?>"
+            >
+                <?php foreach ($replies as $index => $reply): ?>
+                    <?php
+                    $isOwnReply = $currentUsername !== '' && strcasecmp($reply['username'], $currentUsername) === 0;
+                    $replyColor = $isOwnReply ? $avatarColor : $reply['avatar_color'];
+                    $replyInitials = $isOwnReply ? $userInitials : $reply['initials'];
+                    ?>
                     <article
-                        class="akd-comment akd-comment--reply<?= isset($nestedReplyTargetIds[(string) $reply['id']]) ? ' akd-comment--nested-reply' : '' ?><?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>"
+                        class="akd-comment akd-comment--reply<?= $index >= $initialVisible ? ' is-hidden-reply' : '' ?>"
                         data-comment-id="<?= (int) $reply['id'] ?>"
                         data-parent-id="<?= (int) $comment['id'] ?>"
                         data-reply-to-username="<?= htmlspecialchars($reply['reply_to_username'] ?? '') ?>"
@@ -90,12 +95,12 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                         data-reply-index="<?= $index ?>"
                     >
                         <?php if ($isOwnReply): ?>
-                            <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($reply['avatar_color']) ?>;" aria-hidden="true">
-                                <?= htmlspecialchars($reply['initials']) ?>
+                            <span class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($replyColor) ?>;" aria-hidden="true">
+                                <?= htmlspecialchars($replyInitials) ?>
                             </span>
                         <?php else: ?>
-                            <a class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($reply['avatar_color']) ?>;" href="/member/player/<?= htmlspecialchars($reply['username']) ?>" aria-hidden="true">
-                                <?= htmlspecialchars($reply['initials']) ?>
+                            <a class="akd-comment-avatar akd-comment-avatar--sm" style="background-color: <?= htmlspecialchars($replyColor) ?>;" href="/member/player/<?= htmlspecialchars($reply['username']) ?>" aria-hidden="true">
+                                <?= htmlspecialchars($replyInitials) ?>
                             </a>
                         <?php endif; ?>
                         <div class="akd-comment__body">
@@ -111,7 +116,7 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                                         <span class="akd-comment__username">@<?= htmlspecialchars($reply['username']) ?></span>
                                     </a>
                                 <?php endif; ?>
-                                <?php if ($reply['reply_to_username']): ?>
+                                <?php if (!empty($reply['reply_to_username'])): ?>
                                     <span class="akd-comment__reply-target">
                                         <i class="fa-solid fa-caret-right" aria-hidden="true"></i> @<?= htmlspecialchars($reply['reply_to_username']) ?>
                                     </span>
@@ -119,7 +124,7 @@ $isOwnComment = $currentUsername !== '' && strcasecmp($comment['username'], $cur
                             </div>
                             <p class="akd-comment__text"><?= nl2br(htmlspecialchars($reply['content'])) ?></p>
                             <div class="akd-comment__actions">
-                                <span class="akd-comment__time"><?= htmlspecialchars(akd_blog_relative_time($reply['created_at'])) ?></span>
+                                <span class="akd-comment__time" data-time="<?= htmlspecialchars($reply['created_at']) ?>"><?= htmlspecialchars(akd_blog_relative_time($reply['created_at'])) ?></span>
                                 <span class="akd-comment__dot" aria-hidden="true">&middot;</span>
                                 <button type="button" class="akd-comment__reply-btn" data-reply-toggle data-reply-name="<?= htmlspecialchars($reply['fullname']) ?>" data-reply-username="<?= htmlspecialchars($reply['username']) ?>">Reply</button>
                                 <?php if ($isOwnReply): ?>

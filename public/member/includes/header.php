@@ -23,7 +23,7 @@ if ($user === null) {
     exit;
 }
 
-if (in_array($user['role'] ?? null, ['admin', 'moderator'], true)) {
+if (in_array($user['role'] ?? null, ['admin', 'moderator'], true) && empty($allowAdminBlogArticleView)) {
     header('Location: /home');
     exit;
 }

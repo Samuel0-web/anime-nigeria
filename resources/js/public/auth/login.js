@@ -68,9 +68,7 @@ export function initLogin(form, updateButtons) {
 
             window.location.href = response.redirect;
         } catch (err) {
-            // handleApiError(err);
-            // debugger;
-            throw err;
+            handleApiError(err, "Could not sign in. Please try again.");
         } finally {
             clearLoading(button);
             updateButtons();

@@ -27,6 +27,12 @@ export default defineConfig(({ command }) => ({
         strictPort: true,
         cors: true,
         origin: 'http://127.0.0.1:5173',
+
+        watch: {
+            ignored: [
+                '**/public/storage/uploads/**',
+            ],
+        },
     },
 
     build: {

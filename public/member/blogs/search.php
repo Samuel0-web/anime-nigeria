@@ -1,20 +1,26 @@
 <?php
-require_once __DIR__ . '/../includes/data/blog-data.php';
+use App\Core\Logger;
+
 require_once __DIR__ . '/../includes/data/blog-support.php';
+require_once __DIR__ . '/../includes/data/blog-data.php';
 
 $searchQuery = akd_blog_search_query();
 $hasQuery = $searchQuery !== '';
+$pageData = ['items' => [], 'has_more' => false, 'page' => 1];
 
-$matchedArticles = $hasQuery
-    ? akd_blog_sort_by_date_desc(akd_blog_search($blogArticles, $searchQuery))
-    : [];
+if ($hasQuery && $blogService !== null) {
+    try {
+        // Database search, paginated with the same look-ahead. Nothing is filtered in PHP or JS.
+        $pageData = $blogService->search($searchQuery, akd_blog_current_page());
+    } catch (\Throwable $e) {
+        Logger::error($e);
+        $blogLoadError = true;
+    }
+}
 
-$currentPage = akd_blog_current_page();
-$pagination = akd_blog_paginate($matchedArticles, $currentPage, AKD_BLOG_PER_PAGE);
-
-$pageArticles = $pagination['items'];
-$paginationCurrentPage = $pagination['current_page'];
-$paginationTotalPages = $pagination['total_pages'];
+$pageArticles = $pageData['items'];
+$paginationCurrentPage = $pageData['page'];
+$paginationHasMore = $pageData['has_more'];
 $paginationBaseUrl = '/member/blog/search';
 $paginationQueryParams = $hasQuery ? ['q' => $searchQuery] : [];
 
@@ -36,7 +42,9 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="akd-blog akd-blog-search-page">
         <?php require __DIR__ . '/../includes/partials/blog/search-header.php'; ?>
 
-        <?php if ($hasQuery): ?>
+        <?php if ($blogLoadError): ?>
+            <?php require __DIR__ . '/../includes/partials/blog/load-error.php'; ?>
+        <?php elseif ($hasQuery): ?>
             <?php if (empty($pageArticles)): ?>
                 <div class="akd-blog-empty">
                     <p class="akd-blog-empty__title">No articles found.</p>
@@ -48,10 +56,10 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php require __DIR__ . '/../includes/partials/blog/article-card.php'; ?>
                     <?php endforeach; ?>
                 </div>
+
+                <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
             <?php endif; ?>
         <?php endif; ?>
-
-        <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
     </div>
 </main>
 

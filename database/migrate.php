@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../bootstrap.php';
 
 use App\Database\Database;
@@ -28,7 +29,7 @@ $cyan   = fn($s) => $c('36', $s);
 $bold   = fn($s) => $c('1',  $s);
 $gray   = fn($s) => $c('90', $s);
 
-// Colored line:  "  → name"  (icon + name same color)
+// Colored line: "  → name" (icon + name same color)
 $line = fn(string $glyph, callable $color, string $name) =>
     "  " . $color($glyph . " " . $name);
 
@@ -44,11 +45,23 @@ echo str_repeat('─', 50) . PHP_EOL;
 $ran = 0;
 $skipped = 0;
 
-foreach (glob(__DIR__ . '/migrations/*.php') as $file) {
+$files = glob(__DIR__ . '/migrations/*.php');
+
+// Filename determines migration order
+sort($files, SORT_STRING);
+
+foreach ($files as $file) {
     require_once $file;
 
-    $name  = pathinfo($file, PATHINFO_FILENAME);
-    $class = 'App\\Database\\Migrations\\' . $name;
+    // Full filename without extension.
+    // Example: 001_CreateUsersTable
+    $name = pathinfo($file, PATHINFO_FILENAME);
+
+    // Remove numeric prefix to get the actual PHP class name.
+    // Example: 001_CreateUsersTable -> CreateUsersTable
+    $className = preg_replace('/^\d+_/', '', $name);
+
+    $class = 'App\\Database\\Migrations\\' . $className;
 
     if (!class_exists($class)) {
         echo $line('!', $yellow, $name) . $gray(" (class not found)") . PHP_EOL;

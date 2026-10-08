@@ -21,7 +21,8 @@ import './member/community-awards-nominations.js';
 import './member/community-awards-voting.js';
 import './member/honoured-ones.js';
 import './member/gallery.js';
-import { initBlogSearch, initBlogCardImages } from './member/blog';
+import { initBlogCardImages } from './member/blog';
+import { initBlogSearch } from './member/blog-search';
 import { initCommentComposer, initTableOfContents, initCopyLink, initArticleLightbox,
     initReplyExpansion, initReplyComposers, initMobileCommentReply, 
     initMobileCommentsSheet, initCommentListHeight, initCommentDeletion, 

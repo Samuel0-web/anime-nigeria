@@ -4,10 +4,14 @@ use PDO;
 
 class Announcement {
     private const SELECT = "SELECT a.id, a.category_id, c.name AS category_name,
-            c.accent AS accent, a.`date`, a.title, a.excerpt, a.cta, a.url,
-            a.featured, a.image, a.image_alt, a.created_at, a.updated_at
+        c.accent AS accent, a.`date`, a.title, a.excerpt, a.cta, a.url, a.blog_article_id,
+        a.featured, a.image, a.image_alt, a.created_at, a.updated_at,
+        b.slug AS blog_slug, b.public_id AS blog_public_id, b.title AS blog_title,
+        (b.status = 'published' AND b.published_at <= UTC_TIMESTAMP()) AS blog_is_public
         FROM announcements a
-        INNER JOIN announcement_categories c ON c.id = a.category_id";
+        INNER JOIN announcement_categories c ON c.id = a.category_id
+        LEFT JOIN blog_articles b ON b.id = a.blog_article_id"
+    ;
 
     public function __construct(private PDO $db) {}
 
@@ -85,17 +89,18 @@ class Announcement {
 
     public function create(array $data): int {
         $stmt = $this->db->prepare("INSERT INTO announcements
-            (category_id, title, excerpt, cta, url, featured, `date`, image, image_alt)
+            (category_id, title, excerpt, cta, url, blog_article_id, featured, `date`, image, image_alt)
             VALUES
-            (:category_id, :title, :excerpt, :cta, :url, :featured, :date, :image, :image_alt)
+            (:category_id, :title, :excerpt, :cta, :url, :blog_article_id, :featured, :date, :image, :image_alt)
         ");
+        
         $stmt->execute($this->bindings($data));
         return (int) $this->db->lastInsertId();
     }
 
     public function update(int $id, array $data): bool {
         $stmt = $this->db->prepare("UPDATE announcements SET category_id = :category_id,
-            title = :title, excerpt = :excerpt, cta = :cta, url = :url,
+            title = :title, excerpt = :excerpt, cta = :cta, url = :url, blog_article_id = :blog_article_id,
             featured = :featured, `date` = :date, image = :image, image_alt = :image_alt
             WHERE id = :id
         ");
@@ -136,6 +141,7 @@ class Announcement {
             ':excerpt' => $data['excerpt'],
             ':cta' => $data['cta'],
             ':url' => $data['url'],
+            ':blog_article_id' => $data['blog_article_id'] ?? null,
             ':featured' => $data['featured'] ? 1 : 0,
             ':date' => $data['date'],
             ':image' => $data['image'] ?? null,

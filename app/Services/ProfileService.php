@@ -272,7 +272,7 @@ class ProfileService {
             return;
         }
 
-        $file = PUBLIC_PATH . $avatar;
+        $file = STORAGE_PATH . '/uploads/avatars/' . basename($avatar);
 
         if (is_file($file)) {
             @unlink($file);

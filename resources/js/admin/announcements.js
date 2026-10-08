@@ -17,6 +17,7 @@ import {
 } from './form-utils';
 
 const API = '/admin/api/announcements';
+const PICKER_API = '/admin/api/blog/picker';
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const EXCERPT_MAX = 150;
@@ -166,7 +167,24 @@ export function initAdminAnnouncements() {
                 <button type="button" class="akd-ann-iconbtn akd-ann-iconbtn--danger" data-action="delete" aria-label="${escapeHtml(deleteLabel)}" title="Delete">
                     <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                 </button>` : ''}
-        </div>`;
+        </div>`
+    ;
+
+    function destinationCell(item) {
+        const link = item.blog_article;
+
+        const target = link
+            ? `<i class="fa-regular fa-newspaper" aria-hidden="true"></i> ${escapeHtml(link.title || 'Blog article')}${link.is_public ? '' : ' (saved link in use)'}`
+            : escapeHtml(item.url)
+        ;
+
+        return `
+            <div class="akd-ann-cell akd-ann-cell--dest">
+                <span class="akd-ann-cell__cta">${escapeHtml(item.cta)}</span>
+                <span class="akd-ann-cell__url">${target}</span>
+            </div>`
+        ;
+    }
 
     function announcementRow(item) {
         const selected = state.selected.announcements.has(item.id);
@@ -192,10 +210,7 @@ export function initAdminAnnouncements() {
                     <div class="akd-ann-cell akd-ann-cell--date">
                         <time datetime="${escapeHtml(item.date)}">${escapeHtml(formatDate(item.date))}</time>
                     </div>
-                    <div class="akd-ann-cell akd-ann-cell--dest">
-                        <span class="akd-ann-cell__cta">${escapeHtml(item.cta)}</span>
-                        <span class="akd-ann-cell__url">${escapeHtml(item.url)}</span>
-                    </div>
+                    ${destinationCell(item)}
                 </div>
                 ${actionsHtml(`Edit ${item.title}`, `Delete ${item.title}`)}
             </li>`;
@@ -560,7 +575,7 @@ export function initAdminAnnouncements() {
         const isEdit = item !== null;
         const v = item ?? {
             title: '', excerpt: '', cta: '', url: '', date: todayYmd(), featured: false,
-            category_id: null, image: null, image_url: null, image_alt: '',
+            category_id: null, image: null, image_alt: '', image_url: null, blog_article: null,
         };
 
         const categoryChoices = state.categories.items.map((category) => `
@@ -622,26 +637,69 @@ export function initAdminAnnouncements() {
                     </div>
                 </div>
 
-                <div class="akd-ann-form__grid">
-                    <div class="akd-admin-field" data-field="cta">
-                        <label class="akd-admin-field__label" for="annCta">Button label</label>
-                        <div class="akd-admin-field__control">
-                            <input type="text" id="annCta" name="cta" class="akd-admin-field__input" maxlength="30"
-                                value="${escapeHtml(v.cta)}" placeholder="Vote Now" autocomplete="off" aria-describedby="annCta-error">
-                        </div>
-                        <p class="akd-admin-field__error" id="annCta-error" data-field-error aria-live="polite"></p>
+                <div class="akd-admin-field" data-field="cta">
+                    <label class="akd-admin-field__label" for="annCta">Button label</label>
+                    <div class="akd-admin-field__control">
+                        <input type="text" id="annCta" name="cta" class="akd-admin-field__input" maxlength="30"
+                            value="${escapeHtml(v.cta)}" placeholder="Vote Now" autocomplete="off" aria-describedby="annCta-error">
+                    </div>
+                    <p class="akd-admin-field__error" id="annCta-error" data-field-error aria-live="polite"></p>
+                </div>
+
+                <fieldset class="akd-admin-field akd-ann-fieldset" data-field="url">
+                    <legend class="akd-admin-field__label">Destination</legend>
+
+                    <div class="akd-bl-choice" role="radiogroup" aria-label="Destination type">
+                        <label class="akd-bl-choice__item">
+                            <input type="radio" name="dest" value="url">
+                            <span class="akd-bl-choice__body">Custom link</span>
+                        </label>
+                        <label class="akd-bl-choice__item">
+                            <input type="radio" name="dest" value="article">
+                            <span class="akd-bl-choice__body"><i class="fa-regular fa-newspaper" aria-hidden="true"></i>&nbsp;Blog article</span>
+                        </label>
                     </div>
 
-                    <div class="akd-admin-field" data-field="url">
-                        <label class="akd-admin-field__label" for="annUrl">Destination</label>
-                        <div class="akd-admin-field__control">
-                            <input type="text" id="annUrl" name="url" class="akd-admin-field__input" maxlength="500"
-                                value="${escapeHtml(v.url)}" placeholder="/member/awards/voting" autocomplete="off"
-                                autocapitalize="none" spellcheck="false" aria-describedby="annUrl-error">
-                        </div>
-                        <p class="akd-admin-field__error" id="annUrl-error" data-field-error aria-live="polite"></p>
+                    <div class="akd-ann-dest" data-dest-url>
+                        <input type="text" id="annUrl" name="url" class="akd-admin-field__input" maxlength="500"
+                            value="${escapeHtml(v.url)}" placeholder="/member/awards/voting" autocomplete="off"
+                            autocapitalize="none" spellcheck="false" aria-label="Destination URL" aria-describedby="annUrl-error">
                     </div>
-                </div>
+
+                    <div class="akd-ann-dest akd-ann-picker" data-dest-article hidden>
+                        <div class="akd-ann-picker__selected" data-picked hidden>
+                            <span class="akd-ann-picker__icon" aria-hidden="true"><i class="fa-regular fa-newspaper"></i></span>
+                            <div class="akd-ann-picker__text">
+                                <strong data-picked-title></strong>
+                                <span data-picked-meta></span>
+                                <code data-picked-url></code>
+                            </div>
+                            <button type="button" class="akd-admin-btn" data-picked-change>Change</button>
+                        </div>
+                        <p class="akd-admin-field__hint akd-ann-picker__warn" data-picked-warn hidden>
+                            This article isn't published right now, so members get the saved link below instead.
+                        </p>
+
+                        <div class="akd-ann-picker__search" data-picker-search>
+                            <div class="akd-ann-search">
+                                <i class="fa-solid fa-magnifying-glass akd-bl-search__icon" aria-hidden="true"></i>
+                                <input type="text" inputmode="search" role="searchbox" class="akd-admin-field__input akd-bl-search__input"
+                                    data-picker-input placeholder="Search published articles" aria-label="Search published articles"
+                                    autocomplete="off" maxlength="100">
+                                <button type="button" class="akd-bl-search__clear" data-picker-clear aria-label="Clear search" hidden>
+                                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <ul class="akd-ann-picker__list" data-picker-list role="list"></ul>
+                            <div class="akd-ann-picker__footer">
+                                <p class="akd-ann-picker__status" data-picker-status role="status" aria-live="polite"></p>
+                                <button type="button" class="akd-admin-btn" data-picker-retry hidden>Try again</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="akd-admin-field__error" id="annUrl-error" data-field-error aria-live="polite"></p>
+                </fieldset>
 
                 <div class="akd-admin-field" data-field="image">
                     <span class="akd-admin-field__label">Artwork <span class="akd-ann-optional">Optional</span></span>
@@ -675,15 +733,18 @@ export function initAdminAnnouncements() {
         const form = template.content.firstElementChild;
         const field = (name) => form.querySelector(`[data-field="${name}"]`);
         const fields = {
-            title: field('title'), excerpt: field('excerpt'), category_id: field('category_id'),
+            title: field('title'), excerpt: field('excerpt'), 
+            category_id: field('category_id'), 
             date: field('date'), cta: field('cta'), url: field('url'),
             image: field('image'), image_alt: field('image_alt'),
         };
+
+        fields.blog_article_id = fields.url;
         const titleInput = fields.title.querySelector('input');
         const excerptInput = fields.excerpt.querySelector('textarea');
         const dateInput = fields.date.querySelector('input');
         const ctaInput = fields.cta.querySelector('input');
-        const urlInput = fields.url.querySelector('input');
+        const urlInput = form.querySelector('#annUrl');
         const altInput = fields.image_alt.querySelector('input');
         const featuredInput = form.querySelector('input[name="featured"]');
         const counter = form.querySelector('[data-counter]');
@@ -693,6 +754,176 @@ export function initAdminAnnouncements() {
         const chooseLabel = form.querySelector('[data-image-choose-label]');
         const removeBtn = form.querySelector('[data-image-remove]');
 
+        // ---- Destination: a custom link, or a published Blog article -------------
+        const destUrl = form.querySelector('[data-dest-url]');
+        const destArticle = form.querySelector('[data-dest-article]');
+        const picked = form.querySelector('[data-picked]');
+        const pickedTitle = form.querySelector('[data-picked-title]');
+        const pickedMeta = form.querySelector('[data-picked-meta]');
+        const pickedUrl = form.querySelector('[data-picked-url]');
+        const pickedWarn = form.querySelector('[data-picked-warn]');
+        const pickedChange = form.querySelector('[data-picked-change]');
+        const searchWrap = form.querySelector('[data-picker-search]');
+        const searchInput = form.querySelector('[data-picker-input]');
+        const searchClear = form.querySelector('[data-picker-clear]');
+        const resultsEl = form.querySelector('[data-picker-list]');
+        const statusEl = form.querySelector('[data-picker-status]');
+        const retryBtn = form.querySelector('[data-picker-retry]');
+        const modeInputs = Array.from(form.querySelectorAll('input[name="dest"]'));
+
+        let link = v.blog_article
+            ? { id: v.blog_article.id, title: v.blog_article.title || 'Blog article', url: v.url,
+                is_public: v.blog_article.is_public, meta: '' }
+            : null;
+
+        let mode = link ? 'article' : 'url';
+        let results = [];
+        let searched = false;
+        let searchSeq = 0;
+        let searchTimer = 0;
+        modeInputs.forEach((input) => { input.checked = input.value === mode; });
+
+        function renderDestination() {
+            destUrl.hidden = mode !== 'url';
+            destArticle.hidden = mode !== 'article';
+            picked.hidden = !link;
+            searchWrap.hidden = Boolean(link);
+
+            if (link) {
+                pickedTitle.textContent = link.title;
+                pickedMeta.textContent = link.meta || '';
+                pickedMeta.hidden = !link.meta;
+                pickedUrl.textContent = link.url || '';
+                pickedWarn.hidden = link.is_public !== false;
+            }
+        }
+
+        function renderResults(hasMore, query) {
+            resultsEl.replaceChildren(...results.map((r) => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'akd-ann-picker__item';
+                button.dataset.id = String(r.id);
+                const title = document.createElement('span');
+                title.className = 'akd-ann-picker__title';
+                title.textContent = r.title || 'Untitled';
+                const date = r.published_at ? formatDate(r.published_at.slice(0, 10)) : '';
+                const meta = document.createElement('span');
+                meta.className = 'akd-ann-picker__meta';
+                meta.textContent = [r.category || 'No category', date].filter(Boolean).join(' \u00b7 ');
+                button.append(title, meta);
+                li.appendChild(button);
+                return li;
+            }));
+
+            if (results.length === 0) {
+                statusEl.textContent = query ? `No published articles match "${query}".` : 'No articles are published yet.';
+            } else if (hasMore) {
+                statusEl.textContent = 'Showing the first 10. Type to narrow it down.';
+            } else {
+                statusEl.textContent = plural(results.length, 'article', 'articles');
+            }
+        }
+
+        async function runSearch(query) {
+            const token = ++searchSeq;
+            searched = true;
+            retryBtn.hidden = true;
+            statusEl.textContent = 'Searching...';
+            resultsEl.classList.add('is-loading');
+
+            try {
+                const res = await api(`${PICKER_API}?q=${encodeURIComponent(query)}`);
+                if (token !== searchSeq) return;
+                if (res.success === false) throw new Error('Request failed');
+                results = res.items || [];
+                renderResults(Boolean(res.has_more), query);
+            } catch (err) {
+                if (token !== searchSeq) return;
+                results = [];
+                resultsEl.replaceChildren();
+                statusEl.textContent = "Couldn't load articles.";
+                retryBtn.hidden = false;
+            } finally {
+                if (token === searchSeq) resultsEl.classList.remove('is-loading');
+            }
+        }
+
+        modeInputs.forEach((input) => {
+            input.addEventListener('change', () => {
+                if (!input.checked) return;
+                mode = input.value;
+                clearFieldError(fields.url);
+                renderDestination();
+                if (mode === 'article' && !link && !searched) runSearch('');
+            });
+        });
+
+        searchInput.addEventListener('input', () => {
+            searchClear.hidden = searchInput.value === '';
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => runSearch(collapseSpaces(searchInput.value)), 300);
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                resultsEl.querySelector('button')?.focus();
+            } else if (event.key === 'Enter') {
+                event.preventDefault(); // Enter must not submit the whole announcement form
+                clearTimeout(searchTimer);
+                runSearch(collapseSpaces(searchInput.value));
+            }
+        });
+
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            searchClear.hidden = true;
+            searchInput.focus();
+            clearTimeout(searchTimer);
+            runSearch('');
+        });
+
+        resultsEl.addEventListener('keydown', (event) => {
+            const buttons = Array.from(resultsEl.querySelectorAll('button'));
+            const index = buttons.indexOf(document.activeElement);
+            if (index === -1 || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+            event.preventDefault();
+            if (event.key === 'ArrowDown') buttons[Math.min(buttons.length - 1, index + 1)].focus();
+            else if (index === 0) searchInput.focus();
+            else buttons[index - 1].focus();
+        });
+
+        resultsEl.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-id]');
+            const article = button ? results.find((r) => String(r.id) === button.dataset.id) : null;
+            if (!article) return;
+
+            link = {
+                id: article.id,
+                title: article.title || 'Untitled',
+                url: article.url,
+                is_public: true,
+                meta: [article.category, article.published_at ? formatDate(article.published_at.slice(0, 10)) : '']
+                    .filter(Boolean).join(' \u00b7 '),
+            };
+
+            clearFieldError(fields.url);
+            renderDestination();
+            pickedChange.focus();
+        });
+
+        pickedChange.addEventListener('click', () => {
+            link = null;
+            renderDestination();
+            searchInput.focus();
+            if (!searched) runSearch('');
+        });
+
+        retryBtn.addEventListener('click', () => runSearch(collapseSpaces(searchInput.value)));
+        renderDestination();
+        if (mode === 'article' && !link) runSearch('');
         const image = { file: null, remove: false, objectUrl: null };
         const selectedCategory = () => form.querySelector('input[name="category_id"]:checked')?.value ?? '';
 
@@ -701,7 +932,9 @@ export function initAdminAnnouncements() {
             title: collapseSpaces(titleInput.value),
             excerpt: collapseSpaces(excerptInput.value),
             cta: collapseSpaces(ctaInput.value),
+            mode,
             url: urlInput.value.trim(),
+            blog_article_id: mode === 'article' && link ? String(link.id) : '',
             date: dateInput.value,
             featured: featuredInput.checked,
             image_alt: collapseSpaces(altInput.value),
@@ -789,6 +1022,7 @@ export function initAdminAnnouncements() {
                 return null;
             },
             url: () => {
+                if (mode === 'article') return link ? null : 'Choose an article, or switch to a custom link.';
                 const value = urlInput.value.trim();
                 if (!value) return 'Destination URL is required.';
                 if (!validDestination(value)) return 'Use a path such as /member/awards/voting or a full https:// link.';
@@ -852,14 +1086,15 @@ export function initAdminAnnouncements() {
             data.set('title', values.title);
             data.set('excerpt', values.excerpt);
             data.set('cta', values.cta);
-            data.set('url', values.url);
+
+            // In article mode the server builds the address from the article itself.
+            data.set('url', values.mode === 'article' ? '' : values.url);
+            data.set('blog_article_id', values.blog_article_id);
             data.set('date', values.date);
             data.set('featured', values.featured ? '1' : '0');
             data.set('image_alt', values.image_alt);
-
             if (image.file) data.set('image', image.file);
             else if (image.remove) data.set('remove_image', '1');
-
             return data;
         }
 

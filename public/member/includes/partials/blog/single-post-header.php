@@ -15,7 +15,7 @@
         <span class="akd-post__category"><?= htmlspecialchars(strtoupper($article['category'])) ?></span>
     <?php endif; ?>
 
-    <h1 class="akd-post__title"><?= htmlspecialchars($article['title']) ?></h1>
+    <h1 class="akd-post__title"><?= $article['title_html'] ?></h1>
 
     <div class="akd-post__meta">
         <span class="akd-post__author"><?= htmlspecialchars($article['author'] ?? 'Anime Nigeria Editorial') ?></span>

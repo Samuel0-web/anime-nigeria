@@ -41,7 +41,6 @@ class Auth {
     private const PASSWORD_RESET_RESEND_AFTER = 60;
     private const VERIFICATION_RESEND_AFTER = 60;
     private const LOGIN_SESSION_TOUCH_INTERVAL = 300; // 5 minutes
-    private const LOGIN_SESSION_IDLE_TIMEOUT = 1800; // 30 minutes
     private const LOGIN_SESSION_MAX_LIFETIME = 2592000; // 30 days
     private const TWO_FACTOR_TIMEOUT = 600; // 10 minutes
 
@@ -152,12 +151,7 @@ class Auth {
         }
     }
 
-    /**
-     * @param bool $touchActivity Pass false for background requests (the unread
-     *        event stream) so they validate the session without renewing its
-     *        idle timer.
-     */
-    public function check(bool $touchActivity = true): bool {
+    public function check(): bool {
         if (!isset($_SESSION['user_id'])) {
             return false;
         }
@@ -189,13 +183,9 @@ class Auth {
         }
 
         $createdAt = strtotime((string) ($loginSession['created_at'] ?? ''));
-        $lastActivityAt = strtotime((string) ($loginSession['last_activity_at'] ?? ''));
         $now = time();
 
-        if (($createdAt !== false && $createdAt <= $now - self::LOGIN_SESSION_MAX_LIFETIME)
-            || ($lastActivityAt !== false
-                && $lastActivityAt <= $now - self::LOGIN_SESSION_IDLE_TIMEOUT)
-        ) {
+        if ($createdAt !== false && $createdAt <= $now - self::LOGIN_SESSION_MAX_LIFETIME) {
             $this->loginSessions->revoke((int) $loginSession['id'], (int) $_SESSION['user_id']);
             $this->clearAuthenticatedState();
             return false;
@@ -221,7 +211,7 @@ class Auth {
         $shouldTouch = $lastActivityAt === null
             || strtotime($lastActivityAt) <= time() - self::LOGIN_SESSION_TOUCH_INTERVAL;
 
-        if ($touchActivity && $shouldTouch) {
+        if ($shouldTouch) {
             $this->loginSessions->touch((int) $loginSession['id']);
         }
 

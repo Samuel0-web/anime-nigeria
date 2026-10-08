@@ -1,23 +1,17 @@
 <?php
 /**
- * Presentational pagination control shared by every Blog archive page
- * (All Articles, Categories, Search results). Expects the caller to
- * have already prepared:
+ * Previous / Next control driven by the look-ahead row (no COUNT query).
  *
  * @var int $paginationCurrentPage
- * @var int $paginationTotalPages
+ * @var bool $paginationHasMore
  * @var string $paginationBaseUrl
- * @var array<string,string>|null $paginationQueryParams Optional. Extra
- *      query parameters (such as the search term) to preserve on every
- *      page link. Defaults to none.
+ * @var array<string,string>|null $paginationQueryParams extra params kept on every link (e.g. q)
  */
 $paginationQueryParams ??= [];
 
-if ($paginationTotalPages <= 1) {
+if ($paginationCurrentPage <= 1 && !$paginationHasMore) {
     return;
 }
-
-$paginationPages = akd_blog_pagination_pages($paginationCurrentPage, $paginationTotalPages);
 
 $akdBlogPageUrl = static function (int $page) use ($paginationBaseUrl, $paginationQueryParams): string {
     $params = $paginationQueryParams;
@@ -42,18 +36,10 @@ $akdBlogPageUrl = static function (int $page) use ($paginationBaseUrl, $paginati
     <?php endif; ?>
 
     <div class="akd-blog-pagination__pages">
-        <?php foreach ($paginationPages as $paginationPage): ?>
-            <?php if ($paginationPage === 'ellipsis'): ?>
-                <span class="akd-blog-pagination__ellipsis" aria-hidden="true">&hellip;</span>
-            <?php elseif ($paginationPage === $paginationCurrentPage): ?>
-                <span class="akd-blog-pagination__page is-active" aria-current="page"><?= (int) $paginationPage ?></span>
-            <?php else: ?>
-                <a href="<?= htmlspecialchars($akdBlogPageUrl((int) $paginationPage)) ?>" class="akd-blog-pagination__page"><?= (int) $paginationPage ?></a>
-            <?php endif; ?>
-        <?php endforeach; ?>
+        <span class="akd-blog-pagination__page is-active" aria-current="page">Page <?= (int) $paginationCurrentPage ?></span>
     </div>
 
-    <?php if ($paginationCurrentPage < $paginationTotalPages): ?>
+    <?php if ($paginationHasMore): ?>
         <a href="<?= htmlspecialchars($akdBlogPageUrl($paginationCurrentPage + 1)) ?>" class="akd-blog-pagination__btn akd-blog-pagination__btn--next" aria-label="Next page">
             <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
         </a>

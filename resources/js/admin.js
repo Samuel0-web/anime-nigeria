@@ -9,6 +9,7 @@ import { initLogout } from "./modules/logout";
 import { initAdminSidebar } from './admin/sidebar';
 import { initAdminProfile } from './admin/profile';
 import { initAdminAnnouncements } from './admin/announcements';
+import { initAdminBlog } from './admin/blog';
 
 initPreloader();
 
@@ -23,5 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initAdminProfile();
     initAdminAnnouncements();
+    initAdminBlog();
     initLogout();
 });

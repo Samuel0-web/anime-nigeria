@@ -1,6 +1,13 @@
 <?php
 // public/admin/partials/header.php
 require_once __DIR__ . '/../../../bootstrap.php';
+
+global $auth;
+
+if (!isset($auth) || !$auth instanceof \App\Auth\Auth) {
+    throw new \RuntimeException('Authentication bootstrap failed.');
+}
+
 require __DIR__ . '/../../../includes/vite.php';
 
 $auth->requireAuth();
@@ -94,6 +101,7 @@ $navGroups = [
             ],
         ],
         ['label' => 'Announcements', 'icon' => 'fa-solid fa-bullhorn', 'url' => '/admin/announcements'],
+        ['label' => 'Blog', 'icon' => 'fa-solid fa-blog', 'url' => '/admin/blog'],
         [
             'label' => 'Awards',
             'icon' => 'fa-solid fa-trophy',

@@ -1,13 +1,14 @@
 <?php
 /**
  * @var array|null $activeCategory
- * @var array{items: array, current_page: int, per_page: int, total_items: int, total_pages: int} $pagination
+ * @var int $categoryTotal published articles in the active category (or in all of them)
  */
 $categoryHeading = $activeCategory ? $activeCategory['label'] : 'All';
 $categoryCopy = $activeCategory
     ? ($activeCategory['description'] ?? '')
     : 'Every story, guide and update from the Anime Nigeria Blog.';
-$categoryArticleCount = $pagination['total_items'];
+
+$categoryArticleCount = (int) ($categoryTotal ?? 0);
 ?>
 <?php require __DIR__ . '/back-link.php'; ?>
 

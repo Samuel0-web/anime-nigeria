@@ -34,7 +34,9 @@ final class FileCache {
 
     public function __construct(private string $baseDir) {}
 
-    public function remember(string $namespace, string $key, int $ttl, callable $compute): mixed {
+    public function remember(string $namespace, string $key, int $ttl, callable $compute,
+        ?callable $shouldStore = null
+    ): mixed {
         $version = $this->version($namespace);
 
         if ($version === null) {
@@ -52,7 +54,10 @@ final class FileCache {
 
         $this->note($key, 'miss');
         $value = $compute();
-        $this->write($namespace, $path, $key, $value, $ttl);
+
+        if ($shouldStore === null || $shouldStore($value)) {
+            $this->write($namespace, $path, $key, $value, $ttl);
+        }
 
         return $value;
     }

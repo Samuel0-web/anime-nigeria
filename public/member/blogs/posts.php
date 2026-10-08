@@ -1,15 +1,26 @@
 <?php
-require_once __DIR__ . '/../includes/data/blog-data.php';
+use App\Core\Logger;
+
 require_once __DIR__ . '/../includes/data/blog-support.php';
+require_once __DIR__ . '/../includes/data/blog-data.php';
 
-$sortedArticles = akd_blog_sort_by_date_desc($blogArticles);
-$currentPage = akd_blog_current_page();
-$pagination = akd_blog_paginate($sortedArticles, $currentPage, AKD_BLOG_PER_PAGE);
+$pageData = ['items' => [], 'has_more' => false, 'page' => 1];
+$blogTotal = 0;
 
-$pageArticles = $pagination['items'];
-$paginationCurrentPage = $pagination['current_page'];
-$paginationTotalPages = $pagination['total_pages'];
-$paginationBaseUrl = '/member/blog/post';
+if ($blogService !== null) {
+    try {
+        $pageData = $blogService->list(null, akd_blog_current_page());
+        $blogTotal = array_sum(array_column($blogService->categories(), 'count'));
+    } catch (\Throwable $e) {
+        Logger::error($e);
+        $blogLoadError = true;
+    }
+}
+
+$pageArticles = $pageData['items'];
+$paginationCurrentPage = $pageData['page'];
+$paginationHasMore = $pageData['has_more'];
+$paginationBaseUrl = '/member/blog/posts';
 
 $page_title = 'All Articles';
 $page_description = 'Browse every story, guide and update from the Anime Nigeria Blog.';
@@ -34,12 +45,14 @@ require_once __DIR__ . '/../includes/header.php';
                     <p class="akd-blog__subtitle">Every story, guide and update from the Anime Nigeria Blog.</p>
                 </div>
                 <span class="akd-blog-archive-page__count">
-                    <?= (int) $pagination['total_items'] ?> <?= $pagination['total_items'] === 1 ? 'article' : 'articles' ?>
+                    <?= (int) $blogTotal ?> <?= $blogTotal === 1 ? 'article' : 'articles' ?>
                 </span>
             </div>
         </section>
 
-        <?php if (empty($pageArticles)): ?>
+        <?php if ($blogLoadError): ?>
+            <?php require __DIR__ . '/../includes/partials/blog/load-error.php'; ?>
+        <?php elseif (empty($pageArticles)): ?>
             <div class="akd-blog-empty">
                 <p class="akd-blog-empty__title">No articles here yet.</p>
                 <p class="akd-blog-empty__body">There are no published articles right now.</p>
@@ -50,9 +63,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php require __DIR__ . '/../includes/partials/blog/article-card.php'; ?>
                 <?php endforeach; ?>
             </div>
-        <?php endif; ?>
 
-        <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
+            <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
+        <?php endif; ?>
     </div>
 </main>
 

@@ -1,40 +1,48 @@
 <?php
-/** @var string|null $category */
+/** @var string|null $category route parameter (category slug) */
+use App\Core\Logger;
 
-require_once __DIR__ . '/../includes/data/blog-data.php';
 require_once __DIR__ . '/../includes/data/blog-support.php';
+require_once __DIR__ . '/../includes/data/blog-data.php';
 
 $categorySlug = $category ?? null;
-$activeCategory = $categorySlug !== null
-    ? akd_blog_category_by_slug($blogCategories, $categorySlug)
-    : null;
+$allCategories = [];
+$activeCategory = null;
+$pageData = ['items' => [], 'has_more' => false, 'page' => 1];
 
-if ($categorySlug !== null && $activeCategory === null) {
-    http_response_code(404);
-    require __DIR__ . '/../404.php';
-    exit;
+if ($blogService !== null) {
+    try {
+        $allCategories = $blogService->categories();
+        $activeCategory = $categorySlug !== null ? $blogService->categoryBySlug($categorySlug) : null;
+
+        if ($categorySlug !== null && $activeCategory === null) {
+            http_response_code(404);
+            require __DIR__ . '/../404.php';
+            exit;
+        }
+
+        // The category filter is applied in SQL, with the same LIMIT + 1 look-ahead as every list.
+        $pageData = $blogService->list($activeCategory['id'] ?? null, akd_blog_current_page());
+    } catch (\Throwable $e) {
+        Logger::error($e);
+        $blogLoadError = true;
+    }
 }
 
-$categoryArticles = $activeCategory
-    ? akd_blog_articles_by_category($blogArticles, $activeCategory['label'])
-    : $blogArticles;
-$categoryArticles = akd_blog_sort_by_date_desc($categoryArticles);
+// Nav lists categories that have articles, plus the one being viewed.
+$blogCategories = array_values(array_filter($allCategories, static fn (array $c): bool =>
+    $c['count'] > 0 || ($activeCategory !== null && $c['id'] === $activeCategory['id'])));
+$categoryCounts = array_column($allCategories, 'count', 'slug');
+$categoryTotal = $activeCategory !== null ? $activeCategory['count'] : array_sum($categoryCounts);
 
-$currentPage = akd_blog_current_page();
-$pagination = akd_blog_paginate($categoryArticles, $currentPage, AKD_BLOG_PER_PAGE);
-
-$pageArticles = $pagination['items'];
-$paginationCurrentPage = $pagination['current_page'];
-$paginationTotalPages = $pagination['total_pages'];
-$paginationBaseUrl = $activeCategory
-    ? '/member/blog/category/' . $activeCategory['slug']
-    : '/member/blog/category';
-
-$categoryCounts = akd_blog_category_counts($blogArticles, $blogCategories);
+$pageArticles = $pageData['items'];
+$paginationCurrentPage = $pageData['page'];
+$paginationHasMore = $pageData['has_more'];
+$paginationBaseUrl = $activeCategory ? '/member/blog/category/' . $activeCategory['slug'] : '/member/blog/category';
 
 $page_title = $activeCategory ? $activeCategory['label'] : 'Categories';
 $page_description = $activeCategory
-    ? ($activeCategory['description'] ?? 'Stories from the ' . $activeCategory['label'] . ' category.')
+    ? ($activeCategory['description'] ?: 'Stories from the ' . $activeCategory['label'] . ' category.')
     : 'Browse every story, guide and update from the Anime Nigeria Blog.';
 
 $breadcrumbs = [
@@ -50,8 +58,13 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="akd-blog akd-blog-categories-page">
         <?php require __DIR__ . '/../includes/partials/blog/categories-header.php'; ?>
         <?php require __DIR__ . '/../includes/partials/blog/categories-nav.php'; ?>
-        <?php require __DIR__ . '/../includes/partials/blog/categories-list.php'; ?>
-        <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
+
+        <?php if ($blogLoadError): ?>
+            <?php require __DIR__ . '/../includes/partials/blog/load-error.php'; ?>
+        <?php else: ?>
+            <?php require __DIR__ . '/../includes/partials/blog/categories-list.php'; ?>
+            <?php require __DIR__ . '/../includes/partials/blog/pagination.php'; ?>
+        <?php endif; ?>
     </div>
 </main>
 

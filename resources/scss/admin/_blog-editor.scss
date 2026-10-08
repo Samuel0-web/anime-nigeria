@@ -1,0 +1,355 @@
+@use '../tokens' as *;
+
+// =============================================================================
+// ADMIN BLOG EDITOR (modal)
+// =============================================================================
+@media (min-width: 48rem) {
+    .akd-modal.akd-be-modal {
+        width: min(72rem, calc(100vw - 2rem));
+        max-width: none;
+        height: min(94vh, 60rem);
+    }
+}
+
+.akd-be {
+    container-type: inline-size;
+    container-name: be;
+
+    [hidden] { display: none !important; }
+
+    &__grid { display: grid; gap: $space-lg; align-items: start; }
+    &__main, &__side { display: flex; flex-direction: column; gap: $space-md; min-width: 0; }
+
+    @container be (min-width: 52rem) {
+        &__grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+    }
+}
+
+// Title: a transparent textarea over a mirror that renders _italic_ live. Both use the same
+// metrics, so the caret always lines up. The underscores stay visible, just dimmed.
+.akd-be-title {
+    position: relative;
+    border: 1px solid $admin-border-strong;
+    border-radius: $radius-md;
+    background-color: $input-bg;
+    transition: border-color $transition-fast;
+
+    &:focus-within { border-color: rgba($sakura, 0.5); }
+
+    &__mirror,
+    &__input {
+        margin: 0;
+        padding: 0.75rem 0.875rem;
+        font: inherit;
+        font-size: $fs-lg;
+        font-weight: $fw-bold;
+        line-height: $lh-snug;
+        letter-spacing: -0.01em;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    &__mirror { position: relative; min-height: 3.25rem; color: $white; pointer-events: none; }
+
+    &__input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: transparent;
+        color: transparent;
+        caret-color: $white;
+        resize: none;
+        overflow: hidden;
+        outline: none;
+
+        &::placeholder { color: $white-faint; }
+    }
+}
+
+.akd-be-mark { color: transparent; }
+
+// Editor
+.akd-be-editor {
+    border: 1px solid $admin-border-strong;
+    border-radius: $radius-md;
+    background-color: $input-bg;
+
+    &:focus-within { border-color: rgba($sakura, 0.5); }
+}
+
+.akd-be-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.375rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    background-color: $admin-elevated;
+    border-bottom: 1px solid $admin-border;
+    border-radius: $radius-md $radius-md 0 0;
+
+    &::-webkit-scrollbar { display: none; }
+}
+
+.akd-be-tool {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.5rem;
+    border-radius: $radius-sm;
+    color: $white-muted;
+    font-size: $fs-sm;
+    transition: background-color $transition-fast, color $transition-fast;
+
+    &:hover:not(:disabled) { background-color: rgba($white, 0.08); color: $white; }
+    &[aria-pressed='true'] { background-color: $sakura-dim; color: $sakura; }
+    &:disabled { opacity: 0.35; cursor: default; }
+    &:focus-visible { outline: 2px solid $sakura; outline-offset: -2px; }
+
+    &__text { font-family: $font-mono; font-size: 0.75rem; font-weight: $fw-bold; }
+}
+
+.akd-be-linkbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid $admin-border;
+    background-color: rgba($white, 0.03);
+
+    input { flex: 1 1 14rem; min-width: 0; }
+    .akd-admin-field__error { flex-basis: 100%; margin: 0; }
+}
+
+.akd-be-host {
+    position: relative;
+
+    &.is-empty::before {
+        content: attr(data-placeholder);
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        color: $white-faint;
+        pointer-events: none;
+    }
+}
+
+// Content typography (a compact echo of the member article styles)
+.akd-be-prose {
+    min-height: 22rem;
+    padding: 1rem;
+    outline: none;
+    font-size: $fs-base;
+    line-height: $lh-relaxed;
+    color: $white-muted;
+
+    > * + * { margin-top: $space-sm; }
+    p { margin: 0; }
+    h2 { margin-top: $space-md; font-size: $fs-xl; font-weight: $fw-semibold; line-height: $lh-snug; color: $white; }
+    h3 { margin-top: $space-sm; font-size: $fs-lg; font-weight: $fw-semibold; line-height: $lh-snug; color: $white; }
+    strong { color: $white; }
+    a { color: $sakura; text-decoration: underline; text-underline-offset: 2px; }
+    ul, ol { margin: 0; padding-left: 1.3em; }
+    li > p { margin: 0; }
+
+    blockquote {
+        margin: 0;
+        padding: $space-xs $space-sm;
+        border-left: 3px solid $sakura;
+        background: rgba($white, 0.02);
+        border-radius: 0 $radius-md $radius-md 0;
+        color: $white;
+        font-style: italic;
+    }
+
+    .ProseMirror-selectednode { outline: 2px solid $sakura; outline-offset: 2px; border-radius: $radius-md; }
+}
+
+@media (max-width: 40rem) {
+    .akd-be-prose { min-height: 50vh; }
+}
+
+.akd-be-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.875rem;
+    border-top: 1px solid $admin-border;
+    font-size: $fs-xs;
+    color: $white-faint;
+}
+
+// Figure node view
+.akd-be-figure {
+    margin: 0;
+    padding: 0.5rem;
+    border: 1px solid $admin-border;
+    border-radius: $radius-md;
+    background: rgba($white, 0.02);
+
+    &__image { display: block; max-width: 100%; max-height: 24rem; margin: 0 auto; border-radius: $radius-sm; }
+    &.is-broken &__image { display: none; }
+    &.is-broken::before { content: 'This image could not be loaded.'; display: block; padding: 1rem; text-align: center; color: $white-faint; font-size: $fs-sm; }
+    &__fields { display: grid; gap: 0.375rem; margin-top: 0.5rem; }
+
+    &__input {
+        width: 100%;
+        height: 2.25rem;
+        padding: 0 0.625rem;
+        border: 1px solid $admin-border-strong;
+        border-radius: $radius-sm;
+        background: $input-bg;
+        color: $white;
+        font: inherit;
+        font-size: $fs-sm;
+
+        &:focus { outline: none; border-color: rgba($sakura, 0.5); }
+        &::placeholder { color: $white-faint; }
+    }
+
+    &.needs-alt &__input:first-child { border-color: rgba($gold, 0.5); }
+}
+
+// Sidebar cards
+.akd-be-card {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    padding: $space-sm;
+    border: 1px solid $admin-border;
+    border-radius: $radius-lg;
+    background-color: rgba($white, 0.025);
+
+    &__title {
+        font-family: $font-mono;
+        font-size: 0.6875rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $white-faint;
+    }
+}
+
+.akd-be-pub { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.akd-be-pub__note { font-size: $fs-sm; color: $white-muted; }
+
+.akd-be-check {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: $fs-sm;
+    color: $white-muted;
+
+    li { display: flex; align-items: center; gap: 0.5rem; }
+    li.is-done { color: $white-faint; }
+    li.is-done i { color: #22c55e; }
+}
+
+.akd-be-slug {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    font-family: $font-mono;
+    font-size: 0.75rem;
+    color: $white-faint;
+
+    input { flex: 1 1 8rem; min-width: 0; }
+}
+
+.akd-be-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.375rem;
+    border: 1px solid $admin-border-strong;
+    border-radius: $radius-md;
+    background: $input-bg;
+
+    &:focus-within { border-color: rgba($sakura, 0.5); }
+
+    &__list { display: contents; margin: 0; padding: 0; list-style: none; }
+
+    &__input {
+        flex: 1 1 6rem;
+        min-width: 0;
+        height: 1.75rem;
+        padding: 0 0.375rem;
+        border: 0;
+        background: transparent;
+        color: $white;
+        font: inherit;
+        font-size: $fs-sm;
+        outline: none;
+    }
+}
+
+.akd-be-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 1.75rem;
+    padding: 0 0.25rem 0 0.625rem;
+    border: 1px solid $admin-border-strong;
+    border-radius: $radius-full;
+    font-size: $fs-xs;
+    color: $white-muted;
+
+    button {
+        display: grid;
+        place-items: center;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        color: $white-faint;
+        font-size: 0.6rem;
+
+        &:hover { background: rgba($white, 0.1); color: $white; }
+    }
+}
+
+// Footer: save status on the left, lifecycle actions on the right
+.akd-be-footer {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-xs $space-sm;
+}
+
+.akd-be-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: $fs-sm;
+    color: $white-muted;
+
+    &__dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: $white-faint; }
+    &[data-state='dirty'] &__dot { background: $gold; }
+    &[data-state='saving'] &__dot { background: $sakura; animation: akd-ann-pulse 1s ease-in-out infinite; }
+    &[data-state='saved'] &__dot { background: #22c55e; }
+    &[data-state='error'] { color: #ffb4c1; }
+    &[data-state='error'] &__dot { background: $accent-crimson; }
+
+    &__retry {
+        padding: 0 0.5rem;
+        border-radius: $radius-full;
+        color: $white;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+}
+
+.akd-be-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: auto; }
